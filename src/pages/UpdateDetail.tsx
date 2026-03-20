@@ -24,22 +24,21 @@ export default function UpdateDetail() {
     enabled: !!id,
   });
 
-  // Handle Sharing with Edge Function URL
+  // Handle Sharing with actual Website URL
   const handleShare = async () => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const ogUrl = `https://${projectId}.supabase.co/functions/v1/og-meta/updates/${id}`;
+    const shareUrl = window.location.href; // <-- FIX 1: Grabs your actual website link
     
     if (navigator.share) {
       try {
         await navigator.share({ 
           title: update?.headline || 'EduDock Update', 
-          url: ogUrl 
+          url: shareUrl 
         });
       } catch (err) {
         console.log("Share cancelled or failed", err);
       }
     } else {
-      await navigator.clipboard.writeText(ogUrl);
+      await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copied to clipboard!');
     }
   };
@@ -90,8 +89,9 @@ export default function UpdateDetail() {
         <div className="sticky top-0 right-0 w-full flex justify-end items-center gap-3 p-4 z-20 bg-gradient-to-b from-[#0f172a] to-transparent">
           
           {/* WhatsApp Direct Share Button */}
+          {/* FIX 2: Swapped the Supabase URL for window.location.href here too! */}
           <a 
-            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/og-meta/updates/${id}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\n${window.location.href}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg transition"
