@@ -54,19 +54,18 @@ export default function Pdfs() {
     if (id) navigate('/pdfs');
   };
 
-  // UPDATED: Using the exact Edge Function link for PDFs
+  // UPDATED: Using the clean Netlify redirect link
   const handleShare = async () => {
-    const projectId = "qxuxvhzgmrwpngvmsume";
-    const ogUrl = `https://${projectId}.supabase.co/functions/v1/og-meta/pdfs/${selectedId}`;
+    const shareUrl = `https://edudock.netlify.app/share/pdfs/${selectedId}`;
     
     if (navigator.share) {
       try {
-        await navigator.share({ title: selectedPdf?.name || 'EduDock PDF', url: ogUrl });
+        await navigator.share({ title: selectedPdf?.name || 'EduDock PDF', url: shareUrl });
       } catch (err) {
         console.log("Share cancelled or failed", err);
       }
     } else {
-      await navigator.clipboard.writeText(ogUrl);
+      await navigator.clipboard.writeText(shareUrl);
       toast.success('PDF Link copied to clipboard!');
     }
   };
@@ -163,9 +162,9 @@ export default function Pdfs() {
               {/* Header with Updated Share Buttons */}
               <div className="flex items-center justify-end gap-2 p-3 border-b border-border/30">
                 
-                {/* WhatsApp Direct Share Button */}
+                {/* WhatsApp Direct Share Button with Clean Link */}
                 <a 
-                  href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock PDF: ${selectedPdf.name} \n\nhttps://qxuxvhzgmrwpngvmsume.supabase.co/functions/v1/og-meta/pdfs/${selectedId}`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock PDF: ${selectedPdf.name} \n\nhttps://edudock.netlify.app/share/pdfs/${selectedId}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-icon text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"

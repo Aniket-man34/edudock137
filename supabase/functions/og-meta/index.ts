@@ -16,7 +16,6 @@ serve(async (req) => {
   let description = 'Check out this educational resource on EduDock!'
   let imageUrl = ''
   
-  // REPLACE THIS with your actual live Netlify website URL
   const LIVE_WEBSITE_URL = "https://edudock.netlify.app"; 
   let frontendUrl = LIVE_WEBSITE_URL;
 
@@ -58,5 +57,11 @@ serve(async (req) => {
     </html>
   `
 
-  return new Response(html, { headers: { "Content-Type": "text/html" } })
+  return new Response(html, { 
+    status: 200,
+    headers: { 
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate"
+    } 
+  })
 })

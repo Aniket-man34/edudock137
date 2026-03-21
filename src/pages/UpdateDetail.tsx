@@ -24,10 +24,10 @@ export default function UpdateDetail() {
     enabled: !!id,
   });
 
-  // Handle Sharing with Supabase Edge Function URL
+  // Handle Sharing with Netlify Redirect URL
   const handleShare = async () => {
-    const projectId = "qxuxvhzgmrwpngvmsume";
-    const shareUrl = `https://${projectId}.supabase.co/functions/v1/og-meta/updates/${id}`;
+    // This now points to your Netlify site, triggering the hidden _redirects file
+    const shareUrl = `https://edudock.netlify.app/share/updates/${id}`;
     
     if (navigator.share) {
       try {
@@ -91,7 +91,7 @@ export default function UpdateDetail() {
           
           {/* WhatsApp Direct Share Button */}
           <a 
-            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://qxuxvhzgmrwpngvmsume.supabase.co/functions/v1/og-meta/updates/${id}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://edudock.netlify.app/share/updates/${id}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg transition"
