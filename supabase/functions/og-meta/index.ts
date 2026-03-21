@@ -19,26 +19,27 @@ serve(async (req) => {
   const LIVE_WEBSITE_URL = "https://edudock.netlify.app"; 
   let frontendUrl = LIVE_WEBSITE_URL;
 
+  // 1. Fetch Data based on type
   if (type === 'updates') {
     const { data } = await supabase.from('updates').select('*').eq('id', id).single()
     if (data) {
       title = data.headline || title
-      description = data.content ? data.content.substring(0, 120).replace(/\n/g, ' ') + '...' : description
+      description = data.content ? data.content.substring(0, 150).replace(/\n/g, ' ') + '...' : description
       imageUrl = data.image_url || ''
       frontendUrl = `${LIVE_WEBSITE_URL}/updates/${id}`
     }
   } else if (type === 'pdfs') {
     const { data } = await supabase.from('pdfs').select('*').eq('id', id).single()
     if (data) {
-      title = data.title || title
-      description = data.description ? data.description.substring(0, 120).replace(/\n/g, ' ') + '...' : description
-      imageUrl = data.pdf_cover || '' 
+      title = data.name || title // Corrected key
+      description = data.description ? data.description.substring(0, 150).replace(/\n/g, ' ') + '...' : description
+      imageUrl = data.cover_image_url || '' // Corrected key
       frontendUrl = `${LIVE_WEBSITE_URL}/pdfs/${id}`
     }
   }
 
-  const html = `
-    <!DOCTYPE html>
+  // 2. Build the HTML string
+  const html = `<!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
@@ -46,7 +47,8 @@ serve(async (req) => {
       <meta property="og:title" content="${title}" />
       <meta property="og:description" content="${description}" />
       <meta property="og:image" content="${imageUrl}" />
-      <meta property="og:type" content="article" />
+      <meta property="og:url" content="${frontendUrl}" />
+      <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:image" content="${imageUrl}" />
       <meta http-equiv="refresh" content="0; url=${frontendUrl}" />
@@ -54,14 +56,14 @@ serve(async (req) => {
     <body>
       <script>window.location.href = "${frontendUrl}";</script>
     </body>
-    </html>
-  `
+    </html>`
 
-  return new Response(html, { 
+  // 3. Return with binary encoding and strict headers
+  return new Response(new TextEncoder().encode(html), { 
     status: 200,
     headers: { 
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "no-cache, no-store, must-revalidate"
+      "X-Content-Type-Options": "nosniff"
     } 
   })
 })
