@@ -1,121 +1,62 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+serve(async (req) => {
+  const url = new URL(req.url)
+  const parts = url.pathname.split('/').filter(Boolean)
+  const id = parts[parts.length - 1]
+  const type = parts[parts.length - 2] 
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-);
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+  )
 
-const SITE_URL = Deno.env.get("SITE_URL") || "";
-const DEFAULT_IMAGE = "/social.png";
-
-function html(
-  title: string,
-  description: string,
-  image: string,
-  url: string
-): string {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <title>${esc(title)}</title>
-  <meta name="description" content="${esc(description)}"/>
-  <meta property="og:title" content="${esc(title)}"/>
-  <meta property="og:description" content="${esc(description)}"/>
-  <meta property="og:image" content="${esc(image)}"/>
-  <meta property="og:image:width" content="1200"/>
-  <meta property="og:image:height" content="630"/>
-  <meta property="og:url" content="${esc(url)}"/>
-  <meta property="og:type" content="website"/>
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="${esc(title)}"/>
-  <meta name="twitter:description" content="${esc(description)}"/>
-  <meta name="twitter:image" content="${esc(image)}"/>
-  <meta http-equiv="refresh" content="0;url=${esc(url)}"/>
-</head>
-<body>Redirecting…</body>
-</html>`;
-}
-
-function esc(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const reqUrl = new URL(req.url);
-  const path = reqUrl.pathname.replace("/og-meta", "");
+  let title = 'EduDock Resource'
+  let description = 'Check out this educational resource on EduDock!'
+  let imageUrl = ''
   
-  // Use SITE_URL env, or fallback to preview URL pattern
-  const projectRef = Deno.env.get("SUPABASE_URL")?.match(/\/\/([^.]+)/)?.[1] || "";
-  const siteUrl = SITE_URL || `https://id-preview--${projectRef}.lovable.app`;
-  const defaultImg = `${siteUrl}/social.png`;
+  // REPLACE THIS with your actual live Netlify website URL
+  const LIVE_WEBSITE_URL = "https://edudock.netlify.app"; 
+  let frontendUrl = LIVE_WEBSITE_URL;
 
-  // Match /pdfs/:id
-  const pdfMatch = path.match(/^\/pdfs\/([a-f0-9-]+)$/i);
-  if (pdfMatch) {
-    const { data } = await supabase
-      .from("pdfs")
-      .select("name, description, cover_image_url")
-      .eq("id", pdfMatch[1])
-      .single();
-
+  if (type === 'updates') {
+    const { data } = await supabase.from('updates').select('*').eq('id', id).single()
     if (data) {
-      return new Response(
-        html(
-          `${data.name} - EduDock`,
-          data.description || "Check out this PDF on EduDock",
-          data.cover_image_url || defaultImg,
-          `${siteUrl}/pdfs/${pdfMatch[1]}`
-        ),
-        { headers: { ...corsHeaders, "content-type": "text/html; charset=utf-8" } }
-      );
+      title = data.headline || title
+      description = data.content ? data.content.substring(0, 120).replace(/\n/g, ' ') + '...' : description
+      imageUrl = data.image_url || ''
+      frontendUrl = `${LIVE_WEBSITE_URL}/updates/${id}`
+    }
+  } else if (type === 'pdfs') {
+    const { data } = await supabase.from('pdfs').select('*').eq('id', id).single()
+    if (data) {
+      title = data.title || title
+      description = data.description ? data.description.substring(0, 120).replace(/\n/g, ' ') + '...' : description
+      imageUrl = data.pdf_cover || '' 
+      frontendUrl = `${LIVE_WEBSITE_URL}/pdfs/${id}`
     }
   }
 
-  // Match /updates/:id
-  const updateMatch = path.match(/^\/updates\/([a-f0-9-]+)$/i);
-  if (updateMatch) {
-    const { data } = await supabase
-      .from("updates")
-      .select("headline, content, image_url")
-      .eq("id", updateMatch[1])
-      .single();
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>${title}</title>
+      <meta property="og:title" content="${title}" />
+      <meta property="og:description" content="${description}" />
+      <meta property="og:image" content="${imageUrl}" />
+      <meta property="og:type" content="article" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:image" content="${imageUrl}" />
+      <meta http-equiv="refresh" content="0; url=${frontendUrl}" />
+    </head>
+    <body>
+      <script>window.location.href = "${frontendUrl}";</script>
+    </body>
+    </html>
+  `
 
-    if (data) {
-      return new Response(
-        html(
-          `${data.headline} - EduDock`,
-          data.content?.substring(0, 155) || "Latest update from EduDock",
-          data.image_url || defaultImg,
-          `${siteUrl}/updates/${updateMatch[1]}`
-        ),
-        { headers: { ...corsHeaders, "content-type": "text/html; charset=utf-8" } }
-      );
-    }
-  }
-
-  // Fallback
-  return new Response(
-    html(
-      "EduDock - Your Educational Resource Hub",
-      "Discover curated educational tools, PDF resources, and updates.",
-      defaultImg,
-      siteUrl
-    ),
-    { headers: { ...corsHeaders, "content-type": "text/html; charset=utf-8" } }
-  );
-});
+  return new Response(html, { headers: { "Content-Type": "text/html" } })
+})

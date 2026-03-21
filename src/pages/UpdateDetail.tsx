@@ -24,9 +24,10 @@ export default function UpdateDetail() {
     enabled: !!id,
   });
 
-  // Handle Sharing with actual Website URL
+  // Handle Sharing with Supabase Edge Function URL
   const handleShare = async () => {
-    const shareUrl = window.location.href; // <-- FIX 1: Grabs your actual website link
+    const projectId = "qxuxvhzgmrwpngvmsume";
+    const shareUrl = `https://${projectId}.supabase.co/functions/v1/og-meta/updates/${id}`;
     
     if (navigator.share) {
       try {
@@ -89,9 +90,8 @@ export default function UpdateDetail() {
         <div className="sticky top-0 right-0 w-full flex justify-end items-center gap-3 p-4 z-20 bg-gradient-to-b from-[#0f172a] to-transparent">
           
           {/* WhatsApp Direct Share Button */}
-          {/* FIX 2: Swapped the Supabase URL for window.location.href here too! */}
           <a 
-            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\n${window.location.href}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://qxuxvhzgmrwpngvmsume.supabase.co/functions/v1/og-meta/updates/${id}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg transition"
