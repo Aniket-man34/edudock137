@@ -164,7 +164,7 @@ export default function Pdfs() {
                 
                 {/* WhatsApp Direct Share Button with Clean Link */}
                 <a 
-                  href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock PDF: ${selectedPdf.name} \n\nhttps://edudock.netlify.app/share/pdfs/${selectedId}`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock PDF: ${selectedPdf.name} \n\nhttps://edudock.in/share/pdfs/${selectedId}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-icon text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"

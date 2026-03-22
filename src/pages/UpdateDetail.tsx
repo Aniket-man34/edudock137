@@ -91,7 +91,7 @@ export default function UpdateDetail() {
           
           {/* WhatsApp Direct Share Button */}
           <a 
-            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://edudock.netlify.app/share/updates/${id}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://edudock.in/share/updates/${id}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg transition"
