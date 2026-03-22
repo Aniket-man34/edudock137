@@ -56,7 +56,7 @@ export default function Pdfs() {
 
   // UPDATED: Using the clean Netlify redirect link
   const handleShare = async () => {
-    const shareUrl = `https://edudock.netlify.app/share/pdfs/${selectedId}`;
+    const shareUrl = `https://edudock.in/share/pdfs/${selectedId}`;
     
     if (navigator.share) {
       try {

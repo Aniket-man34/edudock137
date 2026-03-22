@@ -27,7 +27,7 @@ export default function UpdateDetail() {
   // Handle Sharing with Netlify Redirect URL
   const handleShare = async () => {
     // This now points to your Netlify site, triggering the hidden _redirects file
-    const shareUrl = `https://edudock.netlify.app/share/updates/${id}`;
+    const shareUrl = `https://edudock.in/share/updates/${id}`;
     
     if (navigator.share) {
       try {

@@ -16,7 +16,7 @@ serve(async (req: Request) => {
     (Deno as any).env.get('SUPABASE_ANON_KEY') ?? ''
   )
 
-  const LIVE_WEBSITE_URL = "https://edudock.netlify.app"
+  const LIVE_WEBSITE_URL = "https://edudock.in"
   let title = 'EduDock Resource'
   let description = 'Check out this educational resource!'
   let imageUrl = ''
