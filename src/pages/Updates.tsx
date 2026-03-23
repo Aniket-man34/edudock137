@@ -24,6 +24,16 @@ export default function Updates() {
       u.headline.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // --- AUTOMATIC "NEW" BADGE LOGIC ---
+  const isNewUpdate = (createdAt: string) => {
+    if (!createdAt) return false;
+    const uploadDate = new Date(createdAt);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - uploadDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -51,8 +61,21 @@ export default function Updates() {
             >
               <Link
                 to={`/updates/${update.id}`}
-                className="block glass-card overflow-hidden group transition-all duration-300 hover:-translate-y-1"
+                className="relative block glass-card overflow-hidden group transition-all duration-300 hover:-translate-y-1"
               >
+                
+                {/* --- GLOWING NEW BADGE --- */}
+                {isNewUpdate(update.created_at) && (
+                  <div className="absolute top-3 left-3 z-30">
+                    <span className="relative flex h-5 w-12 items-center justify-center">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-30"></span>
+                      <span className="relative inline-flex rounded-full h-5 w-12 items-center justify-center bg-blue-500 border border-blue-400 text-[9px] font-bold text-white uppercase tracking-wider shadow-[0_0_15px_rgba(59,130,246,0.6)]">
+                        New
+                      </span>
+                    </span>
+                  </div>
+                )}
+
                 {update.image_url ? (
                   <div className="aspect-video overflow-hidden">
                     <img

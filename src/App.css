@@ -40,3 +40,54 @@
 .read-the-docs {
   color: #888;
 }
+
+/* =========================================
+   🚀 EDUDOCK PREMIUM UI UPGRADES
+   ========================================= */
+
+/* --- 1. PREMIUM GLASS SCROLLBAR --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3); /* Dark slate transparent track */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15); /* Glass thumb */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3); /* Brighter on hover */
+}
+
+/* --- 2. MAGNETIC BUTTON HOVER STATES --- */
+/* Targets your primary, secondary, and icon buttons for a fluid feel */
+.btn-primary, 
+.btn-secondary {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.btn-primary:hover, 
+.btn-secondary:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4) !important; /* Glowing drop shadow */
+}
+
+.btn-primary:active, 
+.btn-secondary:active {
+  transform: translateY(1px) scale(0.98) !important; /* 'Squish' effect on click */
+}
+
+.btn-icon {
+  transition: all 0.2s ease-out !important;
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px) scale(1.1) !important;
+}
+
+.btn-icon:active {
+  transform: translateY(1px) scale(0.95) !important;
+}
