@@ -1,14 +1,21 @@
-User-agent: Googlebot
-Allow: /
+# ------------------------------------------------------------
+# EduDock Robots.txt - Fully Optimized for SEO
+# ------------------------------------------------------------
 
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# 1. Allow all search engines and social media bots
 User-agent: *
+Allow: /
+Allow: /share/
+
+# 2. Prevent bots from indexing private/technical pages (Change these if your routes differ)
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api/
+
+# 3. Help bots find your content map
+Sitemap: https://edudock.in/sitemap.xml
+
+# 4. Specific instructions for Google (optional but professional)
+User-agent: Googlebot
 Allow: /
