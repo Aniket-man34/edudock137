@@ -31,18 +31,25 @@ export default function Home() {
     },
   });
 
-  // --- NEW: TRENDING UPDATES QUERY ---
+  // --- NEW: TRENDING QUERIES (Sorted by Clicks) ---
   const { data: trendingUpdates } = useQuery({
     queryKey: ['trending_updates'],
     queryFn: async () => {
-      // Fetches top 3 most clicked updates
-      const { data, error } = await supabase.from('updates').select('*').order('clicks', { ascending: false }).limit(3);
-      if (error) throw error; 
-      return data || [];
+      const { data, error } = await supabase.from('updates').select('*').order('clicks', { ascending: false }).limit(6);
+      if (error) throw error; return data || [];
     }
   });
 
-  // --- NEW DATA QUERIES (Last 30 Days) ---
+  const { data: trendingPdfs } = useQuery({
+    queryKey: ['trending_pdfs'],
+    queryFn: async () => {
+      // Use 'as any' just in case TypeScript complains about clicks column locally
+      const { data, error } = await (supabase.from('pdfs' as any) as any).select('*').order('clicks', { ascending: false }).limit(6);
+      if (error) throw error; return data || [];
+    }
+  });
+
+  // --- FRESH ARRIVALS QUERIES (Last 30 Days) ---
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const thirtyDaysIso = thirtyDaysAgo.toISOString();
@@ -65,8 +72,8 @@ export default function Home() {
 
   const filteredTools = tools?.filter((t) => !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase()) || t.short_description?.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  // Automatically sorts tools by clicks
-  const trendingTools = tools?.sort((a: any, b: any) => (b.clicks || 0) - (a.clicks || 0)).slice(0, 4) || []; 
+  // Trending Tools sorted by clicks
+  const trendingTools = tools?.sort((a: any, b: any) => (b.clicks || 0) - (a.clicks || 0)).slice(0, 6) || []; 
 
   return (
     <div>
@@ -126,39 +133,76 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* --- TRENDING SECTION (Tools + Updates) --- */}
-      <section className="container mx-auto px-4 pb-16">
-        <div className="flex items-center gap-2 mb-8 border-b border-border/50 pb-4">
-          <TrendingUp className="h-7 w-7 text-orange-500" />
-          <h2 className="text-2xl font-bold font-display">Trending on EduDock</h2>
-        </div>
-        
-        {/* Trending Tools */}
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/80"><Wrench className="h-5 w-5 text-emerald-500" /> Most Used Tools</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
-          {trendingTools.map((tool, i) => (
-            <ToolCard key={tool.id} tool={tool} index={i} />
-          ))}
+      {/* ============================================================== */}
+      {/* NETFLIX-STYLE TRENDING SECTION                 */}
+      {/* ============================================================== */}
+      <section className="container mx-auto px-4 pb-16 overflow-hidden">
+        <div className="flex items-center gap-3 mb-8 border-b border-border/50 pb-4">
+          <div className="relative">
+            <TrendingUp className="h-7 w-7 text-orange-500" />
+            <span className="absolute top-0 right-0 h-2 w-2 bg-orange-500 rounded-full animate-ping"></span>
+          </div>
+          <h2 className="text-2xl font-bold font-display">Trending Now</h2>
         </div>
 
-        {/* Trending Updates */}
-        {trendingUpdates && trendingUpdates.length > 0 && (
-          <>
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/80"><Bell className="h-5 w-5 text-blue-500" /> Top Updates</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {trendingUpdates.map((update) => (
-                <Link to={`/updates/${update.id}`} key={update.id} className="glass-card p-5 rounded-2xl hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group border border-border/50">
-                  <div className="relative h-40 w-full mb-4 rounded-xl overflow-hidden bg-black/20">
-                    <img src={update.image_url || '/placeholder.png'} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="" />
-                    <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold">
-                      <TrendingUp className="h-3 w-3 text-orange-500" /> Trending
-                    </div>
+        {/* 1. TRENDING TOOLS ROW */}
+        <div className="mb-10">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/80"><Wrench className="h-5 w-5 text-emerald-500" /> Top Tools</h3>
+          {/* Netflix Slider Container */}
+          <div className="flex overflow-x-auto gap-5 pb-6 pt-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
+            {trendingTools.map((tool, i) => (
+              <div key={tool.id} className="min-w-[280px] md:min-w-[320px] snap-start shrink-0 relative group">
+                {/* Ranking Badge */}
+                <div className={`absolute -top-3 -left-3 z-20 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shadow-lg border transform -rotate-12 transition-transform group-hover:rotate-0
+                  ${i === 0 ? 'bg-yellow-500 border-yellow-400 text-black' : i === 1 ? 'bg-slate-300 border-slate-200 text-black' : i === 2 ? 'bg-orange-400 border-orange-300 text-black' : 'bg-muted border-border text-muted-foreground'}`}>
+                  #{i + 1}
+                </div>
+                <ToolCard tool={tool} index={i} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 2. TRENDING PDFS ROW */}
+        {trendingPdfs && trendingPdfs.length > 0 && (
+          <div className="mb-10">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/80"><BookOpen className="h-5 w-5 text-primary" /> Most Read PDFs</h3>
+            <div className="flex overflow-x-auto gap-5 pb-6 pt-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
+              {trendingPdfs.map((pdf, i) => (
+                <Link to={`/pdfs/${pdf.id}`} key={pdf.id} className="glass-card flex flex-col p-4 rounded-2xl hover:-translate-y-1 transition-all group border border-border/50 min-w-[200px] md:min-w-[240px] snap-start shrink-0 relative">
+                  <div className={`absolute -top-3 -left-3 z-20 w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[10px] shadow-lg border transform -rotate-12 transition-transform group-hover:rotate-0
+                    ${i === 0 ? 'bg-yellow-500 border-yellow-400 text-black' : i === 1 ? 'bg-slate-300 border-slate-200 text-black' : i === 2 ? 'bg-orange-400 border-orange-300 text-black' : 'bg-muted border-border text-muted-foreground'}`}>
+                    #{i + 1}
                   </div>
-                  <h4 className="font-bold text-base group-hover:text-primary transition-colors line-clamp-2 leading-snug">{update.headline}</h4>
+                  <div className="relative h-40 w-full mb-3 rounded-xl overflow-hidden bg-black/20">
+                    <img src={pdf.cover_image_url || '/placeholder.png'} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={pdf.name} />
+                  </div>
+                  <h4 className="font-bold text-sm group-hover:text-primary transition-colors line-clamp-2">{pdf.name}</h4>
                 </Link>
               ))}
             </div>
-          </>
+          </div>
+        )}
+
+        {/* 3. TRENDING UPDATES ROW */}
+        {trendingUpdates && trendingUpdates.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/80"><Bell className="h-5 w-5 text-blue-500" /> Hot Updates</h3>
+            <div className="flex overflow-x-auto gap-5 pb-6 pt-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
+              {trendingUpdates.map((update, i) => (
+                <Link to={`/updates/${update.id}`} key={update.id} className="glass-card flex flex-col p-4 rounded-2xl hover:-translate-y-1 transition-all group border border-border/50 min-w-[260px] md:min-w-[300px] snap-start shrink-0 relative">
+                  <div className={`absolute -top-3 -left-3 z-20 w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[10px] shadow-lg border transform -rotate-12 transition-transform group-hover:rotate-0
+                    ${i === 0 ? 'bg-yellow-500 border-yellow-400 text-black' : i === 1 ? 'bg-slate-300 border-slate-200 text-black' : i === 2 ? 'bg-orange-400 border-orange-300 text-black' : 'bg-muted border-border text-muted-foreground'}`}>
+                    #{i + 1}
+                  </div>
+                  <div className="relative h-36 w-full mb-3 rounded-xl overflow-hidden bg-black/20">
+                    <img src={update.image_url || '/placeholder.png'} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt="" />
+                  </div>
+                  <h4 className="font-bold text-sm group-hover:text-primary transition-colors line-clamp-2">{update.headline}</h4>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
       </section>
 
@@ -170,7 +214,7 @@ export default function Home() {
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* New PDFs */}
+          {/* New PDFs List */}
           <div className="glass-card p-6 rounded-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary"/> New PDFs</h3>
@@ -188,7 +232,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* New Updates */}
+          {/* New Updates List */}
           <div className="glass-card p-6 rounded-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2"><Bell className="h-5 w-5 text-primary"/> Latest Updates</h3>
@@ -268,7 +312,7 @@ export default function Home() {
                 className="flex items-center justify-center gap-2 w-full py-3 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-xl transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                am46697032@gmail.com
+                am4669703@gmail.com
               </a>
             </div>
 
