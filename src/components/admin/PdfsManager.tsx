@@ -128,8 +128,8 @@ export default function PdfsManager({ search }: { search: string }) {
             <div className="flex items-center gap-3 min-w-0">
               {pdf.cover_image_url && <img src={pdf.cover_image_url} alt="" className="w-10 h-14 rounded object-cover shrink-0" />}
               <div className="min-w-0">
-                <p className="font-medium truncate">{pdf.name}</p>
-                <p className="text-muted-foreground text-xs truncate">{pdf.description}</p>
+                {/* Description removed from right below the name */}
+                <p className="font-medium truncate text-lg">{pdf.name}</p>
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
