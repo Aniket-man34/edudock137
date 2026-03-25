@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { X, Share2, ExternalLink, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 export default function UpdateDetail() {
   const { id } = useParams();
@@ -23,6 +24,18 @@ export default function UpdateDetail() {
     },
     enabled: !!id,
   });
+
+  // --- NEW: Track Clicks when an update is successfully viewed ---
+  useEffect(() => {
+    if (update && id) {
+      (supabase.from('updates' as any) as any)
+        .update({ clicks: ((update as any).clicks || 0) + 1 })
+        .eq('id', id)
+        .then(({ error }: any) => {
+          if (error) console.error("Error updating click count:", error);
+        });
+    }
+  }, [update, id]);
 
   // Handle Sharing
   const handleShare = async () => {

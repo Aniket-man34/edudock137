@@ -70,7 +70,6 @@ export default function Pdfs() {
   };
 
   // --- AUTOMATIC "NEW" BADGE LOGIC ---
-  // Returns true if the PDF was uploaded in the last 7 days
   const isNewPdf = (createdAt: string) => {
     if (!createdAt) return false;
     const uploadDate = new Date(createdAt);
@@ -127,14 +126,21 @@ export default function Pdfs() {
               onClick={() => {
                 setSelectedId(pdf.id);
                 navigate(`/pdfs/${pdf.id}`, { replace: true });
+
+                // --- NEW: Background click tracking ---
+                (supabase.from('pdfs' as any) as any)
+                  .update({ clicks: ((pdf as any).clicks || 0) + 1 })
+                  .eq('id', pdf.id)
+                  .then(({ error }: any) => {
+                    if (error) console.error("Error updating PDF clicks:", error);
+                  });
               }}
-              // ADDED 'relative' here so the absolute badge stays inside the card
               className="relative aspect-[3/4] glass-card overflow-hidden cursor-pointer group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
             >
               
-              {/* --- GLOWING NEW BADGE (Auto-hides after 7 days) --- */}
+              {/* --- GLOWING NEW BADGE --- */}
               {isNewPdf(pdf.created_at) && (
-                <div className="absolute top-3 left-3 z-10">
+                <div className="absolute top-3 left-3 z-30">
                   <span className="relative flex h-5 w-12 items-center justify-center">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-30"></span>
                     <span className="relative inline-flex rounded-full h-5 w-12 items-center justify-center bg-blue-500 border border-blue-400 text-[9px] font-bold text-white uppercase tracking-wider shadow-[0_0_15px_rgba(59,130,246,0.6)]">
@@ -145,9 +151,18 @@ export default function Pdfs() {
               )}
 
               {pdf.cover_image_url ? (
-                <img src={pdf.cover_image_url} alt={pdf.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <>
+                  <img src={pdf.cover_image_url} alt={pdf.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 relative z-10" />
+                  
+                  {/* --- TITLE OVERLAY FOR IMAGES --- */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pt-16 z-20 transition-opacity duration-300">
+                    <h3 className="text-white font-semibold text-sm line-clamp-2 leading-snug drop-shadow-md">
+                      {pdf.name}
+                    </h3>
+                  </div>
+                </>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3">
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3 relative z-10">
                   <BookOpen className="h-8 w-8 text-primary/40" />
                   <span className="font-display font-semibold text-sm text-center leading-snug">{pdf.name}</span>
                 </div>

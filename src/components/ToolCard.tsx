@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, RotateCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
+// 1. Updated interface to include clicks
 interface Tool {
   id: string;
   name: string;
@@ -9,10 +11,23 @@ interface Tool {
   long_description: string | null;
   image_url: string | null;
   website_url: string | null;
+  clicks?: number; 
 }
 
 export default function ToolCard({ tool, index }: { tool: Tool; index: number }) {
   const [flipped, setFlipped] = useState(false);
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); 
+    
+    // 2. Added 'as any' to bypass VS Code TypeScript errors
+    (supabase.from('tools' as any) as any)
+      .update({ clicks: ((tool as any).clicks || 0) + 1 })
+      .eq('id', tool.id)
+      .then(({ error }: any) => {
+        if (error) console.error("Error updating clicks:", error);
+      });
+  };
 
   return (
     <motion.div
@@ -66,7 +81,7 @@ export default function ToolCard({ tool, index }: { tool: Tool; index: number })
               href={tool.website_url}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleLinkClick} // <-- Tracker is attached here
               className="btn-primary text-xs mt-4 self-start"
             >
               Open Website <ExternalLink className="h-3.5 w-3.5" />
