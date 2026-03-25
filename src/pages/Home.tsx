@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useOutletContext, Link } from 'react-router-dom';
+import { useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, TrendingUp, Clock, Info, Mail, BookOpen, Bell, Wrench } from 'lucide-react';
 import ToolCard from '@/components/ToolCard';
@@ -13,13 +13,15 @@ const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transi
 
 export default function Home() {
   const { searchQuery } = useOutletContext<ContextType>();
+  const navigate = useNavigate();
 
   // --- EXISTING QUERIES ---
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       const { data, error } = await supabase.from('categories').select('*').order('name');
-      if (error) throw error; return data;
+      if (error) throw error; 
+      return (data as any[]) || [];
     },
   });
 
@@ -27,29 +29,48 @@ export default function Home() {
     queryKey: ['tools'],
     queryFn: async () => {
       const { data, error } = await supabase.from('tools').select('*').order('name');
-      if (error) throw error; return data;
+      if (error) throw error; 
+      return (data as any[]) || [];
     },
   });
 
-  // --- NEW: TRENDING QUERIES (Sorted by Clicks) ---
+  // --- QUERIES FOR GLOBAL SEARCH ---
+  const { data: allPdfs } = useQuery({
+    queryKey: ['search_pdfs'],
+    queryFn: async () => {
+      const { data } = await (supabase.from('pdfs' as any) as any).select('id, name, cover_image_url, clicks');
+      return (data as any[]) || [];
+    }
+  });
+
+  const { data: allUpdates } = useQuery({
+    queryKey: ['search_updates'],
+    queryFn: async () => {
+      const { data } = await (supabase.from('updates' as any) as any).select('id, headline, image_url, clicks');
+      return (data as any[]) || [];
+    }
+  });
+
+  // --- TRENDING QUERIES ---
   const { data: trendingUpdates } = useQuery({
     queryKey: ['trending_updates'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('updates').select('*').order('clicks', { ascending: false }).limit(6);
-      if (error) throw error; return data || [];
+      const { data, error } = await (supabase.from('updates' as any) as any).select('*').order('clicks', { ascending: false }).limit(6);
+      if (error) throw error; 
+      return (data as any[]) || [];
     }
   });
 
   const { data: trendingPdfs } = useQuery({
     queryKey: ['trending_pdfs'],
     queryFn: async () => {
-      // Use 'as any' just in case TypeScript complains about clicks column locally
       const { data, error } = await (supabase.from('pdfs' as any) as any).select('*').order('clicks', { ascending: false }).limit(6);
-      if (error) throw error; return data || [];
+      if (error) throw error; 
+      return (data as any[]) || [];
     }
   });
 
-  // --- FRESH ARRIVALS QUERIES (Last 30 Days) ---
+  // --- FRESH ARRIVALS QUERIES ---
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const thirtyDaysIso = thirtyDaysAgo.toISOString();
@@ -58,7 +79,7 @@ export default function Home() {
     queryKey: ['new_pdfs'],
     queryFn: async () => {
       const { data } = await supabase.from('pdfs').select('*').gte('created_at', thirtyDaysIso).order('created_at', { ascending: false }).limit(4);
-      return data || [];
+      return (data as any[]) || [];
     }
   });
 
@@ -66,22 +87,102 @@ export default function Home() {
     queryKey: ['new_updates'],
     queryFn: async () => {
       const { data } = await supabase.from('updates').select('*').gte('created_at', thirtyDaysIso).order('created_at', { ascending: false }).limit(3);
-      return data || [];
+      return (data as any[]) || [];
     }
   });
-
-  const filteredTools = tools?.filter((t) => !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase()) || t.short_description?.toLowerCase().includes(searchQuery.toLowerCase()));
 
   // Trending Tools sorted by clicks
   const trendingTools = tools?.sort((a: any, b: any) => (b.clicks || 0) - (a.clicks || 0)).slice(0, 6) || []; 
 
+  // ==========================================
+  // GLOBAL SEARCH LOGIC (Using Top Nav Input)
+  // ==========================================
+  const term = searchQuery?.toLowerCase().trim() || '';
+  const searchMatchedTools = tools?.filter((t: any) => t.name.toLowerCase().includes(term) || t.short_description?.toLowerCase().includes(term)) || [];
+  const searchMatchedPdfs = allPdfs?.filter((p: any) => p.name.toLowerCase().includes(term)) || [];
+  const searchMatchedUpdates = allUpdates?.filter((u: any) => u.headline.toLowerCase().includes(term)) || [];
+  const isSearching = term.length > 0;
+
+  // Render exactly what happens when the user types in the top nav search bar
+  if (isSearching) {
+    return (
+      <div className="container mx-auto px-4 py-12 min-h-screen">
+        <h2 className="text-3xl font-bold font-display mb-8">Search Results for "{searchQuery}"</h2>
+        
+        {searchMatchedTools.length === 0 && searchMatchedPdfs.length === 0 && searchMatchedUpdates.length === 0 && (
+          <div className="glass-card p-12 text-center rounded-2xl border-dashed">
+            <p className="text-muted-foreground text-lg">No matches found for "{searchQuery}". Try a different keyword.</p>
+          </div>
+        )}
+
+        {/* Tools Results */}
+        {searchMatchedTools.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-3">
+              <Wrench className="h-6 w-6 text-emerald-500" />
+              <h3 className="text-xl font-bold text-foreground">Tools ({searchMatchedTools.length})</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {searchMatchedTools.map((tool: any, i: number) => (
+                <ToolCard key={tool.id} tool={tool} index={i} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* PDFs Results */}
+        {searchMatchedPdfs.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-3">
+              <BookOpen className="h-6 w-6 text-blue-500" />
+              <h3 className="text-xl font-bold text-foreground">PDFs & Study Materials ({searchMatchedPdfs.length})</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+              {searchMatchedPdfs.map((pdf: any) => (
+                <Link to={`/pdfs/${pdf.id}`} key={pdf.id} className="glass-card flex flex-col p-4 rounded-2xl hover:-translate-y-1 transition-all group border border-border/50">
+                  <div className="relative h-48 w-full mb-3 rounded-xl overflow-hidden bg-black/20">
+                    <img src={pdf.cover_image_url || '/placeholder.png'} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={pdf.name} />
+                  </div>
+                  <h4 className="font-bold text-base group-hover:text-primary transition-colors line-clamp-2">{pdf.name}</h4>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Updates Results */}
+        {searchMatchedUpdates.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-3">
+              <Bell className="h-6 w-6 text-purple-500" />
+              <h3 className="text-xl font-bold text-foreground">Updates ({searchMatchedUpdates.length})</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              {searchMatchedUpdates.map((update: any) => (
+                <Link to={`/updates/${update.id}`} key={update.id} className="glass-card flex flex-col p-4 rounded-2xl hover:-translate-y-1 transition-all group border border-border/50">
+                  <div className="relative h-40 w-full mb-3 rounded-xl overflow-hidden bg-black/20">
+                    <img src={update.image_url || '/placeholder.png'} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt="" />
+                  </div>
+                  <h4 className="font-bold text-base group-hover:text-primary transition-colors line-clamp-2">{update.headline}</h4>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ==========================================
+  // NORMAL HOME PAGE (When NOT Searching)
+  // ==========================================
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden px-4 py-16 md:py-28 min-h-[65vh] flex items-center">
+    <div className="relative">
+      {/* Hero Content */}
+      <section className="relative overflow-hidden px-4 pb-16 pt-8 md:pb-28 min-h-[50vh] flex items-center mt-4">
         <ParticleBackground />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-background pointer-events-none" />
-        <div className="absolute top-20 left-[10%] w-64 h-64 rounded-full bg-primary/10 blur-[100px] animate-glow-pulse pointer-events-none" />
+        <div className="absolute top-0 left-[10%] w-64 h-64 rounded-full bg-primary/10 blur-[100px] animate-glow-pulse pointer-events-none" />
         <div className="absolute bottom-10 right-[15%] w-48 h-48 rounded-full bg-secondary/10 blur-[80px] animate-glow-pulse pointer-events-none" style={{ animationDelay: '1.5s' }} />
 
         <div className="container mx-auto relative z-10">
@@ -96,13 +197,14 @@ export default function Home() {
               <motion.p variants={fadeUp} className="text-muted-foreground text-base md:text-lg max-w-md mb-8 leading-relaxed mx-auto md:mx-0">
                 Discover curated educational tools, resources, and updates — everything you need in one place.
               </motion.p>
+              
               <motion.div variants={fadeUp} className="flex gap-3 justify-center md:justify-start">
                 <Link to="/tools" className="btn-primary">Explore Tools <ArrowRight className="h-4 w-4" /></Link>
                 <Link to="/pdfs" className="btn-secondary">Browse PDFs</Link>
               </motion.div>
             </div>
 
-            <motion.div variants={fadeUp} className="flex-1 max-w-sm md:max-w-md">
+            <motion.div variants={fadeUp} className="flex-1 max-w-sm md:max-w-md hidden md:block">
               <div className="relative">
                 <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-primary/20 via-secondary/10 to-accent/20 blur-2xl opacity-60 animate-glow-pulse" />
                 <img src="/hero-image.png" alt="EduDock Hero" className="relative w-full rounded-2xl animate-float" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -148,11 +250,9 @@ export default function Home() {
         {/* 1. TRENDING TOOLS ROW */}
         <div className="mb-10">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/80"><Wrench className="h-5 w-5 text-emerald-500" /> Top Tools</h3>
-          {/* Netflix Slider Container */}
           <div className="flex overflow-x-auto gap-5 pb-6 pt-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
-            {trendingTools.map((tool, i) => (
+            {trendingTools.map((tool: any, i: number) => (
               <div key={tool.id} className="min-w-[280px] md:min-w-[320px] snap-start shrink-0 relative group">
-                {/* Ranking Badge */}
                 <div className={`absolute -top-3 -left-3 z-20 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shadow-lg border transform -rotate-12 transition-transform group-hover:rotate-0
                   ${i === 0 ? 'bg-yellow-500 border-yellow-400 text-black' : i === 1 ? 'bg-slate-300 border-slate-200 text-black' : i === 2 ? 'bg-orange-400 border-orange-300 text-black' : 'bg-muted border-border text-muted-foreground'}`}>
                   #{i + 1}
@@ -168,7 +268,7 @@ export default function Home() {
           <div className="mb-10">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/80"><BookOpen className="h-5 w-5 text-primary" /> Most Read PDFs</h3>
             <div className="flex overflow-x-auto gap-5 pb-6 pt-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
-              {trendingPdfs.map((pdf, i) => (
+              {trendingPdfs.map((pdf: any, i: number) => (
                 <Link to={`/pdfs/${pdf.id}`} key={pdf.id} className="glass-card flex flex-col p-4 rounded-2xl hover:-translate-y-1 transition-all group border border-border/50 min-w-[200px] md:min-w-[240px] snap-start shrink-0 relative">
                   <div className={`absolute -top-3 -left-3 z-20 w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[10px] shadow-lg border transform -rotate-12 transition-transform group-hover:rotate-0
                     ${i === 0 ? 'bg-yellow-500 border-yellow-400 text-black' : i === 1 ? 'bg-slate-300 border-slate-200 text-black' : i === 2 ? 'bg-orange-400 border-orange-300 text-black' : 'bg-muted border-border text-muted-foreground'}`}>
@@ -189,7 +289,7 @@ export default function Home() {
           <div className="mb-4">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/80"><Bell className="h-5 w-5 text-blue-500" /> Hot Updates</h3>
             <div className="flex overflow-x-auto gap-5 pb-6 pt-2 px-1 -mx-1 snap-x snap-mandatory scrollbar-hide">
-              {trendingUpdates.map((update, i) => (
+              {trendingUpdates.map((update: any, i: number) => (
                 <Link to={`/updates/${update.id}`} key={update.id} className="glass-card flex flex-col p-4 rounded-2xl hover:-translate-y-1 transition-all group border border-border/50 min-w-[260px] md:min-w-[300px] snap-start shrink-0 relative">
                   <div className={`absolute -top-3 -left-3 z-20 w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[10px] shadow-lg border transform -rotate-12 transition-transform group-hover:rotate-0
                     ${i === 0 ? 'bg-yellow-500 border-yellow-400 text-black' : i === 1 ? 'bg-slate-300 border-slate-200 text-black' : i === 2 ? 'bg-orange-400 border-orange-300 text-black' : 'bg-muted border-border text-muted-foreground'}`}>
@@ -221,7 +321,7 @@ export default function Home() {
               <Link to="/pdfs" className="text-xs text-primary hover:underline">View All</Link>
             </div>
             <div className="space-y-3">
-              {newPdfs?.map(pdf => (
+              {newPdfs?.map((pdf: any) => (
                 <Link to={`/pdfs/${pdf.id}`} key={pdf.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition border border-border/50 group">
                   <img src={pdf.cover_image_url || '/placeholder.png'} className="w-10 h-12 object-cover rounded bg-black/20" alt="" />
                   <p className="text-sm font-medium flex-1 truncate group-hover:text-primary transition-colors">{pdf.name}</p>
@@ -239,7 +339,7 @@ export default function Home() {
               <Link to="/updates" className="text-xs text-primary hover:underline">View All</Link>
             </div>
             <div className="space-y-3">
-              {newUpdates?.map(update => (
+              {newUpdates?.map((update: any) => (
                 <Link to={`/updates/${update.id}`} key={update.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition border border-border/50 group">
                   <img src={update.image_url || '/placeholder.png'} className="w-12 h-10 object-cover rounded bg-black/20" alt="" />
                   <p className="text-sm font-medium flex-1 truncate group-hover:text-primary transition-colors">{update.headline}</p>
@@ -259,8 +359,8 @@ export default function Home() {
           <h2 className="text-2xl font-bold font-display">All Tools Repository</h2>
         </div>
         {categories && categories.length > 0 ? (
-          categories.map((cat) => {
-            const catTools = filteredTools?.filter((t) => t.category_id === cat.id);
+          categories.map((cat: any) => {
+            const catTools = tools?.filter((t: any) => t.category_id === cat.id);
             if (!catTools || catTools.length === 0) return null;
             return (
               <div key={cat.id} className="mb-10">
@@ -268,7 +368,7 @@ export default function Home() {
                   <h3 className="text-xl font-bold">{cat.name}</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {catTools.map((tool, i) => (
+                  {catTools.map((tool: any, i: number) => (
                     <ToolCard key={tool.id} tool={tool} index={i} />
                   ))}
                 </div>
@@ -312,7 +412,7 @@ export default function Home() {
                 className="flex items-center justify-center gap-2 w-full py-3 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-xl transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                am4669703@gmail.com
+                am46697032@gmail.com
               </a>
             </div>
 
