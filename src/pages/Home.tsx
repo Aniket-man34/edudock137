@@ -15,9 +15,11 @@ import {
   Eye,
   ChevronRight,
   Flame,
+  GraduationCap,
 } from 'lucide-react';
 import ToolCard from '@/components/ToolCard';
 import ParticleBackground from '@/components/ParticleBackground';
+import { useState } from 'react';
 
 type ContextType = { searchQuery: string };
 
@@ -53,7 +55,6 @@ const sectionReveal: Variants = {
   },
 };
 
-/* ── rank medal colors ── */
 function getRankStyle(i: number) {
   if (i === 0)
     return 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 border-yellow-300/60 text-black shadow-[0_0_20px_rgba(234,179,8,0.4)]';
@@ -67,6 +68,7 @@ function getRankStyle(i: number) {
 export default function Home() {
   const { searchQuery } = useOutletContext<ContextType>();
   const navigate = useNavigate();
+  const [heroImageError, setHeroImageError] = useState(false);
 
   /* ── EXISTING QUERIES (untouched) ── */
 
@@ -229,7 +231,6 @@ export default function Home() {
             </motion.div>
           )}
 
-        {/* Tools Results */}
         <AnimatePresence>
           {searchMatchedTools.length > 0 && (
             <motion.div
@@ -263,7 +264,6 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* PDFs Results */}
         <AnimatePresence>
           {searchMatchedPdfs.length > 0 && (
             <motion.div
@@ -312,7 +312,6 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* Updates Results */}
         <AnimatePresence>
           {searchMatchedUpdates.length > 0 && (
             <motion.div
@@ -392,6 +391,7 @@ export default function Home() {
             animate="show"
             className="flex flex-col md:flex-row items-center gap-10 md:gap-20"
           >
+            {/* text column */}
             <div className="flex-1 text-center md:text-left">
               <motion.span
                 variants={fadeUp}
@@ -435,20 +435,90 @@ export default function Home() {
               </motion.div>
             </div>
 
+            {/* ── HERO IMAGE / FALLBACK ILLUSTRATION ── */}
             <motion.div
               variants={scaleIn}
               className="flex-1 max-w-sm md:max-w-md hidden md:block"
             >
               <div className="relative">
                 <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-primary/20 via-secondary/10 to-accent/20 blur-3xl opacity-50 animate-glow-pulse" />
-                <img
-                  src="/hero-image.png"
-                  alt="EduDock Hero"
-                  className="relative w-full rounded-2xl animate-float drop-shadow-2xl"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
+
+                {/* Try loading hero-image.png, show fallback if it fails */}
+                {!heroImageError ? (
+                  <img
+                    src="/hero-image.png"
+                    alt="EduDock Hero"
+                    className="relative w-full rounded-2xl animate-float drop-shadow-2xl"
+                    onError={() => setHeroImageError(true)}
+                  />
+                ) : (
+                  /* ── Beautiful fallback illustration ── */
+                  <div className="relative w-full aspect-square rounded-3xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-white/[0.04] via-white/[0.01] to-transparent backdrop-blur-2xl animate-float">
+                    {/* decorative orbs */}
+                    <div className="absolute top-6 right-8 w-20 h-20 rounded-full bg-primary/20 blur-[40px]" />
+                    <div className="absolute bottom-10 left-6 w-16 h-16 rounded-full bg-secondary/20 blur-[35px]" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-accent/15 blur-[45px]" />
+
+                    {/* grid pattern */}
+                    <div className="absolute inset-0 opacity-[0.03]"
+                      style={{
+                        backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+                        backgroundSize: '24px 24px',
+                      }}
+                    />
+
+                    {/* center icon */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-[30px] rounded-full" />
+                        <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/30 via-primary/10 to-transparent border border-primary/20 flex items-center justify-center backdrop-blur-sm">
+                          <GraduationCap className="h-12 w-12 text-primary" />
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold gradient-text bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                          EduDock
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Learn. Discover. Grow.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* floating mini cards */}
+                    <motion.div
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                      className="absolute top-8 left-8 w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center"
+                    >
+                      <BookOpen className="h-6 w-6 text-blue-400/70" />
+                    </motion.div>
+
+                    <motion.div
+                      animate={{ y: [0, 8, 0] }}
+                      transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                      className="absolute top-12 right-10 w-12 h-12 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center"
+                    >
+                      <Wrench className="h-5 w-5 text-emerald-400/70" />
+                    </motion.div>
+
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                      className="absolute bottom-12 right-12 w-13 h-13 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center p-3"
+                    >
+                      <Bell className="h-5 w-5 text-purple-400/70" />
+                    </motion.div>
+
+                    <motion.div
+                      animate={{ y: [0, 6, 0] }}
+                      transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+                      className="absolute bottom-16 left-10 w-11 h-11 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center"
+                    >
+                      <Sparkles className="h-5 w-5 text-yellow-400/70" />
+                    </motion.div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -508,7 +578,6 @@ export default function Home() {
       {/*  NETFLIX-STYLE TRENDING SECTION                              */}
       {/* ══════════════════════════════════════════════════════════════ */}
       <section className="pb-20 overflow-hidden">
-        {/* section header - full-bleed bg accent */}
         <div className="container mx-auto px-4">
           <motion.div
             variants={sectionReveal}
@@ -535,7 +604,6 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* divider with gradient */}
         <div className="container mx-auto px-4 mb-10">
           <div className="h-px bg-gradient-to-r from-orange-500/40 via-red-500/20 to-transparent" />
         </div>
@@ -566,9 +634,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Netflix-style horizontal scroll - bleeds to edges */}
           <div className="relative group/row">
-            {/* fade edges */}
             <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
@@ -586,7 +652,6 @@ export default function Home() {
                   }}
                   className="min-w-[260px] md:min-w-[300px] lg:min-w-[320px] snap-start shrink-0 relative group/card"
                 >
-                  {/* rank badge */}
                   <div
                     className={`absolute -top-2.5 -left-2.5 z-30 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm border-2 transform -rotate-6 transition-all duration-500 group-hover/card:rotate-0 group-hover/card:scale-110 ${getRankStyle(i)}`}
                   >
@@ -648,14 +713,12 @@ export default function Home() {
                       to={`/pdfs/${pdf.id}`}
                       className="group/card relative block w-[180px] md:w-[220px] lg:w-[240px] rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.02] transition-all duration-500 hover:scale-[1.05] hover:z-20 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] hover:border-primary/30"
                     >
-                      {/* rank badge */}
                       <div
                         className={`absolute top-3 left-3 z-30 w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border-2 transition-all duration-500 group-hover/card:scale-110 ${getRankStyle(i)}`}
                       >
                         {i + 1}
                       </div>
 
-                      {/* views badge */}
                       {pdf.clicks > 0 && (
                         <div className="absolute top-3 right-3 z-30 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
                           <Eye className="h-3 w-3" />
@@ -663,19 +726,16 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* poster image */}
                       <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/30">
                         <img
                           src={pdf.cover_image_url || '/placeholder.png'}
                           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/card:scale-110"
                           alt={pdf.name}
                         />
-                        {/* gradient overlays */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
                         <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
                       </div>
 
-                      {/* bottom info */}
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/card:text-primary transition-colors duration-300">
                           {pdf.name}
@@ -738,14 +798,12 @@ export default function Home() {
                       to={`/updates/${update.id}`}
                       className="group/card relative block w-[280px] md:w-[340px] lg:w-[380px] rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.02] transition-all duration-500 hover:scale-[1.03] hover:z-20 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] hover:border-primary/30"
                     >
-                      {/* rank badge */}
                       <div
                         className={`absolute top-3 left-3 z-30 w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border-2 transition-all duration-500 group-hover/card:scale-110 ${getRankStyle(i)}`}
                       >
                         {i + 1}
                       </div>
 
-                      {/* views badge */}
                       {update.clicks > 0 && (
                         <div className="absolute top-3 right-3 z-30 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
                           <Eye className="h-3 w-3" />
@@ -753,7 +811,6 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* 16:9 wide image */}
                       <div className="relative aspect-video w-full overflow-hidden bg-black/30">
                         <img
                           src={update.image_url || '/placeholder.png'}
@@ -764,7 +821,6 @@ export default function Home() {
                         <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
                       </div>
 
-                      {/* bottom info overlaid */}
                       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
                         <h4 className="font-bold text-sm md:text-base text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/card:text-primary transition-colors duration-300">
                           {update.headline}
@@ -778,7 +834,6 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* bottom gradient line */}
         <div className="container mx-auto px-4 mt-10">
           <div className="h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
         </div>
@@ -791,7 +846,7 @@ export default function Home() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="flex items-center gap-3 mb-8"
+          className="flex items-center gap-3 mb-3"
         >
           <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 ring-1 ring-blue-500/25">
             <Clock className="h-5 w-5 text-blue-400" />
@@ -847,10 +902,10 @@ export default function Home() {
                       to={`/pdfs/${pdf.id}`}
                       className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] transition-all duration-300 border border-white/[0.04] hover:border-primary/25 group"
                     >
-                      <div className="relative w-10 h-13 rounded-lg overflow-hidden bg-black/30 ring-1 ring-white/10 shrink-0">
+                      <div className="relative w-10 h-12 rounded-lg overflow-hidden bg-black/30 ring-1 ring-white/10 shrink-0">
                         <img
                           src={pdf.cover_image_url || '/placeholder.png'}
-                          className="w-10 h-12 object-cover"
+                          className="w-full h-full object-cover"
                           alt=""
                         />
                       </div>
@@ -915,7 +970,7 @@ export default function Home() {
                       <div className="relative w-12 h-10 rounded-lg overflow-hidden bg-black/30 ring-1 ring-white/10 shrink-0">
                         <img
                           src={update.image_url || '/placeholder.png'}
-                          className="w-12 h-10 object-cover"
+                          className="w-full h-full object-cover"
                           alt=""
                         />
                       </div>
@@ -1014,7 +1069,6 @@ export default function Home() {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-            {/* About */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1038,7 +1092,6 @@ export default function Home() {
               </p>
             </motion.div>
 
-            {/* Contact */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
