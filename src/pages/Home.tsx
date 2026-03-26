@@ -412,7 +412,7 @@ export default function Home() {
                 className="flex items-center justify-center gap-2 w-full py-3 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-xl transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                am46697032@gmail.com
+                edudockadmin@gmail.com
               </a>
             </div>
 
