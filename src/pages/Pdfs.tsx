@@ -2,10 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Share2, ExternalLink, BookOpen } from 'lucide-react';
+import { X, Share2, ExternalLink, BookOpen, Filter } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
 
 type ContextType = { searchQuery: string };
 
@@ -15,6 +14,7 @@ export default function Pdfs() {
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(id || null);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { data: pdfs, isLoading } = useQuery({
     queryKey: ['pdfs'],
@@ -69,7 +69,6 @@ export default function Pdfs() {
     }
   };
 
-  // --- AUTOMATIC "NEW" BADGE LOGIC ---
   const isNewPdf = (createdAt: string) => {
     if (!createdAt) return false;
     const uploadDate = new Date(createdAt);
@@ -86,27 +85,66 @@ export default function Pdfs() {
         <p className="page-subtitle">Explore our collection of study materials and books</p>
       </motion.div>
 
-      {/* Category filter chips */}
+      {/* Dropdown Category Filter */}
       {pdfCategories && pdfCategories.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex flex-wrap gap-2 mb-6">
-          <Badge
-            variant={activeCategoryId === null ? 'default' : 'outline'}
-            className="cursor-pointer px-3 py-1.5 text-sm transition-colors"
-            onClick={() => setActiveCategoryId(null)}
+        <div className="relative mb-6 z-40">
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-background border border-border/50 shadow-sm rounded-lg hover:bg-muted/50 transition-all text-sm font-medium"
           >
-            All
-          </Badge>
-          {pdfCategories.map((cat) => (
-            <Badge
-              key={cat.id}
-              variant={activeCategoryId === cat.id ? 'default' : 'outline'}
-              className="cursor-pointer px-3 py-1.5 text-sm transition-colors"
-              onClick={() => setActiveCategoryId(cat.id)}
-            >
-              {cat.name}
-            </Badge>
-          ))}
-        </motion.div>
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            {activeCategoryId 
+              ? pdfCategories.find(c => c.id === activeCategoryId)?.name 
+              : 'All Categories'}
+          </button>
+
+          <AnimatePresence>
+            {isFilterOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-30" 
+                  onClick={() => setIsFilterOpen(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 mt-2 w-56 rounded-xl shadow-lg bg-background border border-border/50 z-40 overflow-hidden"
+                >
+                  {/* Scrollable inner container */}
+                  <div className="max-h-[50vh] overflow-y-auto py-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+                    <button
+                      onClick={() => {
+                        setActiveCategoryId(null);
+                        setIsFilterOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
+                        activeCategoryId === null ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground'
+                      }`}
+                    >
+                      All Categories
+                    </button>
+                    {pdfCategories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => {
+                          setActiveCategoryId(cat.id);
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
+                          activeCategoryId === cat.id ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
       {isLoading ? (
@@ -127,7 +165,6 @@ export default function Pdfs() {
                 setSelectedId(pdf.id);
                 navigate(`/pdfs/${pdf.id}`, { replace: true });
 
-                // --- NEW: Background click tracking ---
                 (supabase.from('pdfs' as any) as any)
                   .update({ clicks: ((pdf as any).clicks || 0) + 1 })
                   .eq('id', pdf.id)
@@ -138,7 +175,6 @@ export default function Pdfs() {
               className="relative aspect-[3/4] glass-card overflow-hidden cursor-pointer group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
             >
               
-              {/* --- GLOWING NEW BADGE --- */}
               {isNewPdf(pdf.created_at) && (
                 <div className="absolute top-3 left-3 z-30">
                   <span className="relative flex h-5 w-12 items-center justify-center">
@@ -154,7 +190,6 @@ export default function Pdfs() {
                 <>
                   <img src={pdf.cover_image_url} alt={pdf.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 relative z-10" />
                   
-                  {/* --- TITLE OVERLAY FOR IMAGES --- */}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pt-16 z-20 transition-opacity duration-300">
                     <h3 className="text-white font-semibold text-sm line-clamp-2 leading-snug drop-shadow-md">
                       {pdf.name}
