@@ -408,7 +408,7 @@ export default function Home() {
                 Have a tool suggestion, found a bug, or want to contribute a PDF? We'd love to hear from you.
               </p>
               <a 
-                href="mailto:am46697032@gmail.com" 
+                href="mailto:edudockadmin@gmail.com" 
                 className="flex items-center justify-center gap-2 w-full py-3 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-xl transition-colors"
               >
                 <Mail className="h-4 w-4" />
