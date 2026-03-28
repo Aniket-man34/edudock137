@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell } from 'lucide-react';
+import { Bell, ChevronRight } from 'lucide-react';
 
 type ContextType = { searchQuery: string };
 
@@ -24,7 +24,6 @@ export default function Updates() {
       u.headline.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // --- AUTOMATIC "NEW" BADGE LOGIC ---
   const isNewUpdate = (createdAt: string) => {
     if (!createdAt) return false;
     const uploadDate = new Date(createdAt);
@@ -38,59 +37,77 @@ export default function Updates() {
     <div className="container mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="page-header">Updates</h1>
-        <p className="page-subtitle">Latest news and announcements</p>
+        <p className="page-subtitle">Latest news, notifications, and announcements</p>
       </motion.div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        // Skeleton Loaders
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="glass-card animate-pulse rounded-2xl">
-              <div className="aspect-video bg-muted/30 rounded-t-2xl" />
-              <div className="p-4"><div className="h-5 bg-muted/30 rounded w-3/4" /></div>
+            <div
+              key={i}
+              className="h-full flex flex-col animate-pulse rounded-2xl border border-border/50 bg-muted/10 shadow-lg"
+            >
+              <div className="w-full aspect-[1200/630] bg-muted/30 rounded-t-2xl shrink-0" />
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="h-5 bg-muted/30 rounded w-full mb-3" />
+                <div className="h-5 bg-muted/30 rounded w-3/4" />
+              </div>
             </div>
           ))}
         </div>
       ) : filtered && filtered.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        // Actual Content
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {filtered.map((update, i) => (
             <motion.div
               key={update.id}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04, duration: 0.4 }}
+              transition={{ delay: i * 0.05, duration: 0.45, ease: 'easeOut' }}
+              className="h-full" // Forces equal height in grid
             >
               <Link
                 to={`/updates/${update.id}`}
-                className="relative block glass-card overflow-hidden group transition-all duration-300 hover:-translate-y-1"
+                className="glass-card flex flex-col h-full rounded-2xl overflow-hidden group hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 border border-border/50"
               >
-                
-                {/* --- GLOWING NEW BADGE --- */}
-                {isNewUpdate(update.created_at) && (
-                  <div className="absolute top-3 left-3 z-30">
-                    <span className="relative flex h-5 w-12 items-center justify-center">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-30"></span>
-                      <span className="relative inline-flex rounded-full h-5 w-12 items-center justify-center bg-blue-500 border border-blue-400 text-[9px] font-bold text-white uppercase tracking-wider shadow-[0_0_15px_rgba(59,130,246,0.6)]">
-                        New
+                {/* --- IMAGE CONTAINER (Strict 1200x630 ratio) --- */}
+                <div className="relative w-full aspect-[1200/630] bg-muted/30 overflow-hidden shrink-0">
+                  <img
+                    src={update.image_url || '/placeholder.png'}
+                    alt={update.headline}
+                    // using object-cover assumes you upload exactly 1200x630. If you want NO crop ever, change this to object-contain
+                    className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  
+                  {/* --- GLOWING NEW BADGE --- */}
+                  {isNewUpdate(update.created_at) && (
+                    <div className="absolute top-3 left-3 z-30">
+                      <span className="relative flex h-6 w-14 items-center justify-center">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-30" />
+                        <span className="relative inline-flex items-center justify-center h-6 w-14 rounded-md bg-blue-500/90 backdrop-blur-sm border border-blue-400/50 text-[10px] font-bold text-white uppercase tracking-wider shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                          New
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
 
-                {update.image_url ? (
-                  <div className="aspect-video overflow-hidden">
-                    <img
-                      src={update.image_url}
-                      alt={update.headline}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                {/* --- TEXT CONTAINER (Flex-1 forces it to fill remaining space) --- */}
+                <div className="p-5 flex flex-col flex-1 bg-background/40 relative">
+                  <div className="flex items-start gap-2.5 mb-auto">
+                    <Bell className="w-5 h-5 mt-0.5 shrink-0 text-primary/70" />
+                    <h3 className="font-display font-semibold text-base md:text-lg leading-snug line-clamp-2 text-foreground/90 group-hover:text-primary transition-colors">
+                      {update.headline}
+                    </h3>
                   </div>
-                ) : (
-                  <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-                    <Bell className="h-10 w-10 text-primary/30" />
+                  
+                  {/* Subtle accent line at the bottom to anchor the card visually */}
+                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-border/40">
+                     <span className="text-xs font-medium text-muted-foreground">Read more</span>
+                     <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
                   </div>
-                )}
-                <div className="p-4">
-                  <h3 className="font-display font-semibold text-sm md:text-base leading-snug line-clamp-2">{update.headline}</h3>
                 </div>
               </Link>
             </motion.div>
@@ -101,7 +118,7 @@ export default function Updates() {
           <div className="glass-card inline-flex p-4 rounded-2xl mb-4">
             <Bell className="h-8 w-8 text-muted-foreground" />
           </div>
-          <p>No updates yet.</p>
+          <p>No updates found matching your search.</p>
         </div>
       )}
     </div>

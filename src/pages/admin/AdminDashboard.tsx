@@ -32,17 +32,18 @@ export default function AdminDashboard() {
     },
   });
 
-  // NEW: Fetch automated real-time analytics
+  // Fetch actual page views from the database!
   const { data: analytics } = useQuery({
     queryKey: ['admin-analytics-realtime'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('page_views' as any).select('created_at').order('created_at');
+      // Requesting data from the 'page_views' table
+      const { data, error } = await (supabase.from('page_views' as any) as any).select('created_at').order('created_at');
       if (error) throw error;
       return data || [];
     },
   });
 
-  // Calculate total visitors
+  // Calculate total unique visits
   const totalVisitors = analytics?.length || 0;
 
   // Process data for the chart (Group by day)
@@ -52,7 +53,6 @@ export default function AdminDashboard() {
     const dailyCounts: Record<string, number> = {};
     
     analytics.forEach((view: any) => {
-      // Format to "Mar 20"
       const date = new Date(view.created_at).toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric' 
@@ -60,7 +60,6 @@ export default function AdminDashboard() {
       dailyCounts[date] = (dailyCounts[date] || 0) + 1;
     });
 
-    // Convert object to array for Recharts
     return Object.entries(dailyCounts).map(([name, visitors]) => ({
       name,
       visitors
@@ -71,14 +70,14 @@ export default function AdminDashboard() {
 
   const stats = [
     { label: 'Total Visitors', value: totalVisitors, icon: Users, color: 'text-primary' },
-    { label: 'Tools', value: toolCount ?? 0, icon: Wrench, color: 'text-accent' },
-    { label: 'PDFs', value: pdfCount ?? 0, icon: BookOpen, color: 'text-secondary' },
-    { label: 'Updates', value: updateCount ?? 0, icon: TrendingUp, color: 'text-primary' },
+    { label: 'Tools', value: toolCount ?? 0, icon: Wrench, color: 'text-emerald-500' },
+    { label: 'PDFs', value: pdfCount ?? 0, icon: BookOpen, color: 'text-blue-500' },
+    { label: 'Updates', value: updateCount ?? 0, icon: TrendingUp, color: 'text-purple-500' },
   ];
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-bold mb-8">Dashboard</h1>
+      <h1 className="font-display text-3xl font-bold mb-8">Dashboard Overview</h1>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -88,11 +87,11 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="glass-card p-5"
+            className="glass-card p-5 border border-border/50 shadow-sm"
           >
             <div className="flex items-center gap-3 mb-2">
               <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              <span className="text-muted-foreground text-sm">{stat.label}</span>
+              <span className="text-muted-foreground text-sm font-medium">{stat.label}</span>
             </div>
             <p className="font-display text-3xl font-bold">{stat.value}</p>
           </motion.div>
@@ -104,28 +103,32 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="glass-card p-6"
+        className="glass-card p-6 border border-border/50"
       >
         <h2 className="font-display text-xl font-semibold mb-6">Visitor Analytics (Real-Time)</h2>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 20% 18%)" />
-              <XAxis dataKey="name" tick={{ fill: 'hsl(215 20% 55%)', fontSize: 12 }} />
-              <YAxis tick={{ fill: 'hsl(215 20% 55%)', fontSize: 12 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground)/0.2)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} allowDecimals={false} axisLine={false} tickLine={false} />
               <Tooltip
+                cursor={{ fill: 'hsl(var(--muted)/0.5)' }}
                 contentStyle={{
-                  background: 'hsl(222 47% 8%)',
-                  border: '1px solid hsl(215 20% 18%)',
+                  background: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  color: 'hsl(210 40% 98%)',
+                  color: 'hsl(var(--foreground))',
                 }}
               />
-              <Bar dataKey="visitors" fill="hsl(199 89% 48%)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="visitors" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={50} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-muted-foreground text-center py-12">Waiting for first visitor...</p>
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Users className="h-10 w-10 mb-3 opacity-20" />
+            <p>Waiting for your first visitor...</p>
+          </div>
         )}
       </motion.div>
     </div>

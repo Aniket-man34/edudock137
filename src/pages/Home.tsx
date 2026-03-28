@@ -231,6 +231,7 @@ export default function Home() {
             </motion.div>
           )}
 
+        {/* ── Tools Results ── */}
         <AnimatePresence>
           {searchMatchedTools.length > 0 && (
             <motion.div
@@ -264,6 +265,9 @@ export default function Home() {
           )}
         </AnimatePresence>
 
+        {/* ══════════════════════════════════════════════════════ */}
+        {/*  PDFs Results — PORTRAIT BOOK COVER CARDS             */}
+        {/* ══════════════════════════════════════════════════════ */}
         <AnimatePresence>
           {searchMatchedPdfs.length > 0 && (
             <motion.div
@@ -286,24 +290,43 @@ export default function Home() {
                   </span>
                 </h3>
               </motion.div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
                 {searchMatchedPdfs.map((pdf: any) => (
                   <motion.div key={pdf.id} variants={fadeUp}>
                     <Link
                       to={`/pdfs/${pdf.id}`}
-                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-lg p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20"
+                      className="group/pdf relative block rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.02] transition-all duration-500 hover:scale-[1.04] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] hover:border-primary/30"
                     >
-                      <div className="relative h-48 w-full mb-3 rounded-xl overflow-hidden bg-black/20">
+                      {/* strict portrait aspect ratio */}
+                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/40">
                         <img
                           src={pdf.cover_image_url || '/placeholder.png'}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/pdf:scale-110"
                           alt={pdf.name}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+                        {/* dark gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+
+                        {/* primary tint on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-primary/5 to-transparent opacity-0 group-hover/pdf:opacity-100 transition-opacity duration-500" />
+
+                        {/* views badge */}
+                        {pdf.clicks > 0 && (
+                          <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
+                            <Eye className="h-3 w-3" />
+                            {pdf.clicks}
+                          </div>
+                        )}
+
+                        {/* title at the bottom over gradient */}
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/pdf:text-primary transition-colors duration-300">
+                            {pdf.name}
+                          </h4>
+                        </div>
                       </div>
-                      <h4 className="relative font-bold text-sm group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                        {pdf.name}
-                      </h4>
                     </Link>
                   </motion.div>
                 ))}
@@ -312,6 +335,7 @@ export default function Home() {
           )}
         </AnimatePresence>
 
+        {/* ── Updates Results ── */}
         <AnimatePresence>
           {searchMatchedUpdates.length > 0 && (
             <motion.div
@@ -339,19 +363,30 @@ export default function Home() {
                   <motion.div key={update.id} variants={fadeUp}>
                     <Link
                       to={`/updates/${update.id}`}
-                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-lg p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20"
+                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-lg transition-all duration-500 hover:scale-[1.03] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] hover:border-primary/30"
                     >
-                      <div className="relative h-40 w-full mb-3 rounded-xl overflow-hidden bg-black/20">
+                      <div className="relative aspect-video w-full overflow-hidden bg-black/30">
                         <img
                           src={update.image_url || '/placeholder.png'}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                           alt=""
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                        {update.clicks > 0 && (
+                          <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
+                            <Eye className="h-3 w-3" />
+                            {update.clicks}
+                          </div>
+                        )}
+
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover:text-primary transition-colors duration-300">
+                            {update.headline}
+                          </h4>
+                        </div>
                       </div>
-                      <h4 className="relative font-bold text-sm group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                        {update.headline}
-                      </h4>
                     </Link>
                   </motion.div>
                 ))}
@@ -435,7 +470,7 @@ export default function Home() {
               </motion.div>
             </div>
 
-            {/* ── HERO IMAGE / FALLBACK ILLUSTRATION ── */}
+            {/* ── HERO IMAGE / FALLBACK ── */}
             <motion.div
               variants={scaleIn}
               className="flex-1 max-w-sm md:max-w-md hidden md:block"
@@ -443,7 +478,6 @@ export default function Home() {
               <div className="relative">
                 <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-primary/20 via-secondary/10 to-accent/20 blur-3xl opacity-50 animate-glow-pulse" />
 
-                {/* Try loading hero-image.png, show fallback if it fails */}
                 {!heroImageError ? (
                   <img
                     src="/hero-image.png"
@@ -452,22 +486,20 @@ export default function Home() {
                     onError={() => setHeroImageError(true)}
                   />
                 ) : (
-                  /* ── Beautiful fallback illustration ── */
                   <div className="relative w-full aspect-square rounded-3xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-white/[0.04] via-white/[0.01] to-transparent backdrop-blur-2xl animate-float">
-                    {/* decorative orbs */}
                     <div className="absolute top-6 right-8 w-20 h-20 rounded-full bg-primary/20 blur-[40px]" />
                     <div className="absolute bottom-10 left-6 w-16 h-16 rounded-full bg-secondary/20 blur-[35px]" />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-accent/15 blur-[45px]" />
 
-                    {/* grid pattern */}
-                    <div className="absolute inset-0 opacity-[0.03]"
+                    <div
+                      className="absolute inset-0 opacity-[0.03]"
                       style={{
-                        backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+                        backgroundImage:
+                          'radial-gradient(circle, currentColor 1px, transparent 1px)',
                         backgroundSize: '24px 24px',
                       }}
                     />
 
-                    {/* center icon */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                       <div className="relative">
                         <div className="absolute inset-0 bg-primary/20 blur-[30px] rounded-full" />
@@ -485,10 +517,13 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* floating mini cards */}
                     <motion.div
                       animate={{ y: [0, -8, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
                       className="absolute top-8 left-8 w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center"
                     >
                       <BookOpen className="h-6 w-6 text-blue-400/70" />
@@ -496,7 +531,12 @@ export default function Home() {
 
                     <motion.div
                       animate={{ y: [0, 8, 0] }}
-                      transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                      transition={{
+                        duration: 3.5,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: 0.5,
+                      }}
                       className="absolute top-12 right-10 w-12 h-12 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center"
                     >
                       <Wrench className="h-5 w-5 text-emerald-400/70" />
@@ -504,15 +544,25 @@ export default function Home() {
 
                     <motion.div
                       animate={{ y: [0, -6, 0] }}
-                      transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                      className="absolute bottom-12 right-12 w-13 h-13 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center p-3"
+                      transition={{
+                        duration: 2.8,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: 1,
+                      }}
+                      className="absolute bottom-12 right-12 w-12 h-12 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center"
                     >
                       <Bell className="h-5 w-5 text-purple-400/70" />
                     </motion.div>
 
                     <motion.div
                       animate={{ y: [0, 6, 0] }}
-                      transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+                      transition={{
+                        duration: 3.2,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: 1.5,
+                      }}
                       className="absolute bottom-16 left-10 w-11 h-11 rounded-2xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-lg flex items-center justify-center"
                     >
                       <Sparkles className="h-5 w-5 text-yellow-400/70" />
@@ -732,7 +782,7 @@ export default function Home() {
                           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/card:scale-110"
                           alt={pdf.name}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
                         <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
                       </div>
 
@@ -749,7 +799,7 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* ── 3. TRENDING UPDATES ROW (Netflix wide card style) ── */}
+        {/* ── 3. TRENDING UPDATES ROW ── */}
         {trendingUpdates && trendingUpdates.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
