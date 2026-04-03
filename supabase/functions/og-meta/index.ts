@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req: Request) => {
   const userAgent = req.headers.get('user-agent') || ''
-  // Detects if the visitor is a social media crawler (WhatsApp, FB, etc.)
+  // Detects if the visitor is a social media crawler (WhatsApp,FB, etc.)
   const isBot = /bot|googlebot|facebookexternalhit|whatsapp|twitterbot/i.test(userAgent)
   
   const url = new URL(req.url)
