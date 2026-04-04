@@ -29,6 +29,7 @@ serve(async (req: Request) => {
   let description = 'Discover curated educational tools, PDFs, study materials, and real-time updates.'
   let imageUrl = `${LIVE_WEBSITE_URL}/social.png` 
   let frontendUrl = LIVE_WEBSITE_URL
+  let authorName = 'EduDock Official' // 🚨 NEW DEFAULT AUTHOR
 
   try {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(safeParam);
@@ -42,6 +43,7 @@ serve(async (req: Request) => {
         description = data.content?.substring(0, 150).replace(/\n/g, ' ') || description
         imageUrl = data.image_url || imageUrl
         frontendUrl = `${LIVE_WEBSITE_URL}/updates/${data.slug || data.id}`
+        authorName = data.author_name || authorName // 🚨 GRAB AUTHOR
       }
     } else if (type === 'pdfs' && safeParam) {
       let query = supabase.from('pdfs').select('*');
@@ -52,18 +54,20 @@ serve(async (req: Request) => {
         description = data.description?.substring(0, 150).replace(/\n/g, ' ') || description
         imageUrl = data.cover_image_url || imageUrl
         frontendUrl = `${LIVE_WEBSITE_URL}/pdfs/${data.slug || data.id}`
+        authorName = data.author_name || authorName // 🚨 GRAB AUTHOR
       }
     }
   } catch (error) {
     console.error("Fetch error:", error)
   }
 
-  // 🚨 PURE HTML ONLY. NO REDIRECTS! Telegram is trapped here and MUST read the image. 🚨
   const html = `<!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <title>${title}</title>
+      <meta name="author" content="${authorName}" />
+      <meta property="article:author" content="${authorName}" />
       <meta property="og:type" content="article" />
       <meta property="og:url" content="${frontendUrl}" />
       <meta property="og:title" content="${title}" />
@@ -80,6 +84,7 @@ serve(async (req: Request) => {
     </head>
     <body>
       <h1>${title}</h1>
+      <p>By ${authorName}</p>
       <p>${description}</p>
       <img src="${imageUrl}" alt="Preview Image" />
     </body>

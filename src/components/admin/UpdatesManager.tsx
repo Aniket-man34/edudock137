@@ -85,12 +85,18 @@ export default function UpdatesManager({ search }: { search: string }) {
 
   const addUpdate = useMutation({
     mutationFn: async () => {
+      // 🚨 AUTOMATICALLY FETCH LOGGED IN ADMIN'S GMAIL DATA 🚨
+      const { data: { session } } = await supabase.auth.getSession();
+      const userMeta = session?.user?.user_metadata || {};
+
       const payload = {
         headline: form.headline.trim(),
         slug: generateSlug(form.headline), // AUTO-GENERATE SLUG
         content: form.content || null,
         image_url: form.image_url || null,
         external_link: form.external_link || null,
+        author_name: userMeta.full_name || 'EduDock Official', // INJECT GMAIL NAME
+        author_avatar_url: userMeta.avatar_url || null         // INJECT GMAIL PICTURE
       };
       const { error } = await (supabase as any).from('updates').insert(payload);
       if (error) throw error;
@@ -169,7 +175,7 @@ export default function UpdatesManager({ search }: { search: string }) {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="glass-card p-6 rounded-2xl border border-purple-500/20 shadow-xl space-y-5">
+            <div className="glass-card p-6 rounded-2xl border border-purple-500/20 shadow-xl space-y-5 mb-6">
               <div className="flex items-center justify-between border-b border-border/50 pb-3">
                 <h4 className="font-bold text-purple-500">Create New Update</h4>
                 <button type="button" onClick={() => { setIsAddFormOpen(false); setForm(emptyForm); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition">
@@ -194,13 +200,21 @@ export default function UpdatesManager({ search }: { search: string }) {
 
       {/* --- LIST OF UPDATES --- */}
       <div className="space-y-3">
-        {filtered?.map((update) => (
+        {filtered?.map((update: any) => (
           <div key={update.id} className="glass-card p-3 rounded-xl flex items-center justify-between gap-4 border border-border/40 hover:border-purple-500/30 transition-all group">
             <div className="flex items-center gap-4 min-w-0">
-              <img src={update.image_url || '/image-placeholder.png'} className="w-16 h-12 rounded-lg object-cover shrink-0 bg-muted border border-border/50 shadow-sm" alt="" />
+              <img src={update.image_url || '/placeholder.svg'} className="w-16 h-12 rounded-lg object-cover shrink-0 bg-muted border border-border/50 shadow-sm" alt="" />
               <div className="min-w-0">
                 <p className="font-bold text-foreground truncate">{update.headline}</p>
-                <p className="text-xs text-muted-foreground truncate mt-0.5 hidden sm:block">{update.content || 'No content'}</p>
+                {/* 🚨 NEW: Displaying the Author Profile Pic & Name 🚨 */}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {update.author_avatar_url && (
+                    <img src={update.author_avatar_url} alt="" className="w-4 h-4 rounded-full border border-border/50" />
+                  )}
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                    Posted by {update.author_name || 'EduDock Official'} • {new Date(update.created_at).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
             </div>
             <div className="flex gap-2 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">

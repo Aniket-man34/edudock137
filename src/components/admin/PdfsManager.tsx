@@ -98,12 +98,19 @@ export default function PdfsManager({ search }: { search: string }) {
 
   const addPdf = useMutation({
     mutationFn: async () => {
+      // 🚨 AUTOMATICALLY FETCH LOGGED IN ADMIN'S GMAIL DATA 🚨
+      const { data: { session } } = await supabase.auth.getSession();
+      const userMeta = session?.user?.user_metadata || {};
+
       const payload = { 
-        ...form, 
         name: form.name.trim(), 
-        slug: generateSlug(form.name), // AUTO-GENERATE SLUG
+        description: form.description || null,
+        cover_image_url: form.cover_image_url || null,
         drive_link: form.drive_link.trim(),
-        pdf_category_id: form.pdf_category_id === 'none' ? null : form.pdf_category_id || null
+        slug: generateSlug(form.name), // AUTO-GENERATE SLUG
+        pdf_category_id: form.pdf_category_id === 'none' ? null : form.pdf_category_id || null,
+        author_name: userMeta.full_name || 'EduDock Official', // INJECT GMAIL NAME
+        author_avatar_url: userMeta.avatar_url || null         // INJECT GMAIL PICTURE
       };
       const { error } = await (supabase as any).from('pdfs').insert(payload);
       if (error) throw error;
@@ -178,7 +185,7 @@ export default function PdfsManager({ search }: { search: string }) {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="glass-card p-6 rounded-2xl border border-blue-500/20 shadow-xl space-y-5">
+            <div className="glass-card p-6 rounded-2xl border border-blue-500/20 shadow-xl space-y-5 mb-6">
               <div className="flex items-center justify-between border-b border-border/50 pb-3">
                 <h4 className="font-bold text-blue-500">Upload New PDF</h4>
                 <button type="button" onClick={() => { setIsAddFormOpen(false); setForm(emptyForm); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition">
@@ -202,20 +209,28 @@ export default function PdfsManager({ search }: { search: string }) {
       </AnimatePresence>
 
       <div className="space-y-3">
-        {filtered?.map((pdf) => (
+        {filtered?.map((pdf: any) => (
           <div key={pdf.id} className="glass-card p-3 rounded-xl flex items-center justify-between gap-4 border border-border/40 hover:border-blue-500/30 transition-all group">
             <div className="flex items-center gap-4 min-w-0">
               <img src={pdf.cover_image_url || '/pdf-placeholder.png'} className="w-12 h-16 rounded-lg object-cover shrink-0 bg-muted border border-border/50 shadow-sm" alt="" />
               <div className="min-w-0">
                 <p className="font-bold text-foreground truncate">{pdf.name}</p>
+                
+                {/* 🚨 NEW: Displaying Category and Author Profile Info 🚨 */}
                 <div className="flex items-center gap-2 mt-1">
                   {pdf.pdf_categories?.name && (
                     <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-md">
                       {pdf.pdf_categories.name}
                     </span>
                   )}
-                  <p className="text-xs text-muted-foreground truncate hidden sm:block">{pdf.description || 'No description provided'}</p>
+                  {pdf.author_avatar_url && (
+                    <img src={pdf.author_avatar_url} alt="" className="w-4 h-4 rounded-full ml-1 border border-border/50" />
+                  )}
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                    {pdf.author_name ? `Posted by ${pdf.author_name}` : (pdf.description || 'No description')}
+                  </p>
                 </div>
+                
               </div>
             </div>
             <div className="flex gap-2 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
