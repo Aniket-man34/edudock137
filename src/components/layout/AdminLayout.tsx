@@ -30,6 +30,9 @@ export default function AdminLayout() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
+  // Google Profile State
+  const [userProfile, setUserProfile] = useState<{name: string, avatar: string} | null>(null);
+  
   // Desktop Sidebar States
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(true);
@@ -40,15 +43,35 @@ export default function AdminLayout() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<{id: string, type: 'pdfs' | 'updates', name: string} | null>(null);
 
-  // --- AUTH CHECK ---
+  // --- AUTH CHECK & GOOGLE PROFILE FETCH ---
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate('/admin');
+      if (!session) {
+        navigate('/admin/login');
+      } else {
+        // 🚨 AGGRESSIVE GOOGLE DATA FETCH (Fix for missing picture) 🚨
+        const user = session.user;
+        const googleIdentity = user?.identities?.find(id => id.provider === 'google');
+        
+        // Dig deep into identity_data first, fallback to metadata
+        const googleData = googleIdentity?.identity_data || user?.user_metadata || {};
+        const email = user?.email || '';
+        
+        const rawName = googleData.full_name || googleData.name || email.split('@')[0] || 'Admin';
+        const finalName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+        
+        // Check avatar_url or picture specifically from the Google payload
+        const finalAvatar = googleData.avatar_url || googleData.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${finalName}&backgroundColor=8b5cf6&textColor=ffffff`;
+        
+        setUserProfile({ name: finalName, avatar: finalAvatar });
+      }
       setLoading(false);
     });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) navigate('/admin');
+      if (!session) navigate('/admin/login');
     });
+
     return () => subscription.unsubscribe();
   }, [navigate]);
 
@@ -100,7 +123,7 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/admin');
+    navigate('/admin/login');
   };
 
   const handleEditClick = (type: string, id: string) => {
@@ -165,7 +188,21 @@ export default function AdminLayout() {
           </div>
         </nav>
 
-        <div className="p-4 border-t border-border/50 space-y-2">
+        <div className="p-4 border-t border-border/50 flex flex-col gap-2">
+          
+          {/* DISPLAY LOGGED IN ADMIN DETAILS */}
+          {userProfile && (
+            <div className={`flex items-center gap-3 p-2 mb-2 ${isCollapsed ? 'justify-center' : ''}`}>
+              <img src={userProfile.avatar} alt="Admin" className="w-9 h-9 rounded-full border border-border/50 shrink-0 object-cover bg-muted" />
+              {!isCollapsed && (
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-sm font-bold truncate text-foreground">{userProfile.name}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Administrator</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <Link to="/" className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted text-muted-foreground transition">
             <Home size={20} className="shrink-0" /> {!isCollapsed && <span>Back to Site</span>}
           </Link>
@@ -185,8 +222,8 @@ export default function AdminLayout() {
 
       {sidebarOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)}>
-          <aside className="w-64 h-full glass-card rounded-none overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="pt-16 p-4 space-y-1">
+          <aside className="w-64 h-full glass-card rounded-none overflow-y-auto flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="pt-16 p-4 space-y-1 flex-1">
               <Link to="/admin/dashboard" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-muted">
                 <LayoutDashboard className="h-5 w-5" /> Dashboard
               </Link>
@@ -196,10 +233,21 @@ export default function AdminLayout() {
                   <link.icon className="h-5 w-5" /> {link.name}
                 </Link>
               ))}
-              <div className="border-t border-border/50 mt-4 pt-4">
-                <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted"><Home className="h-5 w-5" /> Back to Site</Link>
-                <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 w-full"><LogOut className="h-5 w-5" /> Logout</button>
-              </div>
+            </div>
+
+            <div className="p-4 border-t border-border/50 mt-auto bg-background/50">
+              {/* MOBILE USER PROFILE */}
+              {userProfile && (
+                <div className="flex items-center gap-3 px-4 py-2 mb-3">
+                  <img src={userProfile.avatar} alt="Admin" className="w-10 h-10 rounded-full border border-border/50 shrink-0 object-cover bg-muted" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold truncate text-foreground">{userProfile.name}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Admin</span>
+                  </div>
+                </div>
+              )}
+              <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted"><Home className="h-5 w-5" /> Back to Site</Link>
+              <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 w-full"><LogOut className="h-5 w-5" /> Logout</button>
             </div>
           </aside>
         </div>
