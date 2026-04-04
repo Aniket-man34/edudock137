@@ -7,39 +7,50 @@ import { toast } from 'sonner';
 import { useEffect } from 'react';
 
 export default function UpdateDetail() {
-  const { id } = useParams();
+  // 1. DUAL-CATCH: Grab slug from URL
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
   // Fetch Update Data
   const { data: update, isLoading } = useQuery({
-    queryKey: ['update', id],
+    queryKey: ['update', slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // 2. DUAL CATCH SAFETY: Detect if it's an old ID or a new Slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
+      const searchColumn = isUUID ? 'id' : 'slug';
+
+      // Bypass TypeScript errors for new slug column
+      const { data, error } = await (supabase as any)
         .from('updates')
         .select('*')
-        .eq('id', id!)
+        .eq(searchColumn, slug)
         .single();
-      if (error) throw error;
+        
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Safe fallback if missing
+        throw error;
+      }
       return data;
     },
-    enabled: !!id,
+    enabled: !!slug,
   });
 
-  // --- NEW: Track Clicks when an update is successfully viewed ---
+  // Track Clicks when an update is successfully viewed
   useEffect(() => {
-    if (update && id) {
-      (supabase.from('updates' as any) as any)
+    if (update && update.id) {
+      (supabase as any).from('updates')
         .update({ clicks: ((update as any).clicks || 0) + 1 })
-        .eq('id', id)
+        .eq('id', update.id)
         .then(({ error }: any) => {
           if (error) console.error("Error updating click count:", error);
         });
     }
-  }, [update, id]);
+  }, [update]);
 
   // Handle Sharing
   const handleShare = async () => {
-    const shareUrl = `https://edudock.in/share/updates/${id}`;
+    // 3. Share URL updated to use slug or fallback to ID
+    const shareUrl = `https://edudock.in/share/updates/${update?.slug || update?.id}`;
     
     if (navigator.share) {
       try {
@@ -109,8 +120,9 @@ export default function UpdateDetail() {
         
         {/* --- Top Sticky Header (Actions) --- */}
         <div className="sticky top-0 right-0 w-full flex justify-end items-center gap-3 p-4 z-20 bg-gradient-to-b from-[#0f172a] to-transparent">
+          {/* 4. Update WhatsApp Direct Link to use slug or ID */}
           <a 
-            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://edudock.in/share/updates/${id}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://edudock.in/share/updates/${update.slug || update.id}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full shadow-lg transition"

@@ -12,14 +12,17 @@ export default function Updates() {
   const { data: updates, isLoading } = useQuery({
     queryKey: ['updates'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('updates').select('*').order('created_at', { ascending: false });
+      const { data, error } = await (supabase as any)
+        .from('updates')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
   const filtered = updates?.filter(
-    (u) =>
+    (u: any) =>
       !searchQuery ||
       u.headline.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -41,7 +44,6 @@ export default function Updates() {
       </motion.div>
 
       {isLoading ? (
-        // Skeleton Loaders
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {[...Array(6)].map((_, i) => (
             <div
@@ -57,31 +59,27 @@ export default function Updates() {
           ))}
         </div>
       ) : filtered && filtered.length > 0 ? (
-        // Actual Content
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-          {filtered.map((update, i) => (
+          {filtered.map((update: any, i: number) => (
             <motion.div
               key={update.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.45, ease: 'easeOut' }}
-              className="h-full" // Forces equal height in grid
+              className="h-full"
             >
               <Link
-                to={`/updates/${update.id}`}
+                to={`/updates/${update.slug || update.id}`}
                 className="glass-card flex flex-col h-full rounded-2xl overflow-hidden group hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 border border-border/50"
               >
-                {/* --- IMAGE CONTAINER (Strict 1200x630 ratio) --- */}
                 <div className="relative w-full aspect-[1200/630] bg-muted/30 overflow-hidden shrink-0">
                   <img
                     src={update.image_url || '/placeholder.png'}
                     alt={update.headline}
-                    // using object-cover assumes you upload exactly 1200x630. If you want NO crop ever, change this to object-contain
                     className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     loading="lazy"
                   />
                   
-                  {/* --- GLOWING NEW BADGE --- */}
                   {isNewUpdate(update.created_at) && (
                     <div className="absolute top-3 left-3 z-30">
                       <span className="relative flex h-6 w-14 items-center justify-center">
@@ -94,7 +92,6 @@ export default function Updates() {
                   )}
                 </div>
 
-                {/* --- TEXT CONTAINER (Flex-1 forces it to fill remaining space) --- */}
                 <div className="p-5 flex flex-col flex-1 bg-background/40 relative">
                   <div className="flex items-start gap-2.5 mb-auto">
                     <Bell className="w-5 h-5 mt-0.5 shrink-0 text-primary/70" />
@@ -103,7 +100,6 @@ export default function Updates() {
                     </h3>
                   </div>
                   
-                  {/* Subtle accent line at the bottom to anchor the card visually */}
                   <div className="mt-4 flex items-center justify-between pt-3 border-t border-border/40">
                      <span className="text-xs font-medium text-muted-foreground">Read more</span>
                      <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />

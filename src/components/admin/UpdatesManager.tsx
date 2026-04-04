@@ -10,6 +10,14 @@ import { Pencil, Trash2, Plus, X, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from './ImageUpload';
 
+// --- THE MAGIC BULLETPROOF SLUG GENERATOR ---
+const generateSlug = (text: string) => {
+  return text.toString().toLowerCase().trim()
+    .replace(/\s+/g, '-')        // Replace spaces with -
+    .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
+    .replace(/\-\-+/g, '-');     // Replace multiple - with single -
+};
+
 interface UpdateForm {
   headline: string;
   content: string;
@@ -19,7 +27,6 @@ interface UpdateForm {
 
 const emptyForm: UpdateForm = { headline: '', content: '', image_url: '', external_link: '' };
 
-// MOVED OUTSIDE to fix the "losing focus / keyboard closing" bug!
 const UpdateFormFields = ({ formData, setFormData }: { formData: UpdateForm, setFormData: any }) => (
   <div className="space-y-4">
     <div>
@@ -60,7 +67,6 @@ export default function UpdatesManager({ search }: { search: string }) {
     },
   });
 
-  // Automatically open the edit modal if an ID is passed in the URL (from global search)
   useEffect(() => {
     const targetEditId = searchParams.get('edit');
     if (targetEditId && updates) {
@@ -81,11 +87,12 @@ export default function UpdatesManager({ search }: { search: string }) {
     mutationFn: async () => {
       const payload = {
         headline: form.headline.trim(),
+        slug: generateSlug(form.headline), // AUTO-GENERATE SLUG
         content: form.content || null,
         image_url: form.image_url || null,
         external_link: form.external_link || null,
       };
-      const { error } = await supabase.from('updates').insert(payload);
+      const { error } = await (supabase as any).from('updates').insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -101,11 +108,12 @@ export default function UpdatesManager({ search }: { search: string }) {
     mutationFn: async () => {
       const payload = {
         headline: editForm.headline.trim(),
+        slug: generateSlug(editForm.headline), // AUTO-GENERATE SLUG
         content: editForm.content || null,
         image_url: editForm.image_url || null,
         external_link: editForm.external_link || null,
       };
-      const { error } = await supabase.from('updates').update(payload).eq('id', editId);
+      const { error } = await (supabase as any).from('updates').update(payload).eq('id', editId);
       if (error) throw error;
     },
     onSuccess: () => {

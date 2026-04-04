@@ -57,9 +57,9 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/pdfs" element={<Pdfs />} />
-              <Route path="/pdfs/:id" element={<Pdfs />} />
+              <Route path="/pdfs/:slug" element={<Pdfs />} />
               <Route path="/updates" element={<Updates />} />
-              <Route path="/updates/:id" element={<UpdateDetail />} />
+              <Route path="/updates/:slug" element={<UpdateDetail />} />
             </Route>
 
             {/* Admin Portal */}

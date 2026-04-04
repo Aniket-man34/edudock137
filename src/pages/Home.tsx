@@ -70,12 +70,10 @@ export default function Home() {
   const navigate = useNavigate();
   const [heroImageError, setHeroImageError] = useState(false);
 
-  /* ── EXISTING QUERIES (untouched) ── */
-
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('categories')
         .select('*')
         .order('name');
@@ -87,7 +85,7 @@ export default function Home() {
   const { data: tools } = useQuery({
     queryKey: ['tools'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('tools')
         .select('*')
         .order('name');
@@ -99,8 +97,8 @@ export default function Home() {
   const { data: allPdfs } = useQuery({
     queryKey: ['search_pdfs'],
     queryFn: async () => {
-      const { data } = await (supabase.from('pdfs' as any) as any).select(
-        'id, name, cover_image_url, clicks'
+      const { data } = await (supabase as any).from('pdfs').select(
+        'id, name, cover_image_url, clicks, slug' // Added slug
       );
       return (data as any[]) || [];
     },
@@ -109,8 +107,8 @@ export default function Home() {
   const { data: allUpdates } = useQuery({
     queryKey: ['search_updates'],
     queryFn: async () => {
-      const { data } = await (supabase.from('updates' as any) as any).select(
-        'id, headline, image_url, clicks'
+      const { data } = await (supabase as any).from('updates').select(
+        'id, headline, image_url, clicks, slug' // Added slug
       );
       return (data as any[]) || [];
     },
@@ -119,7 +117,7 @@ export default function Home() {
   const { data: trendingUpdates } = useQuery({
     queryKey: ['trending_updates'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('updates' as any) as any)
+      const { data, error } = await (supabase as any).from('updates')
         .select('*')
         .order('clicks', { ascending: false })
         .limit(6);
@@ -131,7 +129,7 @@ export default function Home() {
   const { data: trendingPdfs } = useQuery({
     queryKey: ['trending_pdfs'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('pdfs' as any) as any)
+      const { data, error } = await (supabase as any).from('pdfs')
         .select('*')
         .order('clicks', { ascending: false })
         .limit(6);
@@ -147,7 +145,7 @@ export default function Home() {
   const { data: newPdfs } = useQuery({
     queryKey: ['new_pdfs'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('pdfs')
         .select('*')
         .gte('created_at', thirtyDaysIso)
@@ -160,7 +158,7 @@ export default function Home() {
   const { data: newUpdates } = useQuery({
     queryKey: ['new_updates'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('updates')
         .select('*')
         .gte('created_at', thirtyDaysIso)
@@ -175,8 +173,6 @@ export default function Home() {
       ?.sort((a: any, b: any) => (b.clicks || 0) - (a.clicks || 0))
       .slice(0, 6) || [];
 
-  /* ── GLOBAL SEARCH LOGIC ── */
-
   const term = searchQuery?.toLowerCase().trim() || '';
   const searchMatchedTools =
     tools?.filter(
@@ -190,10 +186,6 @@ export default function Home() {
     allUpdates?.filter((u: any) => u.headline.toLowerCase().includes(term)) ||
     [];
   const isSearching = term.length > 0;
-
-  /* ================================================================ */
-  /*  SEARCH RESULTS VIEW                                             */
-  /* ================================================================ */
 
   if (isSearching) {
     return (
@@ -265,9 +257,7 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* ══════════════════════════════════════════════════════ */}
-        {/*  PDFs Results — PORTRAIT BOOK COVER CARDS             */}
-        {/* ══════════════════════════════════════════════════════ */}
+        {/* ── PDFs Results ── */}
         <AnimatePresence>
           {searchMatchedPdfs.length > 0 && (
             <motion.div
@@ -295,10 +285,9 @@ export default function Home() {
                 {searchMatchedPdfs.map((pdf: any) => (
                   <motion.div key={pdf.id} variants={fadeUp}>
                     <Link
-                      to={`/pdfs/${pdf.id}`}
+                      to={`/pdfs/${pdf.slug || pdf.id}`}
                       className="group/pdf relative block rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.02] transition-all duration-500 hover:scale-[1.04] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] hover:border-primary/30"
                     >
-                      {/* strict portrait aspect ratio */}
                       <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/40">
                         <img
                           src={pdf.cover_image_url || '/placeholder.png'}
@@ -306,13 +295,9 @@ export default function Home() {
                           alt={pdf.name}
                         />
 
-                        {/* dark gradient overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
-
-                        {/* primary tint on hover */}
                         <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-primary/5 to-transparent opacity-0 group-hover/pdf:opacity-100 transition-opacity duration-500" />
 
-                        {/* views badge */}
                         {pdf.clicks > 0 && (
                           <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
                             <Eye className="h-3 w-3" />
@@ -320,7 +305,6 @@ export default function Home() {
                           </div>
                         )}
 
-                        {/* title at the bottom over gradient */}
                         <div className="absolute bottom-0 left-0 right-0 p-4">
                           <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/pdf:text-primary transition-colors duration-300">
                             {pdf.name}
@@ -362,7 +346,7 @@ export default function Home() {
                 {searchMatchedUpdates.map((update: any) => (
                   <motion.div key={update.id} variants={fadeUp}>
                     <Link
-                      to={`/updates/${update.id}`}
+                      to={`/updates/${update.slug || update.id}`}
                       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-lg transition-all duration-500 hover:scale-[1.03] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] hover:border-primary/30"
                     >
                       <div className="relative aspect-video w-full overflow-hidden bg-black/30">
@@ -398,13 +382,8 @@ export default function Home() {
     );
   }
 
-  /* ================================================================ */
-  /*  NORMAL HOME PAGE                                                */
-  /* ================================================================ */
-
   return (
     <div className="relative">
-      {/* ─────────────── HERO ─────────────── */}
       <section className="relative overflow-hidden px-4 pb-20 pt-10 md:pb-32 min-h-[55vh] flex items-center mt-4">
         <ParticleBackground />
 
@@ -426,7 +405,6 @@ export default function Home() {
             animate="show"
             className="flex flex-col md:flex-row items-center gap-10 md:gap-20"
           >
-            {/* text column */}
             <div className="flex-1 text-center md:text-left">
               <motion.span
                 variants={fadeUp}
@@ -470,7 +448,6 @@ export default function Home() {
               </motion.div>
             </div>
 
-            {/* ── HERO IMAGE / FALLBACK ── */}
             <motion.div
               variants={scaleIn}
               className="flex-1 max-w-sm md:max-w-md hidden md:block"
@@ -575,7 +552,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─────────────── COMMUNITY BANNER ─────────────── */}
       <section className="container mx-auto px-4 pb-14">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
@@ -624,9 +600,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/*  NETFLIX-STYLE TRENDING SECTION                              */}
-      {/* ══════════════════════════════════════════════════════════════ */}
       <section className="pb-20 overflow-hidden">
         <div className="container mx-auto px-4">
           <motion.div
@@ -658,7 +631,6 @@ export default function Home() {
           <div className="h-px bg-gradient-to-r from-orange-500/40 via-red-500/20 to-transparent" />
         </div>
 
-        {/* ── 1. TRENDING TOOLS ROW ── */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -714,7 +686,6 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* ── 2. TRENDING PDFS ROW (Netflix poster style) ── */}
         {trendingPdfs && trendingPdfs.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -760,7 +731,7 @@ export default function Home() {
                     className="snap-start shrink-0"
                   >
                     <Link
-                      to={`/pdfs/${pdf.id}`}
+                      to={`/pdfs/${pdf.slug || pdf.id}`}
                       className="group/card relative block w-[180px] md:w-[220px] lg:w-[240px] rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.02] transition-all duration-500 hover:scale-[1.05] hover:z-20 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] hover:border-primary/30"
                     >
                       <div
@@ -799,7 +770,6 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* ── 3. TRENDING UPDATES ROW ── */}
         {trendingUpdates && trendingUpdates.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -845,7 +815,7 @@ export default function Home() {
                     className="snap-start shrink-0"
                   >
                     <Link
-                      to={`/updates/${update.id}`}
+                      to={`/updates/${update.slug || update.id}`}
                       className="group/card relative block w-[280px] md:w-[340px] lg:w-[380px] rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.02] transition-all duration-500 hover:scale-[1.03] hover:z-20 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] hover:border-primary/30"
                     >
                       <div
@@ -889,7 +859,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─────────────── FRESH ARRIVALS ─────────────── */}
       <section className="container mx-auto px-4 pb-20">
         <motion.div
           variants={sectionReveal}
@@ -914,7 +883,6 @@ export default function Home() {
         <div className="h-px bg-gradient-to-r from-blue-500/40 via-cyan-500/20 to-transparent mb-8" />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* New PDFs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -949,7 +917,7 @@ export default function Home() {
                     transition={{ delay: idx * 0.08 }}
                   >
                     <Link
-                      to={`/pdfs/${pdf.id}`}
+                      to={`/pdfs/${pdf.slug || pdf.id}`}
                       className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] transition-all duration-300 border border-white/[0.04] hover:border-primary/25 group"
                     >
                       <div className="relative w-10 h-12 rounded-lg overflow-hidden bg-black/30 ring-1 ring-white/10 shrink-0">
@@ -975,7 +943,6 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* New Updates */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1014,7 +981,7 @@ export default function Home() {
                     transition={{ delay: idx * 0.08 }}
                   >
                     <Link
-                      to={`/updates/${update.id}`}
+                      to={`/updates/${update.slug || update.id}`}
                       className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] transition-all duration-300 border border-white/[0.04] hover:border-primary/25 group"
                     >
                       <div className="relative w-12 h-10 rounded-lg overflow-hidden bg-black/30 ring-1 ring-white/10 shrink-0">
@@ -1042,7 +1009,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─────────────── ALL TOOLS BY CATEGORY ─────────────── */}
       <section className="container mx-auto px-4 pb-20">
         <motion.div
           variants={sectionReveal}
@@ -1111,7 +1077,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* ─────────────── ABOUT & CONTACT ─────────────── */}
       <section className="relative border-t border-white/[0.06] py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-background pointer-events-none" />
         <div className="absolute bottom-10 left-[20%] w-64 h-64 bg-primary/[0.04] blur-[120px] rounded-full pointer-events-none" />

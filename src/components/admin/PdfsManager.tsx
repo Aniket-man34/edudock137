@@ -11,6 +11,14 @@ import { toast } from 'sonner';
 import ImageUpload from './ImageUpload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// --- THE MAGIC BULLETPROOF SLUG GENERATOR ---
+const generateSlug = (text: string) => {
+  return text.toString().toLowerCase().trim()
+    .replace(/\s+/g, '-')        // Replace spaces with -
+    .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
+    .replace(/\-\-+/g, '-');     // Replace multiple - with single -
+};
+
 interface PdfForm { name: string; description: string; cover_image_url: string; drive_link: string; pdf_category_id: string; }
 // FIX 1: Default to 'none' instead of empty string
 const emptyForm: PdfForm = { name: '', description: '', cover_image_url: '', drive_link: '', pdf_category_id: 'none' };
@@ -93,10 +101,11 @@ export default function PdfsManager({ search }: { search: string }) {
       const payload = { 
         ...form, 
         name: form.name.trim(), 
+        slug: generateSlug(form.name), // AUTO-GENERATE SLUG
         drive_link: form.drive_link.trim(),
         pdf_category_id: form.pdf_category_id === 'none' ? null : form.pdf_category_id || null
       };
-      const { error } = await supabase.from('pdfs').insert(payload);
+      const { error } = await (supabase as any).from('pdfs').insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -112,13 +121,14 @@ export default function PdfsManager({ search }: { search: string }) {
     mutationFn: async () => {
       const payload = { 
         name: editForm.name.trim(), 
+        slug: generateSlug(editForm.name), // AUTO-GENERATE SLUG
         description: editForm.description || null,
         cover_image_url: editForm.cover_image_url || null,
         drive_link: editForm.drive_link.trim(),
         pdf_category_id: editForm.pdf_category_id === 'none' || editForm.pdf_category_id === '' ? null : editForm.pdf_category_id
       };
       
-      const { error } = await supabase.from('pdfs').update(payload).eq('id', editId);
+      const { error } = await (supabase as any).from('pdfs').update(payload).eq('id', editId);
       if (error) throw error;
     },
     onSuccess: () => {
