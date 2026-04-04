@@ -3,18 +3,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req: Request) => {
-  const userAgent = req.headers.get('user-agent') || ''
-  
-  // 🚨 INCLUDES WHATSAPP, TELEGRAM, AND OTHERS 🚨
-  const isBot = /bot|googlebot|facebookexternalhit|whatsapp|twitterbot|telegram|linkedin|viber|skype/i.test(userAgent)
-  
   const url = new URL(req.url)
   const parts = url.pathname.split('/').filter(Boolean)
   
   let type = '';
   let slugOrId = ''; 
 
-  // Since the URL hitting this function is like: .../og-meta/updates/slug
+  // Safely extract the type and slug regardless of how the proxy forwards it
   if (parts.includes('updates')) {
     type = 'updates';
     slugOrId = parts[parts.indexOf('updates') + 1];
@@ -37,7 +32,7 @@ serve(async (req: Request) => {
   let frontendUrl = LIVE_WEBSITE_URL
 
   try {
-    // 🚨 DUAL-CATCH FOR BOTS 🚨
+    // DUAL-CATCH: Supports both old UUID links and new beautiful Slugs
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(safeParam);
 
     if (type === 'updates' && safeParam) {
@@ -69,26 +64,36 @@ serve(async (req: Request) => {
     console.error("Fetch error:", error)
   }
 
-  // Humans get redirected immediately
-  if (!isBot) {
-    return Response.redirect(frontendUrl, 302)
-  }
-
-  // Bots get the meta-tags
+  // 🚨 ALWAYS RETURN HTML WITH REDIRECT TRIGGERS 🚨
+  // Bots read the meta tags. Humans execute the Javascript & meta-refresh.
   const html = `<!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta charset="UTF-8">
       <title>${title}</title>
+      
+      <meta property="og:type" content="article" />
+      <meta property="og:url" content="${frontendUrl}" />
       <meta property="og:title" content="${title}" />
       <meta property="og:description" content="${description}" />
       <meta property="og:image" content="${imageUrl}" />
-      <meta property="og:url" content="${frontendUrl}" />
-      <meta property="og:type" content="article" />
+      <meta property="og:image:secure_url" content="${imageUrl}" />
       <meta property="og:site_name" content="EduDock" />
+
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:url" content="${frontendUrl}" />
+      <meta name="twitter:title" content="${title}" />
+      <meta name="twitter:description" content="${description}" />
+      <meta name="twitter:image" content="${imageUrl}" />
+
+      <meta http-equiv="refresh" content="0;url=${frontendUrl}" />
+      <script>
+        window.location.replace("${frontendUrl}");
+      </script>
     </head>
-    <body>Redirecting...</body>
+    <body>
+      <p>Redirecting to <a href="${frontendUrl}">${title}</a>...</p>
+    </body>
     </html>`
 
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } })
