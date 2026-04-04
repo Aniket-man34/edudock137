@@ -1,33 +1,29 @@
 export async function onRequest(context) {
   const urlPath = context.params.path ? context.params.path.join('/') : '';
-  const supabaseUrl = `https://qxuxvhzgmrwpngvmsume.supabase.co/functions/v1/og-meta/${urlPath}`;
-
-  // 🚨 CRITICAL: Grab the User-Agent so Supabase knows if it's Telegram or a Human
   const userAgent = context.request.headers.get("user-agent") || "";
+  
+  // Detect bots (WhatsApp, Telegram, Twitter, etc.)
+  const isBot = /bot|facebook|whatsapp|telegram|twitter|linkedin|viber|skype/i.test(userAgent);
 
-  // Fetch from Supabase, passing the exact User-Agent
-  const response = await fetch(supabaseUrl, {
-    headers: {
-      "user-agent": userAgent
-    },
-    redirect: "manual" // Prevents Cloudflare from auto-following redirects
-  });
-
-  // If Supabase says it's a human (302 Redirect), pass the redirect to the user
-  if (response.status >= 300 && response.status < 400) {
-    return new Response(null, {
-      status: response.status,
-      headers: {
-        "Location": response.headers.get("Location") || `https://edudock.in/${urlPath}`
-      }
-    });
+  // 1. IF HUMAN: Instantly redirect to the real page! Fast and easy.
+  if (!isBot) {
+    return Response.redirect(`https://edudock.in/${urlPath}`, 302);
   }
 
-  // If Supabase says it's a bot (200 OK), send the meta tags to Telegram!
-  return new Response(response.body, {
-    status: response.status,
+  // 2. IF BOT: Fetch the meta tags from Supabase
+  const supabaseUrl = `https://qxuxvhzgmrwpngvmsume.supabase.co/functions/v1/og-meta/${urlPath}`;
+  const response = await fetch(supabaseUrl, {
+    headers: { "user-agent": userAgent }
+  });
+
+  const html = await response.text();
+
+  // Return the pure HTML to Telegram/WhatsApp
+  return new Response(html, {
+    status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "public, max-age=3600"
     }
   });
 }
