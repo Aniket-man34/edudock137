@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  /* Light theme */
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 224 40% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 40% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 40% 14%;
+
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 256 55% 58%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 10% 46%;
+
+    --accent: 172 60% 46%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
+    --ring: 199 89% 48%;
+
+    --radius: 0.875rem;
+
+    --glass-bg: 0 0% 100% / 0.65;
+    --glass-border: 220 13% 80% / 0.5;
+    --glass-shine: 0 0% 100% / 0.8;
+    --glass-shadow-1: 220 30% 50% / 0.06;
+    --glass-shadow-2: 220 30% 50% / 0.03;
+
+    --particle-color: 199 89% 48%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 224 40% 14%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 94%;
+    --sidebar-accent-foreground: 224 40% 14%;
+    --sidebar-border: 220 13% 87%;
+    --sidebar-ring: 199 89% 48%;
+  }
+
+  /* Dark theme */
+  .dark {
+    --background: 225 32% 5%;
+    --foreground: 210 40% 96%;
+
+    --card: 225 28% 8%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 225 28% 8%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 199 89% 48%;
+    --primary-foreground: 225 32% 5%;
+
+    --secondary: 256 55% 58%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 225 22% 12%;
+    --muted-foreground: 218 14% 50%;
+
+    --accent: 172 60% 46%;
+    --accent-foreground: 225 32% 5%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 96%;
+
+    --border: 225 16% 16%;
+    --input: 225 16% 16%;
+    --ring: 199 89% 48%;
+
+    --glass-bg: 225 28% 9% / 0.55;
+    --glass-border: 210 40% 96% / 0.08;
+    --glass-shine: 210 40% 96% / 0.03;
+    --glass-shadow-1: 0 0% 0% / 0.25;
+    --glass-shadow-2: 0 0% 0% / 0.15;
+
+    --particle-color: 199 89% 48%;
+
+    --sidebar-background: 225 28% 8%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 225 32% 5%;
+    --sidebar-accent: 225 22% 12%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 225 16% 16%;
+    --sidebar-ring: 199 89% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply backdrop-blur-2xl border rounded-2xl transition-all duration-300;
+    background: hsl(var(--glass-bg));
+    border-color: hsl(var(--glass-border));
+  }
+  .glass-card {
+    @apply glass;
+    box-shadow:
+      0 4px 24px -4px hsl(var(--glass-shadow-1)),
+      0 1px 2px hsl(var(--glass-shadow-2)),
+      inset 0 1px 0 hsl(var(--glass-shine));
+  }
+  .glass-card:hover {
+    box-shadow:
+      0 8px 40px -8px hsl(var(--glass-shadow-1)),
+      0 2px 4px hsl(var(--glass-shadow-2)),
+      inset 0 1px 0 hsl(var(--glass-shine));
+  }
+  .glass-navbar {
+    @apply backdrop-blur-2xl border-b rounded-none transition-all duration-300;
+    background: hsl(var(--glass-bg));
+    border-color: hsl(var(--glass-border));
+    box-shadow: 0 1px 12px -2px hsl(var(--glass-shadow-1));
+  }
+  .glass-subtle {
+    @apply backdrop-blur-lg rounded-xl transition-all duration-300;
+    background: hsl(var(--glass-bg));
+  }
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)) 50%, hsl(var(--accent)));
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all duration-200;
+    box-shadow: 0 2px 12px -2px hsl(var(--primary) / 0.4);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px -4px hsl(var(--primary) / 0.5);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl glass-card text-sm font-semibold text-foreground transition-all duration-200;
+  }
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+  }
+  .btn-icon {
+    @apply p-2 rounded-xl transition-all duration-200 text-muted-foreground;
+  }
+  .btn-icon:hover {
+    @apply text-foreground bg-muted/60;
+  }
+  .page-header {
+    @apply font-display text-2xl md:text-3xl font-bold tracking-tight;
+  }
+  .page-subtitle {
+    @apply text-muted-foreground text-sm mt-1;
+  }
+  .empty-state {
+    @apply text-center py-24;
+  }
+  .empty-state p {
+    @apply text-muted-foreground text-base;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.3);
+}
