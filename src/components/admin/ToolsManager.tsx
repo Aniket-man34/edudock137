@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadFile } from '@/lib/storage';
+import { uploadFile, clearTempImage } from '@/lib/storage';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -59,7 +59,26 @@ export default function ToolsManager({ search }: { search: string }) {
   const save = useMutation({
     mutationFn: async () => {
       let finalImageUrl = form.image_url;
+
       if (form.image_file) {
+        // When editing, delete old image from storage before uploading new one
+        if (editId) {
+          const { data: currentTool } = await supabase.from('tools').select('image_url').eq('id', editId).single();
+          if (currentTool?.image_url && currentTool.image_url.includes('supabase.co')) {
+            try {
+              const url = new URL(currentTool.image_url);
+              const pathParts = url.pathname.split('/');
+              const bucketIndex = pathParts.indexOf('tool-images');
+              if (bucketIndex !== -1) {
+                const filePath = pathParts.slice(bucketIndex + 1).join('/');
+                await supabase.storage.from('tool-images').remove([filePath]);
+              }
+            } catch (err) {
+              console.error("Failed to delete old image:", err);
+            }
+          }
+        }
+
         const uploadedUrl = await uploadFile('tool-images', form.image_file);
         if (!uploadedUrl) throw new Error("Image upload failed");
         finalImageUrl = uploadedUrl;
@@ -87,6 +106,7 @@ export default function ToolsManager({ search }: { search: string }) {
       setForm(emptyForm);
       setEditId(null);
       setIsFormOpen(false);
+      clearTempImage();
       toast.success(editId ? 'Tool updated successfully' : 'Tool created successfully');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -94,12 +114,15 @@ export default function ToolsManager({ search }: { search: string }) {
 
   const remove = useMutation({
     mutationFn: async (tool: any) => {
-      // 1. DELETE FROM STORAGE FIRST
+      // 1. DELETE FROM STORAGE FIRST (robust URL-based path extraction)
       if (tool.image_url && tool.image_url.includes('supabase.co')) {
         try {
-          const pathParts = tool.image_url.split('tool-images/');
-          if (pathParts.length === 2) {
-            await supabase.storage.from('tool-images').remove([pathParts[1]]);
+          const url = new URL(tool.image_url);
+          const pathParts = url.pathname.split('/');
+          const bucketIndex = pathParts.indexOf('tool-images');
+          if (bucketIndex !== -1) {
+            const filePath = pathParts.slice(bucketIndex + 1).join('/');
+            await supabase.storage.from('tool-images').remove([filePath]);
           }
         } catch (err) {
           console.error("Failed to delete image:", err);
@@ -136,6 +159,7 @@ export default function ToolsManager({ search }: { search: string }) {
     setIsFormOpen(false);
     setEditId(null);
     setForm(emptyForm);
+    clearTempImage();
   };
 
   return (

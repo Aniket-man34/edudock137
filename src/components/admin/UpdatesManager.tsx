@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadFile } from '@/lib/storage';
+import { uploadFile, clearTempImage, tempImageState } from '@/lib/storage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -103,6 +103,7 @@ export default function UpdatesManager({ search }: { search: string }) {
     }
   }, [searchParams, updates]);
 
+  // ─── PUBLISH UPDATE (ONLY place Supabase upload happens) ───
   const addUpdate = useMutation({
     mutationFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -121,6 +122,8 @@ export default function UpdatesManager({ search }: { search: string }) {
       }
 
       let finalImageUrl = form.image_url;
+
+      // Upload ONLY here — compressed file from tempImageState
       if (form.image_file) {
         const uploadedUrl = await uploadFile('update-images', form.image_file);
         if (!uploadedUrl) throw new Error("Image upload failed");
@@ -144,6 +147,8 @@ export default function UpdatesManager({ search }: { search: string }) {
       qc.invalidateQueries({ queryKey: ['updates'] });
       setForm(emptyForm);
       setIsAddFormOpen(false);
+      // Clear temp state after successful publish
+      clearTempImage();
       toast.success('Update published successfully!');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -160,7 +165,7 @@ export default function UpdatesManager({ search }: { search: string }) {
 
       let finalImageUrl = editForm.image_url;
 
-      // If a new image file is selected
+      // If a new image file is selected — upload ONLY here
       if (editForm.image_file) {
         // Delete old image from storage if it exists and is from Supabase
         if (currentUpdate?.image_url && currentUpdate.image_url.includes('supabase.co')) {
@@ -177,7 +182,7 @@ export default function UpdatesManager({ search }: { search: string }) {
           }
         }
 
-        // Upload new image
+        // Upload new compressed image
         const uploadedUrl = await uploadFile('update-images', editForm.image_file);
         if (!uploadedUrl) throw new Error("Image upload failed");
         finalImageUrl = uploadedUrl;
@@ -197,6 +202,7 @@ export default function UpdatesManager({ search }: { search: string }) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['updates'] });
       setEditId(null);
+      clearTempImage();
       toast.success('Update saved successfully!');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -229,6 +235,12 @@ export default function UpdatesManager({ search }: { search: string }) {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const handleCancelAdd = () => {
+    setIsAddFormOpen(false);
+    setForm(emptyForm);
+    clearTempImage();
+  };
 
   const filtered = updates?.filter((u) => !search || u.headline.toLowerCase().includes(search.toLowerCase()));
 
@@ -265,7 +277,7 @@ export default function UpdatesManager({ search }: { search: string }) {
                 <h4 className="font-bold text-purple-500">Create New Update</h4>
                 <button
                   type="button"
-                  onClick={() => { setIsAddFormOpen(false); setForm(emptyForm); }}
+                  onClick={handleCancelAdd}
                   className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition"
                 >
                   <X className="h-5 w-5" />
@@ -277,7 +289,7 @@ export default function UpdatesManager({ search }: { search: string }) {
                   <Button type="submit" disabled={addUpdate.isPending} className="flex-1 md:flex-none w-40 bg-purple-600 hover:bg-purple-700 text-white">
                     {addUpdate.isPending ? 'Publishing...' : 'Publish Update'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => { setIsAddFormOpen(false); setForm(emptyForm); }} className="flex-1 md:flex-none w-24">
+                  <Button type="button" variant="outline" onClick={handleCancelAdd} className="flex-1 md:flex-none w-24">
                     Cancel
                   </Button>
                 </div>
@@ -291,7 +303,8 @@ export default function UpdatesManager({ search }: { search: string }) {
         {filtered?.map((update: any) => (
           <div key={update.id} className="glass-card p-3 rounded-xl flex items-center justify-between gap-4 border border-border/40 hover:border-purple-500/30 transition-all group">
             <div className="flex items-center gap-4 min-w-0">
-              <img src={update.image_url || '/placeholder.svg'} className="w-16 h-12 rounded-lg object-cover shrink-0 bg-muted border border-border/50 shadow-sm" alt="" />
+              {/* Cache-bust fix: append timestamp to prevent stale images */}
+              <img src={update.image_url ? `${update.image_url}?t=${Date.now()}` : '/placeholder.svg'} className="w-16 h-12 rounded-lg object-cover shrink-0 bg-muted border border-border/50 shadow-sm" alt="" />
               <div className="min-w-0">
                 <p className="font-bold text-foreground truncate">{update.headline}</p>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -349,7 +362,7 @@ export default function UpdatesManager({ search }: { search: string }) {
             >
               <div className="flex items-center justify-between p-5 border-b border-border/50">
                 <h2 className="text-xl font-bold text-foreground">Edit Update</h2>
-                <button onClick={() => setEditId(null)} className="p-2 hover:bg-muted rounded-full transition">
+                <button onClick={() => { setEditId(null); clearTempImage(); }} className="p-2 hover:bg-muted rounded-full transition">
                   <X className="h-5 w-5 text-muted-foreground" />
                 </button>
               </div>
@@ -357,7 +370,7 @@ export default function UpdatesManager({ search }: { search: string }) {
                 <form onSubmit={(e) => { e.preventDefault(); updateExisting.mutate(); }}>
                   <UpdateFormFields formData={editForm} setFormData={setEditForm} />
                   <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border/50">
-                    <Button type="button" variant="outline" onClick={() => setEditId(null)}>Cancel</Button>
+                    <Button type="button" variant="outline" onClick={() => { setEditId(null); clearTempImage(); }}>Cancel</Button>
                     <Button type="submit" disabled={updateExisting.isPending} className="bg-purple-600 hover:bg-purple-700 text-white">Save Changes</Button>
                   </div>
                 </form>

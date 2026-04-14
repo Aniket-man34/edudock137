@@ -9,12 +9,52 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/avif': 'avif',
 };
 
-// Temporary in-memory storage for images before compression
-const temporaryStorage = new Map<string, { file: File; url: string }>();
+// ─── TEMP IMAGE STATE (local only, never uploaded until publish) ───
+export interface TempImageState {
+  file: File | null;
+  previewUrl: string | null;
+  isCompressed: boolean;
+}
 
-export async function uploadFile(bucket: string, file: File, tempId?: string): Promise<string | null> {
-  // Prefer the MIME-derived extension so WebP blobs compressed client-side
-  // always land in storage as .webp regardless of the original filename.
+export const tempImageState: TempImageState = {
+  file: null,
+  previewUrl: null,
+  isCompressed: false,
+};
+
+/** Store a file locally — NO upload, NO server call */
+export function selectImage(file: File): void {
+  // Revoke previous preview URL to avoid memory leaks
+  if (tempImageState.previewUrl) {
+    URL.revokeObjectURL(tempImageState.previewUrl);
+  }
+  tempImageState.file = file;
+  tempImageState.previewUrl = URL.createObjectURL(file);
+  tempImageState.isCompressed = false;
+}
+
+/** Replace temp image with compressed version */
+export function replaceWithCompressed(compressedFile: File): void {
+  if (tempImageState.previewUrl) {
+    URL.revokeObjectURL(tempImageState.previewUrl);
+  }
+  tempImageState.file = compressedFile;
+  tempImageState.previewUrl = URL.createObjectURL(compressedFile);
+  tempImageState.isCompressed = true;
+}
+
+/** Clear temp state after publish or cancel */
+export function clearTempImage(): void {
+  if (tempImageState.previewUrl) {
+    URL.revokeObjectURL(tempImageState.previewUrl);
+  }
+  tempImageState.file = null;
+  tempImageState.previewUrl = null;
+  tempImageState.isCompressed = false;
+}
+
+// ─── UPLOAD TO SUPABASE (called ONLY on publish) ───
+export async function uploadFile(bucket: string, file: File): Promise<string | null> {
   const ext = MIME_TO_EXT[file.type] ?? file.name.split('.').pop() ?? 'bin';
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
 
@@ -28,60 +68,6 @@ export async function uploadFile(bucket: string, file: File, tempId?: string): P
     return null;
   }
 
-  // Clean up temporary file if tempId provided
-  if (tempId) {
-    removeTemporaryFile(tempId);
-  }
-
   const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
   return data.publicUrl;
-}
-
-/**
- * Store file temporarily in memory for compression
- */
-export function storeTemporaryFile(file: File): string {
-  const id = `temp_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-  const url = URL.createObjectURL(file);
-  temporaryStorage.set(id, { file, url });
-  return id;
-}
-
-/**
- * Get temporary file by ID
- */
-export function getTemporaryFile(id: string): { file: File; url: string } | undefined {
-  return temporaryStorage.get(id);
-}
-
-/**
- * Update temporary file with compressed version
- */
-export function updateTemporaryFile(id: string, compressedFile: File): string {
-  const existing = temporaryStorage.get(id);
-  if (existing) {
-    URL.revokeObjectURL(existing.url); // Clean up old URL
-  }
-
-  const newUrl = URL.createObjectURL(compressedFile);
-  temporaryStorage.set(id, { file: compressedFile, url: newUrl });
-  return newUrl;
-}
-
-/**
- * Remove temporary file
- */
-export function removeTemporaryFile(id: string): void {
-  const existing = temporaryStorage.get(id);
-  if (existing) {
-    URL.revokeObjectURL(existing.url);
-  }
-  temporaryStorage.delete(id);
-}
-
-/**
- * Get all temporary file IDs (for debugging)
- */
-export function getAllTemporaryFileIds(): string[] {
-  return Array.from(temporaryStorage.keys());
 }

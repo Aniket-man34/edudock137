@@ -1,100 +1,81 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Upload, Link as LinkIcon, Eye, Loader2, Minimize2, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { compressImage } from '@/lib/imageOptimizer';
-import { storeTemporaryFile, getTemporaryFile, updateTemporaryFile, removeTemporaryFile } from '@/lib/storage';
+import { tempImageState, selectImage, replaceWithCompressed } from '@/lib/storage';
 import { toast } from 'sonner';
 
 interface ImageUploadProps {
-  bucket?: string;
   value: string;
   onChange: (url: string, file?: File | null) => void;
+}
+
+/** Format bytes to human-readable string */
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
 export default function ImageUpload({ value, onChange }: ImageUploadProps) {
   const [mode, setMode] = useState<'upload' | 'url'>(
     value && !value.includes('supabase') && !value.startsWith('blob:') ? 'url' : 'upload'
   );
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [statusText, setStatusText] = useState('');
-  const [tempFileId, setTempFileId] = useState<string | null>(null);
-  const [isCompressed, setIsCompressed] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressSuccess, setCompressSuccess] = useState(false);
+  const [originalSize, setOriginalSize] = useState<number | null>(null);
+  const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Clean up temporary file on unmount
-  useEffect(() => {
-    return () => {
-      if (tempFileId) {
-        removeTemporaryFile(tempFileId);
-      }
-    };
-  }, [tempFileId]);
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ─── STEP 1: Select Image (NO upload, NO compression) ───
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsProcessing(true);
-    setStatusText('Storing image...');
-    setIsCompressed(false);
-    setShowSuccess(false);
+    // Store locally in tempImageState — zero server calls
+    selectImage(file);
 
-    try {
-      // Store file temporarily
-      const tempId = storeTemporaryFile(file);
-      setTempFileId(tempId);
+    // Track original file size
+    setOriginalSize(file.size);
+    setCompressedSize(null);
 
-      const tempFile = getTemporaryFile(tempId);
-      if (!tempFile) throw new Error('Failed to store file');
+    // Update parent form with blob preview URL and raw File
+    onChange(tempImageState.previewUrl!, file);
+    setCompressSuccess(false);
+    toast.success('Image selected. Click "Compress 50KB" to optimize.');
 
-      // Show preview from temporary storage
-      onChange(tempFile.url, file);
-      toast.success('Image stored locally. Click "Compress 50KB" to optimize.');
-    } catch (error) {
-      console.error('Storage Error:', error);
-      toast.error('Failed to store image.');
-    } finally {
-      setIsProcessing(false);
-      setStatusText('');
-      if (fileRef.current) fileRef.current.value = '';
-    }
+    if (fileRef.current) fileRef.current.value = '';
   };
 
+  // ─── STEP 2: Compress < 50KB (only when button clicked) ───
   const handleCompress = async () => {
-    if (!tempFileId) {
+    if (!tempImageState.file) {
       toast.error('No image selected');
       return;
     }
 
-    setIsProcessing(true);
-    setStatusText('Compressing to 50KB...');
+    setIsCompressing(true);
+    setCompressSuccess(false);
 
     try {
-      const tempFile = getTemporaryFile(tempFileId);
-      if (!tempFile) throw new Error('Temporary file not found');
+      const compressed = await compressImage(tempImageState.file, 50);
 
-      const optimizedFile = await compressImage(tempFile.file, 50);
-      const finalSizeKB = (optimizedFile.size / 1024).toFixed(1);
+      // Replace in storage.ts — old blob URL revoked automatically
+      replaceWithCompressed(compressed);
 
-      // Update temporary storage with compressed file
-      const newUrl = updateTemporaryFile(tempFileId, optimizedFile);
+      // Track compressed size
+      setCompressedSize(compressed.size);
 
-      onChange(newUrl, optimizedFile);
-      setIsCompressed(true);
-      setShowSuccess(true);
+      // Update parent form with new compressed file
+      onChange(tempImageState.previewUrl!, compressed);
+      setCompressSuccess(true);
 
-      toast.success(`Image compressed to ${finalSizeKB}KB! Ready to publish.`);
-
-      // Hide success tick after 3 seconds
-      setTimeout(() => setShowSuccess(false), 3000);
+      toast.success(`✅ Image compressed to ${formatSize(compressed.size)}! Ready to publish.`);
     } catch (error) {
       console.error('Compression Error:', error);
       toast.error('Failed to compress image.');
     } finally {
-      setIsProcessing(false);
-      setStatusText('');
+      setIsCompressing(false);
     }
   };
 
@@ -112,43 +93,57 @@ export default function ImageUpload({ value, onChange }: ImageUploadProps) {
       {mode === 'upload' ? (
         <div className="space-y-3">
           <div>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
-            <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={isProcessing} className="w-full">
-              {isProcessing ? (
-                <span className="flex items-center gap-2 text-purple-600 font-medium">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {statusText}
-                </span>
-              ) : 'Choose Image'}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+            <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={isCompressing} className="w-full">
+              Choose Image
             </Button>
           </div>
 
-          {value && !isProcessing && (
+          {/* Preview */}
+          {value && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4 text-muted-foreground shrink-0" />
                 <img src={value} alt="Preview" className="h-16 w-16 object-cover rounded-lg border border-border/50" />
                 <div className="text-sm text-muted-foreground">
-                  {isCompressed ? '✓ Compressed to 50KB' : 'Ready for compression'}
+                  {compressSuccess ? (
+                    <>✓ Compressed — {formatSize(compressedSize!)}</>
+                  ) : originalSize ? (
+                    <>Original — {formatSize(originalSize)}</>
+                  ) : (
+                    'Ready for compression'
+                  )}
                 </div>
               </div>
 
-              {!isCompressed && (
+              {/* Compress Button — shows loading state */}
+              {!compressSuccess && (
                 <Button
                   type="button"
                   onClick={handleCompress}
+                  disabled={isCompressing}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-2"
                 >
-                  <Minimize2 className="h-4 w-4" />
-                  Compress 50KB
+                  {isCompressing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Compressing...
+                    </>
+                  ) : (
+                    <>
+                      <Minimize2 className="h-4 w-4" />
+                      Compress 50KB
+                    </>
+                  )}
                 </Button>
               )}
 
-              {showSuccess && (
+              {/* ✅ Success — stays visible until publish */}
+              {compressSuccess && (
                 <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
                   <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                    Compression complete! Image is ready to publish.
+                    ✅ Compressed {originalSize ? `${formatSize(originalSize)} → ${formatSize(compressedSize!)}` : `to ${formatSize(compressedSize!)}`} — Ready to publish!
                   </span>
                 </div>
               )}

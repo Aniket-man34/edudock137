@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadFile } from '@/lib/storage';
+import { uploadFile, clearTempImage } from '@/lib/storage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -171,6 +171,7 @@ export default function PdfsManager({ search }: { search: string }) {
       qc.invalidateQueries({ queryKey: ['pdfs'] });
       setForm(emptyForm);
       setIsAddFormOpen(false);
+      clearTempImage();
       toast.success('PDF created successfully!');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -179,7 +180,24 @@ export default function PdfsManager({ search }: { search: string }) {
   const updatePdf = useMutation({
     mutationFn: async () => {
       let finalImageUrl = editForm.cover_image_url;
+
       if (editForm.cover_image_file) {
+        // Delete old image from storage before uploading new one
+        const { data: currentPdf } = await supabase.from('pdfs').select('cover_image_url').eq('id', editId).single();
+        if (currentPdf?.cover_image_url && currentPdf.cover_image_url.includes('supabase.co')) {
+          try {
+            const url = new URL(currentPdf.cover_image_url);
+            const pathParts = url.pathname.split('/');
+            const bucketIndex = pathParts.indexOf('pdf-covers');
+            if (bucketIndex !== -1) {
+              const filePath = pathParts.slice(bucketIndex + 1).join('/');
+              await supabase.storage.from('pdf-covers').remove([filePath]);
+            }
+          } catch (err) {
+            console.error("Failed to delete old image:", err);
+          }
+        }
+
         const uploadedUrl = await uploadFile('pdf-covers', editForm.cover_image_file);
         if (!uploadedUrl) throw new Error("Image upload failed");
         finalImageUrl = uploadedUrl;
@@ -200,6 +218,7 @@ export default function PdfsManager({ search }: { search: string }) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pdfs'], exact: true });
       setEditId(null);
+      clearTempImage();
       toast.success('PDF updated successfully!');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -207,12 +226,15 @@ export default function PdfsManager({ search }: { search: string }) {
 
   const remove = useMutation({
     mutationFn: async (pdf: any) => {
-      // 1. DELETE FROM STORAGE FIRST
+      // 1. DELETE FROM STORAGE FIRST (robust URL-based path extraction)
       if (pdf.cover_image_url && pdf.cover_image_url.includes('supabase.co')) {
         try {
-          const pathParts = pdf.cover_image_url.split('pdf-covers/');
-          if (pathParts.length === 2) {
-            await supabase.storage.from('pdf-covers').remove([pathParts[1]]);
+          const url = new URL(pdf.cover_image_url);
+          const pathParts = url.pathname.split('/');
+          const bucketIndex = pathParts.indexOf('pdf-covers');
+          if (bucketIndex !== -1) {
+            const filePath = pathParts.slice(bucketIndex + 1).join('/');
+            await supabase.storage.from('pdf-covers').remove([filePath]);
           }
         } catch (err) {
           console.error("Failed to delete image:", err);
@@ -265,7 +287,7 @@ export default function PdfsManager({ search }: { search: string }) {
                 <h4 className="font-bold text-blue-500">Upload New PDF</h4>
                 <button
                   type="button"
-                  onClick={() => { setIsAddFormOpen(false); setForm(emptyForm); }}
+                  onClick={() => { setIsAddFormOpen(false); setForm(emptyForm); clearTempImage(); }}
                   className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition"
                 >
                   <X className="h-5 w-5" />
@@ -277,7 +299,7 @@ export default function PdfsManager({ search }: { search: string }) {
                   <Button type="submit" disabled={addPdf.isPending} className="flex-1 md:flex-none w-40 bg-blue-600 hover:bg-blue-700 text-white">
                     {addPdf.isPending ? 'Uploading...' : 'Upload PDF'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => { setIsAddFormOpen(false); setForm(emptyForm); }} className="flex-1 md:flex-none w-24">
+                  <Button type="button" variant="outline" onClick={() => { setIsAddFormOpen(false); setForm(emptyForm); clearTempImage(); }} className="flex-1 md:flex-none w-24">
                     Cancel
                   </Button>
                 </div>
@@ -355,7 +377,7 @@ export default function PdfsManager({ search }: { search: string }) {
             >
               <div className="flex items-center justify-between p-5 border-b border-border/50">
                 <h2 className="text-xl font-bold text-foreground">Edit PDF Details</h2>
-                <button onClick={() => setEditId(null)} className="p-2 hover:bg-muted rounded-full transition">
+                <button onClick={() => { setEditId(null); clearTempImage(); }} className="p-2 hover:bg-muted rounded-full transition">
                   <X className="h-5 w-5 text-muted-foreground" />
                 </button>
               </div>
@@ -363,7 +385,7 @@ export default function PdfsManager({ search }: { search: string }) {
                 <form onSubmit={(e) => { e.preventDefault(); updatePdf.mutate(); }}>
                   <PdfFormFields formData={editForm} setFormData={setEditForm} pdfCategories={pdfCategories} />
                   <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border/50">
-                    <Button type="button" variant="outline" onClick={() => setEditId(null)}>Cancel</Button>
+                    <Button type="button" variant="outline" onClick={() => { setEditId(null); clearTempImage(); }}>Cancel</Button>
                     <Button type="submit" disabled={updatePdf.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">Save Changes</Button>
                   </div>
                 </form>
