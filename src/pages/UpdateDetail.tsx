@@ -29,7 +29,7 @@ export default function UpdateDetail() {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
       const searchColumn = isUUID ? 'id' : 'slug';
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('updates')
         .select('*')
         .eq(searchColumn, slug)
@@ -47,7 +47,7 @@ export default function UpdateDetail() {
   const { data: recentUpdates } = useQuery({
     queryKey: ['recent_updates_suggestions', update?.id],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('updates')
         .select('*')
         .neq('id', update.id)
@@ -61,10 +61,10 @@ export default function UpdateDetail() {
 
   useEffect(() => {
     if (update && update.id) {
-      (supabase as any).from('updates')
-        .update({ clicks: ((update as any).clicks || 0) + 1 })
+      supabase.from('updates')
+        .update({ clicks: (update.clicks || 0) + 1 })
         .eq('id', update.id)
-        .then(({ error }: any) => {
+        .then(({ error }) => {
           if (error) console.error("Error updating click count:", error);
         });
     }
@@ -76,7 +76,7 @@ export default function UpdateDetail() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: update?.headline || 'EduDock Update',
+          title: update?.title || 'EduDock Update',
           url: shareUrl
         });
       } catch (err) {
@@ -127,7 +127,7 @@ export default function UpdateDetail() {
         <Link to="/updates" className="hover:text-primary transition-colors">Updates</Link>
         <ChevronRight className="w-4 h-4 shrink-0" />
         <span className="text-foreground font-medium truncate max-w-[200px] sm:max-w-[400px]">
-          {update.headline}
+          {update.title}
         </span>
       </nav>
 
@@ -138,13 +138,13 @@ export default function UpdateDetail() {
         className="w-full max-w-4xl mx-auto flex flex-col"
       >
         <h1 className="text-3xl md:text-4xl lg:text-[42px] font-bold font-display text-foreground tracking-tight leading-[1.25] mb-6">
-          {update.headline}
+          {update.title}
         </h1>
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-6 mb-8">
           <div className="flex items-center gap-3">
             <img
-              src={getHighResAvatar(update.author_avatar_url)}
+              src={getHighResAvatar(update.author_avatar)}
               alt="Author"
               className="w-14 h-14 rounded-full object-cover border border-border/50 bg-muted/20 shadow-sm"
             />
@@ -176,7 +176,7 @@ export default function UpdateDetail() {
 
           <div className="flex items-center gap-2">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.headline} \n\nhttps://edudock.in/share/updates/${update.slug || update.id}`)}`}
+              href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.title} \n\nhttps://edudock.in/share/updates/${update.slug || update.id}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-10 h-10 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
@@ -206,7 +206,7 @@ export default function UpdateDetail() {
           <div className="w-full mb-10 overflow-hidden bg-transparent rounded-2xl">
             <img
               src={`${update.image_url}?t=${Date.now()}`}
-              alt={update.headline}
+              alt={update.title}
               className="w-full h-auto object-contain max-h-[700px] border border-border/20 shadow-sm"
             />
           </div>
@@ -219,12 +219,12 @@ export default function UpdateDetail() {
             </p>
           )}
 
-          {update.external_link && (
+          {update.external_url && (
             <div className="mt-12 bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center">
               <h3 className="text-xl font-bold mb-2">Official Resource</h3>
               <p className="text-base text-muted-foreground mb-6">Click below to visit the official website or resource related to this update.</p>
               <a
-                href={update.external_link}
+                href={update.external_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5"
@@ -282,7 +282,7 @@ export default function UpdateDetail() {
                   </div>
                   <div className="min-w-0">
                     <h4 className="text-xs font-bold text-foreground group-hover:text-primary leading-snug line-clamp-2 transition-colors">
-                      {item.headline}
+                      {item.title}
                     </h4>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

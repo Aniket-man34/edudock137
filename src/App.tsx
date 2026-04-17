@@ -6,7 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import PublicLayout from "@/components/layout/PublicLayout";
-import AdminLayout from "@/components/layout/AdminLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Lazy load all page components
@@ -17,10 +18,8 @@ const Updates = lazy(() => import("@/pages/Updates"));
 const UpdateDetail = lazy(() => import("@/pages/UpdateDetail"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
 const Terms = lazy(() => import("@/pages/Terms"));
-const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
-const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
-const AdminManagement = lazy(() => import("@/pages/admin/AdminManagement"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const ContentManager = lazy(() => import("@/components/admin/ContentManager"));
 
 const queryClient = new QueryClient();
 
@@ -45,12 +44,8 @@ const AnalyticsTracker = () => {
 
   useEffect(() => {
     const recordVisit = async () => {
-      // Ignore admin page visits to keep stats accurate
-      if (location.pathname.startsWith('/admin')) return;
-
       try {
-        // 'as any' prevents the TypeScript error while your local types update
-        await (supabase.from('page_views' as any) as any).insert([
+        await supabase.from('page_views').insert([
           { page_path: location.pathname }
         ]);
       } catch (error) {
@@ -71,32 +66,30 @@ const App = () => (
         <Toaster />
         <BrowserRouter>
           <AnalyticsTracker />
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              {/* Public Pages */}
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/tools" element={<Tools />} />
-                <Route path="/pdfs" element={<Pdfs />} />
-                <Route path="/pdfs/:slug" element={<Pdfs />} />
-                <Route path="/updates" element={<Updates />} />
-                <Route path="/updates/:slug" element={<UpdateDetail />} />
-                {/* 🚨 REQUIRED FOR GOOGLE VERIFICATION 🚨 */}
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-              </Route>
+          <ErrorBoundary fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                {/* Public Pages */}
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/tools" element={<Tools />} />
+                  <Route path="/pdfs" element={<Pdfs />} />
+                  <Route path="/pdfs/:slug" element={<Pdfs />} />
+                  <Route path="/updates" element={<Updates />} />
+                  <Route path="/updates/:slug" element={<UpdateDetail />} />
+                  {/* 🚨 REQUIRED FOR GOOGLE VERIFICATION 🚨 */}
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                </Route>
 
-              {/* Admin Portal */}
-              <Route path="/admin" element={<AdminLogin />} />
-              <Route element={<AdminLayout />}>
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/management" element={<AdminManagement />} />
-              </Route>
+                {/* Admin Routes */}
+                <Route path="/admin/content" element={<ContentManager />} />
 
-              {/* Fallback */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+                {/* Fallback */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

@@ -1,31 +1,96 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { FileText, ArrowLeft } from 'lucide-react';
 
 export default function Terms() {
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl min-h-screen">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="prose prose-slate dark:prose-invert max-w-none">
-        <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
-        <p className="text-muted-foreground italic">Last Updated: April 5, 2026</p>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        {/* Back link */}
+        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+          <ArrowLeft className="h-4 w-4" />
+          <span className="text-sm">Back to Home</span>
+        </Link>
 
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold">1. Acceptance of Terms</h2>
-          <p>By accessing the EduDock Admin Panel, you agree to comply with these terms. This panel is for authorized administrators only.</p>
-        </section>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2.5 rounded-xl bg-primary/10">
+            <FileText className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-4xl font-bold font-display">Terms of Service</h1>
+        </div>
+        <p className="text-muted-foreground italic mb-10">Last Updated: April 5, 2026</p>
 
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold">2. Admin Responsibilities</h2>
-          <p>As an administrator, you agree not to upload any illegal, copyrighted (without permission), or harmful material to the EduDock platform. You are responsible for maintaining the security of your Google account used for login.</p>
-        </section>
+        <div className="space-y-8">
+          <section className="glass-card p-6">
+            <h2 className="text-xl font-bold font-display mb-3">1. Acceptance of Terms</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              By accessing or using the EduDock platform (edudock.in), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services. Your continued use of the platform constitutes acceptance of any modifications to these terms.
+            </p>
+          </section>
 
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold">3. Termination</h2>
-          <p>We reserve the right to revoke administrative access at any time if these terms are violated.</p>
-        </section>
+          <section className="glass-card p-6">
+            <h2 className="text-xl font-bold font-display mb-3">2. User Responsibilities</h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              As a user of EduDock, you agree to:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+              <li>Use the platform only for lawful educational purposes</li>
+              <li>Not engage in any malicious activities or attempt unauthorized access</li>
+              <li>Not misuse the services provided or distribute harmful content</li>
+              <li>Respect the intellectual property rights of others</li>
+              <li>Provide accurate information when required</li>
+            </ul>
+          </section>
 
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold">4. Disclaimer</h2>
-          <p>The materials on EduDock are provided "as is". We make no warranties regarding the accuracy or reliability of content uploaded by third parties.</p>
-        </section>
+          <section className="glass-card p-6">
+            <h2 className="text-xl font-bold font-display mb-3">3. Acceptable Use</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              We reserve the right to restrict, suspend, or terminate access to any user found violating these terms or engaging in disruptive behavior. This includes, but is not limited to, spamming, hacking, distributing malware, or any activity that could damage the platform or other users' experience.
+            </p>
+          </section>
+
+          <section className="glass-card p-6">
+            <h2 className="text-xl font-bold font-display mb-3">4. Intellectual Property</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              All content on EduDock, including text, graphics, logos, and software, is the property of EduDock or its content suppliers and is protected by intellectual property laws. You may not reproduce, distribute, or create derivative works without explicit permission.
+            </p>
+          </section>
+
+          <section className="glass-card p-6">
+            <h2 className="text-xl font-bold font-display mb-3">5. Disclaimer</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              The materials on EduDock are provided "as is" without warranties of any kind, either express or implied. We make no warranties regarding the accuracy, reliability, or completeness of content uploaded by third parties. EduDock does not guarantee uninterrupted or error-free service.
+            </p>
+          </section>
+
+          <section className="glass-card p-6">
+            <h2 className="text-xl font-bold font-display mb-3">6. Limitation of Liability</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              EduDock shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform. This includes damages for loss of profits, data, or other intangible losses, even if we have been advised of the possibility of such damages.
+            </p>
+          </section>
+
+          <section className="glass-card p-6">
+            <h2 className="text-xl font-bold font-display mb-3">7. Changes to Terms</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting on this page. Your continued use of the platform after any changes constitutes your acceptance of the new terms. We encourage you to review this page periodically.
+            </p>
+          </section>
+
+          <section className="glass-card p-6">
+            <h2 className="text-xl font-bold font-display mb-3">8. Contact Us</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              If you have questions about these Terms of Service, please contact us at: <strong className="text-foreground">support@edudock.in</strong>
+            </p>
+          </section>
+        </div>
+
+        {/* Footer link */}
+        <div className="mt-12 pt-8 border-t border-border text-center">
+          <p className="text-muted-foreground text-sm">
+            Also see our <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+          </p>
+        </div>
       </motion.div>
     </div>
   );

@@ -71,70 +71,71 @@ export default function Home() {
   const [heroImageError, setHeroImageError] = useState(false);
 
   const { data: categories } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['tool_categories'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .order('name');
+        .eq('entity_type', 'tool')
+        .order('title');
       if (error) throw error;
-      return (data as any[]) || [];
+      return data || [];
     },
   });
 
   const { data: tools } = useQuery({
     queryKey: ['tools'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('tools')
         .select('*')
-        .order('name');
+        .order('title');
       if (error) throw error;
-      return (data as any[]) || [];
+      return data || [];
     },
   });
 
   const { data: allPdfs } = useQuery({
     queryKey: ['search_pdfs'],
     queryFn: async () => {
-      const { data } = await (supabase as any).from('pdfs').select(
-        'id, name, cover_image_url, clicks, slug' // Added slug
+      const { data } = await supabase.from('pdfs').select(
+        'id, title, cover_image_url, clicks, slug'
       );
-      return (data as any[]) || [];
+      return data || [];
     },
   });
 
   const { data: allUpdates } = useQuery({
     queryKey: ['search_updates'],
     queryFn: async () => {
-      const { data } = await (supabase as any).from('updates').select(
-        'id, headline, image_url, clicks, slug' // Added slug
+      const { data } = await supabase.from('updates').select(
+        'id, title, image_url, clicks, slug'
       );
-      return (data as any[]) || [];
+      return data || [];
     },
   });
 
   const { data: trendingUpdates } = useQuery({
     queryKey: ['trending_updates'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from('updates')
+      const { data, error } = await supabase.from('updates')
         .select('*')
         .order('clicks', { ascending: false })
         .limit(6);
       if (error) throw error;
-      return (data as any[]) || [];
+      return data || [];
     },
   });
 
   const { data: trendingPdfs } = useQuery({
     queryKey: ['trending_pdfs'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from('pdfs')
+      const { data, error } = await supabase.from('pdfs')
         .select('*')
         .order('clicks', { ascending: false })
         .limit(6);
       if (error) throw error;
-      return (data as any[]) || [];
+      return data || [];
     },
   });
 
@@ -145,26 +146,26 @@ export default function Home() {
   const { data: newPdfs } = useQuery({
     queryKey: ['new_pdfs'],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from('pdfs')
         .select('*')
         .gte('created_at', thirtyDaysIso)
         .order('created_at', { ascending: false })
         .limit(4);
-      return (data as any[]) || [];
+      return data || [];
     },
   });
 
   const { data: newUpdates } = useQuery({
     queryKey: ['new_updates'],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from('updates')
         .select('*')
         .gte('created_at', thirtyDaysIso)
         .order('created_at', { ascending: false })
         .limit(3);
-      return (data as any[]) || [];
+      return data || [];
     },
   });
 
@@ -177,13 +178,13 @@ export default function Home() {
   const searchMatchedTools =
     tools?.filter(
       (t: any) =>
-        t.name.toLowerCase().includes(term) ||
+        t.title.toLowerCase().includes(term) ||
         t.short_description?.toLowerCase().includes(term)
     ) || [];
   const searchMatchedPdfs =
-    allPdfs?.filter((p: any) => p.name.toLowerCase().includes(term)) || [];
+    allPdfs?.filter((p: any) => p.title.toLowerCase().includes(term)) || [];
   const searchMatchedUpdates =
-    allUpdates?.filter((u: any) => u.headline.toLowerCase().includes(term)) ||
+    allUpdates?.filter((u: any) => u.title.toLowerCase().includes(term)) ||
     [];
   const isSearching = term.length > 0;
 
@@ -292,7 +293,7 @@ export default function Home() {
                         <img
                           src={pdf.cover_image_url || '/placeholder.png'}
                           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/pdf:scale-110"
-                          alt={pdf.name}
+                          alt={pdf.title}
                         />
 
                         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
@@ -307,7 +308,7 @@ export default function Home() {
 
                         <div className="absolute bottom-0 left-0 right-0 p-4">
                           <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/pdf:text-primary transition-colors duration-300">
-                            {pdf.name}
+                            {pdf.title}
                           </h4>
                         </div>
                       </div>
@@ -367,7 +368,7 @@ export default function Home() {
 
                         <div className="absolute bottom-0 left-0 right-0 p-4">
                           <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover:text-primary transition-colors duration-300">
-                            {update.headline}
+                            {update.title}
                           </h4>
                         </div>
                       </div>
@@ -751,7 +752,7 @@ export default function Home() {
                         <img
                           src={pdf.cover_image_url || '/placeholder.png'}
                           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/card:scale-110"
-                          alt={pdf.name}
+                          alt={pdf.title}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
                         <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
@@ -759,7 +760,7 @@ export default function Home() {
 
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/card:text-primary transition-colors duration-300">
-                          {pdf.name}
+                          {pdf.title}
                         </h4>
                       </div>
                     </Link>
@@ -843,7 +844,7 @@ export default function Home() {
 
                       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
                         <h4 className="font-bold text-sm md:text-base text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/card:text-primary transition-colors duration-300">
-                          {update.headline}
+                          {update.title}
                         </h4>
                       </div>
                     </Link>
@@ -928,7 +929,7 @@ export default function Home() {
                         />
                       </div>
                       <p className="text-sm font-medium flex-1 truncate group-hover:text-primary transition-colors">
-                        {pdf.name}
+                        {pdf.title}
                       </p>
                       <ArrowRight className="h-4 w-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 shrink-0" />
                     </Link>
@@ -992,7 +993,7 @@ export default function Home() {
                         />
                       </div>
                       <p className="text-sm font-medium flex-1 truncate group-hover:text-primary transition-colors">
-                        {update.headline}
+                        {update.title}
                       </p>
                       <ArrowRight className="h-4 w-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 shrink-0" />
                     </Link>

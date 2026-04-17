@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Home, Wrench, BookOpen, Bell, Search, Shield, X } from 'lucide-react';
+import { Home, Wrench, BookOpen, Bell, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import ThemeToggle from '@/components/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch';
 
 const navItems = [
   { label: 'Home', path: '/', icon: Home },
@@ -15,18 +16,36 @@ const navItems = [
 
 export default function PublicLayout() {
   const location = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, debouncedSearch, setSearchQuery] = useDebouncedSearch(300);
 
   // --- TRACK UNIQUE VISITOR ONCE PER SESSION ---
   useEffect(() => {
     const trackVisit = async () => {
       if (!sessionStorage.getItem('has_visited')) {
         try {
-          // Added "as any" to bypass TypeScript's strict checking for the new table
-          await (supabase.from('page_views' as any) as any).insert([{ path: location.pathname }]);
-          sessionStorage.setItem('has_visited', 'true');
+          console.log('[PageView] Attempting to track visit for:', location.pathname);
+
+          const { data, error, status, statusText } = await supabase
+            .from('page_views')
+            .insert([{ path: location.pathname }])
+            .select();
+
+          if (error) {
+            console.error('[PageView] Insert failed:', {
+              error,
+              status,
+              statusText,
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              code: error.code
+            });
+          } else {
+            console.log('[PageView] Successfully tracked visit:', data);
+            sessionStorage.setItem('has_visited', 'true');
+          }
         } catch (error) {
-          console.error("Error logging visit", error);
+          console.error('[PageView] Unexpected error:', error);
         }
       }
     };
@@ -45,14 +64,14 @@ export default function PublicLayout() {
           {/* FLEX WRAPPER: Automatically locks absolute children to the exact vertical center */}
           <div className="relative flex items-center w-full group">
             <Search className="absolute left-3 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary pointer-events-none" />
-            
+
             <Input
               placeholder="Search anything..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-9 pl-9 pr-9 bg-muted/40 border-transparent text-sm rounded-xl focus:bg-card focus:border-primary/30 transition-all"
             />
-            
+
             {/* Clear Button Container - Anchored right, centered by Flexbox */}
             <div className="absolute right-2 flex items-center justify-center">
               <AnimatePresence>
@@ -83,11 +102,10 @@ export default function PublicLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground' 
-                }`}
+                className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 {isActive && (
                   <motion.div
@@ -104,9 +122,6 @@ export default function PublicLayout() {
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <Link to="/admin" className="btn-icon">
-            <Shield className="h-[18px] w-[18px]" />
-          </Link>
         </div>
       </header>
 
@@ -119,14 +134,14 @@ export default function PublicLayout() {
           {/* FLEX WRAPPER FOR MOBILE */}
           <div className="relative flex items-center w-full">
             <Search className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            
+
             <Input
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-8 pl-8 pr-8 bg-muted/40 border-transparent text-xs rounded-lg focus:bg-card focus:border-primary/30 transition-all"
             />
-            
+
             {/* Clear Button Container */}
             <div className="absolute right-1.5 flex items-center justify-center">
               <AnimatePresence>
@@ -149,15 +164,23 @@ export default function PublicLayout() {
           </div>
         </div>
         <ThemeToggle className="p-1.5" />
-        <Link to="/admin" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
-          <Shield className="h-4 w-4" />
-        </Link>
       </header>
 
       {/* Main Content */}
-      <main className="pt-[60px] md:pt-[60px] pb-20 md:pb-10">
-        <Outlet context={{ searchQuery }} />
+      <main className="pt-[60px] md:pt-[60px] pb-20 md:pb-0">
+        <Outlet context={{ searchQuery: debouncedSearch }} />
       </main>
+
+      {/* Desktop Footer */}
+      <footer className="hidden md:block border-t border-border bg-background/80 backdrop-blur-sm">
+        <div className="container mx-auto px-8 py-6 flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} EduDock. All rights reserved.</p>
+          <nav className="flex items-center gap-6">
+            <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
+          </nav>
+        </div>
+      </footer>
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-navbar border-t border-b-0 rounded-none safe-bottom">
