@@ -30,7 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
         //   window.Sentry.captureException(error, { contexts: { react: errorInfo } });
         // }
 
-        // Log to localStorage for debugging
+        // Log to localStorage for debugging 
         if (typeof window !== 'undefined') {
             try {
                 const errorLog = {
