@@ -2,206 +2,245 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, ChevronRight, Loader2 } from 'lucide-react';
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import OptimizedImage from '@/components/OptimizedImage';
 
 type ContextType = { searchQuery: string };
 
-const ITEMS_PER_PAGE = 9;
+/* ── Framer Motion variants ─────────────────────────────────────── */
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.15,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  },
+};
+
+/* ── Helpers ─────────────────────────────────────────────────────── */
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function isNewUpdate(createdAt: string): boolean {
+  if (!createdAt) return false;
+  const uploadDate = new Date(createdAt);
+  const today = new Date();
+  const diffDays = Math.ceil(
+    Math.abs(today.getTime() - uploadDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  return diffDays <= 7;
+}
+
+/* ── Component ───────────────────────────────────────────────────── */
 
 export default function Updates() {
   const { searchQuery } = useOutletContext<ContextType>();
-  const [page, setPage] = useState(1);
-  const [allUpdates, setAllUpdates] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const observerTarget = useRef<HTMLDivElement>(null);
-  const isInitialMount = useRef(true);
 
-  const { data: updates, isLoading, isFetching } = useQuery({
-    queryKey: ['updates', page],
+  /* Fetch latest 5 updates from Supabase */
+  const { data: updates, isLoading } = useQuery({
+    queryKey: ['updates-latest'],
     queryFn: async () => {
-      const from = (page - 1) * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-
       const { data, error } = await supabase
         .from('updates')
         .select('*')
         .order('created_at', { ascending: false })
-        .range(from, to);
+        .limit(5);
 
       if (error) throw error;
       return data;
     },
   });
 
-  // Update all updates when new data arrives
-  useEffect(() => {
-    if (updates) {
-      if (page === 1) {
-        setAllUpdates(updates);
-      } else {
-        setAllUpdates(prev => [...prev, ...updates]);
-      }
-
-      // Check if there's more data
-      if (updates.length < ITEMS_PER_PAGE) {
-        setHasMore(false);
-      }
-    }
-  }, [updates, page]);
-
-  // Reset when search query changes (skip on initial mount to avoid clearing cached data)
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    setPage(1);
-    setAllUpdates([]);
-    setHasMore(true);
-  }, [searchQuery]);
-
-  const filtered = allUpdates?.filter(
+  /* Apply search filter */
+  const filtered = updates?.filter(
     (u: any) =>
-      !searchQuery ||
-      u.title.toLowerCase().includes(searchQuery.toLowerCase())
+      !searchQuery || u.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Intersection Observer for infinite scroll
-  useEffect(() => {
-    const currentTarget = observerTarget.current;
-    if (!currentTarget) return;
+  /* Split into two columns: left (3 items), right (2 items) */
+  const leftItems = filtered ? filtered.slice(0, 3) : [];
+  const rightItems = filtered ? filtered.slice(3, 5) : [];
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading && !isFetching) {
-          setPage(prev => prev + 1);
-        }
-      },
-      { threshold: 0.1 }
+  /* ── Render a single update row ──────────────────────────────── */
+  const renderUpdateItem = (update: any, isLastInColumn: boolean) => {
+    const isExternal = !!update.external_link;
+
+    const titleElement = (
+      <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2 text-sm md:text-base leading-snug">
+        {update.title}
+      </h3>
     );
 
-    observer.observe(currentTarget);
+    return (
+      <motion.div
+        key={update.id}
+        variants={itemVariants}
+        className={`group flex flex-row items-start gap-4 ${
+          isLastInColumn ? '' : 'border-b border-gray-100 pb-4'
+        }`}
+      >
+        {/* Thumbnail */}
+        <div className="shrink-0 w-28 md:w-32 aspect-[40/21] rounded-lg overflow-hidden">
+          <OptimizedImage
+            src={update.image_url || '/placeholder.svg'}
+            alt={update.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            width={1200}
+            height={630}
+          />
+        </div>
 
-    return () => {
-      observer.unobserve(currentTarget);
-    };
-  }, [hasMore, isLoading, isFetching]);
+        {/* Text content */}
+        <div className="flex flex-col justify-start min-w-0 flex-1">
+          {isExternal ? (
+            <a
+              href={update.external_link}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {titleElement}
+            </a>
+          ) : (
+            <Link to={`/updates/${update.slug || update.id}`}>
+              {titleElement}
+            </Link>
+          )}
 
-  const isNewUpdate = (createdAt: string) => {
-    if (!createdAt) return false;
-    const uploadDate = new Date(createdAt);
-    const today = new Date();
-    const diffTime = Math.abs(today.getTime() - uploadDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7;
+          <div className="flex items-center gap-2 mt-1.5">
+            {isNewUpdate(update.created_at) && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                New
+              </span>
+            )}
+            <span className="text-sm text-blue-500 font-medium">
+              {formatDate(update.created_at)}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    );
   };
 
+  /* ── Render ──────────────────────────────────────────────────── */
   return (
-    <div className="container mx-auto px-4 py-8">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="page-header">Updates</h1>
-        <p className="page-subtitle">Latest news, notifications, and announcements</p>
-      </motion.div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch" role="status" aria-live="polite" aria-label="Loading updates">
-          {[...Array(9)].map((_, i) => (
-            <div
-              key={i}
-              className="h-full flex flex-col animate-pulse rounded-xl border border-border/40 bg-muted/5 shadow-sm"
-              aria-hidden="true"
-            >
-              <div className="w-full aspect-[4/3] bg-muted/20 rounded-t-xl shrink-0" />
-              <div className="p-3 flex-1 flex flex-col">
-                <div className="h-4 bg-muted/20 rounded w-full mb-2" />
-                <div className="h-4 bg-muted/20 rounded w-2/3" />
-              </div>
-            </div>
-          ))}
+    <div className="w-full">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white rounded-2xl md:rounded-3xl shadow-lg border border-gray-100 p-6 md:p-10"
+      >
+        {/* ── Section Heading ─────────────────────────────────── */}
+        <div className="text-center mb-8 md:mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold inline-flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
+            <span>Latest</span>
+            <span className="text-blue-600">Updates</span>
+          </h2>
         </div>
-      ) : filtered && filtered.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch" role="list" aria-label="Updates list">
-            {filtered.map((update: any, i: number) => (
-              <motion.div
-                key={update.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.35, ease: 'easeOut' }}
-                className="h-full"
-                role="listitem"
-              >
-                <Link
-                  to={`/updates/${update.slug || update.id}`}
-                  className="glass-card flex flex-col h-full rounded-xl overflow-hidden group hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 border border-border/40"
-                  aria-label={`Read ${update.title} update${isNewUpdate(update.created_at) ? ' - New' : ''}`}
+
+        {isLoading ? (
+          /* ── Loading Skeleton ────────────────────────────────── */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            {/* Left column skeletons */}
+            <div className="flex flex-col gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={`left-skeleton-${i}`}
+                  className="flex flex-row items-start gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
                 >
-                  <div className="relative w-full aspect-[4/3] bg-muted/20 overflow-hidden shrink-0">
-                    <OptimizedImage
-                      src={update.image_url || '/placeholder.svg'}
-                      alt={update.title}
-                      className="w-full h-full transition-transform duration-500 ease-out group-hover:scale-105"
-                    />
-
-                    {isNewUpdate(update.created_at) && (
-                      <div className="absolute top-2 left-2 z-30" aria-label="New update">
-                        <span className="relative flex h-5 w-12 items-center justify-center">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-30" aria-hidden="true" />
-                          <span className="relative inline-flex items-center justify-center h-5 w-12 rounded-md bg-blue-500/90 backdrop-blur-sm border border-blue-400/50 text-[9px] font-bold text-white uppercase tracking-wider shadow-[0_0_10px_rgba(59,130,246,0.4)]">
-                            New
-                          </span>
-                        </span>
-                      </div>
-                    )}
+                  <div className="shrink-0 w-28 md:w-32 aspect-[40/21] rounded-lg bg-gray-100 animate-pulse" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-4 bg-gray-100 animate-pulse rounded w-3/4" />
+                    <div className="h-3 bg-gray-100 animate-pulse rounded w-1/3" />
                   </div>
+                </div>
+              ))}
+            </div>
 
-                  <div className="p-3 flex flex-col flex-1 bg-background/30 relative">
-                    <div className="flex items-start gap-2 mb-auto">
-                      <Bell className="w-4 h-4 mt-0.5 shrink-0 text-primary/70" aria-hidden="true" />
-                      <h3 className="font-display font-medium text-sm leading-tight line-clamp-2 text-foreground/90 group-hover:text-primary transition-colors">
-                        {update.title}
-                      </h3>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/30">
-                      <span className="text-xs text-muted-foreground">Read more</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-primary group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-                    </div>
+            {/* Right column skeletons */}
+            <div className="flex flex-col gap-4">
+              {[...Array(2)].map((_, i) => (
+                <div
+                  key={`right-skeleton-${i}`}
+                  className="flex flex-row items-start gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
+                >
+                  <div className="shrink-0 w-28 md:w-32 aspect-[40/21] rounded-lg bg-gray-100 animate-pulse" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-4 bg-gray-100 animate-pulse rounded w-3/4" />
+                    <div className="h-3 bg-gray-100 animate-pulse rounded w-1/3" />
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Loading indicator for infinite scroll */}
-          {isFetching && !isLoading && (
-            <div className="flex justify-center py-8" role="status" aria-live="polite" aria-label="Loading more updates">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ))}
             </div>
-          )}
-
-          {/* Observer target for infinite scroll */}
-          {hasMore && !isLoading && (
-            <div ref={observerTarget} className="h-4" aria-hidden="true" />
-          )}
-
-          {/* End of list message */}
-          {!hasMore && filtered.length > 0 && (
-            <div className="text-center py-8 text-muted-foreground text-sm">
-              You've reached the end of updates
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="empty-state" role="status">
-          <div className="glass-card inline-flex p-4 rounded-2xl mb-4">
-            <Bell className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           </div>
-          <p>No updates found matching your search.</p>
-        </div>
-      )}
+        ) : filtered && filtered.length > 0 ? (
+          <>
+            {/* ── Two-Column Layout ─────────────────────────────── */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
+            >
+              {/* Left Column — 3 items */}
+              <div className="flex flex-col gap-4">
+                {leftItems.map((update: any, i: number) =>
+                  renderUpdateItem(update, i === leftItems.length - 1)
+                )}
+              </div>
+
+              {/* Right Column — 2 items */}
+              <div className="flex flex-col gap-4">
+                {rightItems.map((update: any, i: number) =>
+                  renderUpdateItem(update, i === rightItems.length - 1)
+                )}
+              </div>
+            </motion.div>
+
+            {/* ── View All Updates Button ──────────────────────── */}
+            <div className="flex justify-center md:justify-end mt-8">
+              <Link
+                to="/updates"
+                className="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-200 text-blue-700 font-medium rounded-full px-6 py-2.5 transition-colors duration-200"
+              >
+                View All Updates
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </>
+        ) : (
+          /* ── Empty State ─────────────────────────────────────── */
+          <div className="flex flex-col items-center justify-center py-16" role="status">
+            <div className="inline-flex p-4 rounded-2xl mb-4 bg-gray-50 border border-gray-100">
+              <Loader2 className="h-6 w-6 text-gray-400" aria-hidden="true" />
+            </div>
+            <p className="text-gray-500 text-base">
+              {searchQuery ? 'No updates match your search' : 'No updates found'}
+            </p>
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }

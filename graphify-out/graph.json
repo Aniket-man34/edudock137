@@ -1,0 +1,26 @@
+{
+  "nodes": [
+    {"id": "eslint_config_js", "label": "eslint.config.js", "file_type": "code", "source_file": "eslint.config.js"},
+    {"id": "react_component_lib", "label": "React Components", "file_type": "code", "source_file": "src/components"},
+    {"id": "supabase_client", "label": "Supabase Client", "file_type": "code", "source_file": "src/integrations/supabase/client.ts"},
+    {"id": "tailwind_config", "label": "Tailwind Config", "file_type": "code", "source_file": "tailwind.config.ts"},
+    {"id": "vite_config", "label": "Vite Config", "file_type": "code", "source_file": "vite.config.ts"},
+    {"id": "home_page", "label": "Home Page", "file_type": "code", "source_file": "src/pages/Home.tsx"},
+    {"id": "tools_page", "label": "Tools Page", "file_type": "code", "source_file": "src/pages/Tools.tsx"},
+    {"id": "pdfs_page", "label": "PDFs Page", "file_type": "code", "source_file": "src/pages/Pdfs.tsx"},
+    {"id": "use_tools_hook", "label": "useTools Hook", "file_type": "code", "source_file": "src/hooks/useTools.ts"},
+    {"id": "use_pdfs_hook", "label": "usePdfs Hook", "file_type": "code", "source_file": "src/hooks/usePdfs.ts"},
+    {"id": "ui_components", "label": "shadcn/ui Library", "file_type": "code", "source_file": "src/components/ui"}
+  ],
+  "links": [
+    {"source": "home_page", "target": "react_component_lib", "relation": "uses"},
+    {"source": "tools_page", "target": "react_component_lib", "relation": "uses"},
+    {"source": "pdfs_page", "target": "react_component_lib", "relation": "uses"},
+    {"source": "tools_page", "target": "use_tools_hook", "relation": "uses"},
+    {"source": "pdfs_page", "target": "use_pdfs_hook", "relation": "uses"},
+    {"source": "use_tools_hook", "target": "supabase_client", "relation": "queries"},
+    {"source": "use_pdfs_hook", "target": "supabase_client", "relation": "queries"},
+    {"source": "react_component_lib", "target": "ui_components", "relation": "depends"},
+    {"source": "react_component_lib", "target": "tailwind_config", "relation": "uses"}
+  ]
+}

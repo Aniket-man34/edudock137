@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, RotateCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,10 +6,10 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Tool = Tables<'tools'>;
 
-export default function ToolCard({ tool, index }: { tool: Tool; index: number }) {
+function ToolCardComponent({ tool, index }: { tool: Tool; index: number }) {
   const [flipped, setFlipped] = useState(false);
 
-  const handleLinkClick = (e: React.MouseEvent) => {
+  const handleLinkClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
 
     supabase.from('tools')
@@ -18,7 +18,11 @@ export default function ToolCard({ tool, index }: { tool: Tool; index: number })
       .then(({ error }) => {
         if (error) console.error("Error updating clicks:", error);
       });
-  };
+  }, [tool.id, tool.clicks]);
+
+  const handleCardClick = useCallback(() => {
+    setFlipped(prev => !prev);
+  }, []);
 
   return (
     <motion.div
@@ -27,7 +31,7 @@ export default function ToolCard({ tool, index }: { tool: Tool; index: number })
       transition={{ delay: index * 0.04, duration: 0.4 }}
       className="h-60 cursor-pointer group"
       style={{ perspective: '1000px' }}
-      onClick={() => setFlipped(!flipped)}
+      onClick={handleCardClick}
     >
       <motion.div
         animate={{ rotateY: flipped ? 180 : 0 }}
@@ -83,3 +87,19 @@ export default function ToolCard({ tool, index }: { tool: Tool; index: number })
     </motion.div>
   );
 }
+
+// Custom comparison function to prevent unnecessary re-renders
+const areEqual = (prevProps: { tool: Tool; index: number }, nextProps: { tool: Tool; index: number }) => {
+  // Only re-render if tool data actually changed
+  return prevProps.tool.id === nextProps.tool.id &&
+    prevProps.tool.title === nextProps.tool.title &&
+    prevProps.tool.short_description === nextProps.tool.short_description &&
+    prevProps.tool.description === nextProps.tool.description &&
+    prevProps.tool.image_url === nextProps.tool.image_url &&
+    prevProps.tool.url === nextProps.tool.url &&
+    prevProps.tool.clicks === nextProps.tool.clicks &&
+    prevProps.index === nextProps.index;
+};
+
+const ToolCard = memo(ToolCardComponent, areEqual);
+export default ToolCard;

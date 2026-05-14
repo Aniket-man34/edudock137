@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Share2, ExternalLink, Calendar, ChevronRight } from 'lucide-react';
-import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { ExternalLink, Calendar, ChevronRight } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import TableOfContents from '@/components/updates/TableOfContents';
+import SocialShare from '@/components/updates/SocialShare';
 
 // 🚨 HIGH-RES INTERCEPTOR FOR OLD POSTS 🚨
 const getHighResAvatar = (url: string | null) => {
@@ -70,24 +71,6 @@ export default function UpdateDetail() {
     }
   }, [update]);
 
-  const handleShare = async () => {
-    const shareUrl = `https://edudock.in/share/updates/${update?.slug || update?.id}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: update?.title || 'EduDock Update',
-          url: shareUrl
-        });
-      } catch (err) {
-        console.log("Share cancelled or failed", err);
-      }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success('Link copied to clipboard!');
-    }
-  };
-
   const formattedDate = update?.created_at
     ? new Date(update.created_at).toLocaleDateString('en-US', {
       month: 'short',
@@ -95,6 +78,57 @@ export default function UpdateDetail() {
       year: 'numeric'
     })
     : '';
+
+  const { htmlContent, headings } = useMemo(() => {
+    const raw = update?.content || '';
+    if (!raw) return { htmlContent: '', headings: [] as any[] };
+
+    const slugify = (text: string) =>
+      text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+
+    const lines = raw.split(/\r?\n/);
+    let h2 = 0;
+    let h3 = 0;
+    const headings: any[] = [];
+    let html = '';
+
+    for (const line of lines) {
+      const mdH2 = line.match(/^##\s+(.*)/);
+      const mdH3 = line.match(/^###\s+(.*)/);
+      const htmlH2 = line.match(/^<h2>(.*)<\/h2>/i);
+      const htmlH3 = line.match(/^<h3>(.*)<\/h3>/i);
+
+      if (mdH2 || htmlH2) {
+        const text = (mdH2 ? mdH2[1] : htmlH2![1]).trim();
+        h2++;
+        h3 = 0;
+        const id = slugify(text);
+        headings.push({ id, text, level: 2, number: String(h2) });
+        html += `<h2 id="${id}" class="mt-6 mb-3">${text}</h2>`;
+      } else if (mdH3 || htmlH3) {
+        const text = (mdH3 ? mdH3[1] : htmlH3![1]).trim();
+        if (h2 === 0) h2 = 1;
+        h3++;
+        const id = slugify(`${h2}-${text}`);
+        headings.push({ id, text, level: 3, number: `${h2}.${h3}` });
+        html += `<h3 id="${id}" class="mt-4 mb-2">${text}</h3>`;
+      } else {
+        const escaped = line
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        if (escaped.trim() !== '') {
+          html += `<p class="whitespace-pre-wrap text-[16px] md:text-[18px] text-foreground/80 leading-[1.9] mb-4">${escaped}</p>`;
+        }
+      }
+    }
+
+    return { htmlContent: html, headings };
+  }, [update?.content]);
 
   if (isLoading) {
     return (
@@ -174,32 +208,10 @@ export default function UpdateDetail() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(`Check out this EduDock update: ${update.title} \n\nhttps://edudock.in/share/updates/${update.slug || update.id}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
-              title="Share to WhatsApp"
-            >
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.001 5.45-4.436 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" /></svg>
-            </a>
-            <a
-              href="https://t.me/edudock"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" /></svg>
-            </a>
-            <button
-              onClick={handleShare}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors"
-              title="Copy Link"
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
-          </div>
+          <SocialShare
+            title={update.title}
+            url={`https://edudock.in/share/updates/${update.slug || update.id}`}
+          />
         </div>
 
         {update.image_url && (
@@ -213,29 +225,41 @@ export default function UpdateDetail() {
         )}
 
         <div className="prose prose-slate dark:prose-invert max-w-none">
-          {update.content && (
-            <p className="whitespace-pre-wrap text-[16px] md:text-[18px] text-foreground/80 leading-[1.9] mb-10">
-              {update.content}
-            </p>
-          )}
+          <div className="md:flex md:gap-8">
+            {headings && headings.length > 0 && (
+              <div className="hidden md:block md:w-80">
+                <TableOfContents headings={headings} />
+              </div>
+            )}
 
-          {update.external_url && (
-            <div className="mt-12 bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center">
-              <h3 className="text-xl font-bold mb-2">Official Resource</h3>
-              <p className="text-base text-muted-foreground mb-6">Click below to visit the official website or resource related to this update.</p>
-              <a
-                href={update.external_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5"
-              >
-                Visit Official Link <ExternalLink className="h-5 w-5" />
-              </a>
+            <div className="min-w-0 flex-1">
+              <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+
+              {update.external_url && (
+                <div className="mt-12 bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center">
+                  <h3 className="text-xl font-bold mb-2">Official Resource</h3>
+                  <p className="text-base text-muted-foreground mb-6">Click below to visit the official website or resource related to this update.</p>
+                  <a
+                    href={update.external_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5"
+                  >
+                    Visit Official Link <ExternalLink className="h-5 w-5" />
+                  </a>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <SocialShare
+          title={update.title}
+          url={`https://edudock.in/share/updates/${update.slug || update.id}`}
+          className="mt-10 pt-8 border-t border-border/40"
+        />
+
+        <div className="mt-8 pt-8 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="text-center sm:text-left">
             <p className="text-lg font-bold text-foreground">Get Notified First 🚀</p>
             <p className="text-sm text-muted-foreground">Join for fresh updates & resources</p>

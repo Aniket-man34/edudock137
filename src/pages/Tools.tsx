@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext } from 'react-router-dom';
 import ToolCard from '@/components/ToolCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wrench, Filter, Loader2 } from 'lucide-react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { Wrench, Filter, Loader2, AlertCircle } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useTools } from '@/hooks/useTools';
 
 type ContextType = { searchQuery: string };
 
@@ -20,38 +21,13 @@ export default function Tools() {
   const observerTarget = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
 
-  const { data: tools, isLoading, isFetching } = useQuery<any[]>({
-    queryKey: ['tools', page],
-    queryFn: async () => {
-      const from = (page - 1) * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-
-      console.log('[Tools.tsx] Fetching tools page:', page, 'from:', from, 'to:', to);
-
-      const { data, error } = await supabase
-        .from('tools')
-        .select('*, categories(name)')
-        .order('title')
-        .range(from, to);
-
-      if (error) {
-        console.error('[Tools.tsx] Query error:', error.message);
-        console.error('[Tools.tsx] Error details:', error.details);
-        console.error('[Tools.tsx] Error hint:', error.hint);
-        console.error('[Tools.tsx] Full error object:', JSON.stringify(error, null, 2));
-        throw error;
-      }
-
-      console.log('[Tools.tsx] Raw data returned:', data);
-      console.log('[Tools.tsx] Number of tools:', data?.length || 0);
-
-      return data || [];
-    },
-  });
+  const { data: toolsData, isLoading, isFetching, error } = useTools(page, ITEMS_PER_PAGE);
+  const tools = toolsData?.data || [];
+  const totalTools = toolsData?.total || 0;
 
   // Update all tools when new data arrives
   useEffect(() => {
-    if (tools) {
+    if (tools && tools.length > 0) {
       if (page === 1) {
         setAllTools(tools);
       } else {
@@ -59,11 +35,10 @@ export default function Tools() {
       }
 
       // Check if there's more data
-      if (tools.length < ITEMS_PER_PAGE) {
-        setHasMore(false);
-      }
+      const hasMoreData = totalTools > page * ITEMS_PER_PAGE;
+      setHasMore(hasMoreData);
     }
-  }, [tools, page]);
+  }, [tools, page, totalTools]);
 
   // Reset when search query or category changes (skip on initial mount to avoid clearing cached data)
   useEffect(() => {
@@ -121,11 +96,37 @@ export default function Tools() {
     };
   }, [hasMore, isLoading, isFetching]);
 
+  // Handle error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Failed to load tools</h2>
+          <p className="text-muted-foreground mb-6">
+            {error instanceof Error ? error.message : 'An unexpected error occurred'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="page-header">All Tools</h1>
         <p className="page-subtitle">Browse our curated collection of educational tools</p>
+        {totalTools > 0 && (
+          <p className="text-sm text-muted-foreground mt-2">
+            Showing {allTools.length} of {totalTools} tools
+          </p>
+        )}
       </motion.div>
 
       {/* Dropdown Category Filter */}

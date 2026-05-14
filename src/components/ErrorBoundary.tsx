@@ -23,11 +23,28 @@ export class ErrorBoundary extends Component<Props, State> {
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('Component Error:', error, errorInfo);
+        console.error('Component Stack:', errorInfo.componentStack);
 
         // Log to error tracking service (e.g., Sentry, LogRocket)
         // if (typeof window !== 'undefined' && window.Sentry) {
         //   window.Sentry.captureException(error, { contexts: { react: errorInfo } });
         // }
+
+        // Log to localStorage for debugging
+        if (typeof window !== 'undefined') {
+            try {
+                const errorLog = {
+                    timestamp: new Date().toISOString(),
+                    message: error.message,
+                    stack: error.stack,
+                    componentStack: errorInfo.componentStack,
+                    url: window.location.href
+                };
+                localStorage.setItem('last_error', JSON.stringify(errorLog));
+            } catch (e) {
+                // Ignore localStorage errors
+            }
+        }
     }
 
     handleReset = () => {
@@ -75,12 +92,31 @@ export class ErrorBoundary extends Component<Props, State> {
                                 Try Again
                             </Button>
                             <Button
-                                onClick={() => window.location.href = '/'}
+                                onClick={() => window.location.reload()}
                                 variant="outline"
+                            >
+                                Reload Page
+                            </Button>
+                            <Button
+                                onClick={() => window.location.href = '/'}
+                                variant="ghost"
                             >
                                 Go Home
                             </Button>
                         </div>
+
+                        {process.env.NODE_ENV === 'development' && this.state.error?.stack && (
+                            <div className="mt-6 p-4 bg-muted/50 rounded-lg text-left">
+                                <details>
+                                    <summary className="cursor-pointer text-sm font-medium mb-2">
+                                        Error Details (Development Only)
+                                    </summary>
+                                    <pre className="text-xs text-muted-foreground overflow-auto max-h-40 p-2 bg-background rounded">
+                                        {this.state.error.stack}
+                                    </pre>
+                                </details>
+                            </div>
+                        )}
 
                         <p className="text-xs text-muted-foreground">
                             If this problem persists, please contact support.

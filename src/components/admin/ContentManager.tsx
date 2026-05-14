@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { deleteUpdate, deletePdf, deleteTool } from '@/integrations/supabase/deletion';
-import { Trash2, AlertTriangle, Check, X, Loader2, FileText, Wrench, Bell } from 'lucide-react';
+import { FileText, Wrench, Bell } from 'lucide-react';
 import { toast } from 'sonner';
+import { ContentSection, SectionSkeleton } from './ContentSection';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 export default function ContentManager() {
     const queryClient = useQueryClient();
@@ -77,6 +79,9 @@ export default function ContentManager() {
                 queryClient.invalidateQueries({ queryKey: ['updates'] });
                 queryClient.invalidateQueries({ queryKey: ['pdfs'] });
                 queryClient.invalidateQueries({ queryKey: ['tools'] });
+                
+                // Reset confirmation state
+                setConfirmDelete(null);
             } else {
                 toast.error(`Failed to delete ${confirmDelete.type}`);
             }
@@ -85,7 +90,6 @@ export default function ContentManager() {
             toast.error('An error occurred while deleting');
         } finally {
             setIsDeleting(false);
-            setConfirmDelete(null);
         }
     };
 
@@ -94,206 +98,102 @@ export default function ContentManager() {
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-foreground mb-2">Content Manager</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Content Manager</h1>
                 <p className="text-muted-foreground">Manage all content (Updates, PDFs, Tools) and delete with associated files</p>
             </div>
 
-            {confirmDelete && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-background rounded-xl p-6 max-w-md w-full border border-red-500/30 shadow-xl">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
-                                <AlertTriangle className="w-6 h-6" />
-                            </div>
-                            <h3 className="text-lg font-semibold">Confirm Deletion</h3>
-                        </div>
-
-                        <p className="text-muted-foreground mb-6">
-                            Are you sure you want to delete <span className="font-semibold text-foreground">{confirmDelete.name}</span>?
-                            This will permanently remove the database record. Associated files will be automatically deleted from storage.
-                        </p>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setConfirmDelete(null)}
-                                disabled={isDeleting}
-                                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-background hover:bg-muted transition-colors disabled:opacity-50"
-                            >
-                                <X className="w-4 h-4 inline mr-2" />
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleDelete}
-                                disabled={isDeleting}
-                                className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isDeleting ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
-                                        Deleting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Trash2 className="w-4 h-4 inline mr-2" />
-                                        Delete Permanently
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmationModal
+                isOpen={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                onConfirm={handleDelete}
+                isDeleting={isDeleting}
+                itemName={confirmDelete?.name || ''}
+                itemType={confirmDelete?.type || 'update'}
+            />
 
             {isLoading ? (
-                <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <SectionSkeleton />
+                    <SectionSkeleton />
+                    <SectionSkeleton />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Updates Section */}
-                    <div className="bg-card border border-border rounded-xl p-5">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-                                <Bell className="w-5 h-5" />
-                            </div>
-                            <h2 className="text-xl font-semibold">Updates</h2>
-                            <span className="ml-auto bg-muted text-muted-foreground text-xs font-medium px-2.5 py-1 rounded-full">
-                                {updates?.length || 0}
-                            </span>
-                        </div>
-
-                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                            {updates?.map((update) => (
-                                <div key={update.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-sm truncate">{update.title}</h4>
-                                        <p className="text-xs text-muted-foreground truncate">
-                                            {new Date(update.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => setConfirmDelete({
-                                            type: 'update',
-                                            id: update.id,
-                                            name: update.title
-                                        })}
-                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {(!updates || updates.length === 0) && (
-                                <div className="text-center py-6 text-muted-foreground">
-                                    <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                    <p>No updates found</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <ContentSection
+                        title="Updates"
+                        icon={Bell}
+                        items={updates || []}
+                        isLoading={updatesLoading}
+                        colorClass="bg-primary/10 text-primary"
+                        getItemName={(item) => item.title}
+                        getItemSubtitle={(item) => new Date(item.created_at).toLocaleDateString()}
+                        onDelete={(item) => setConfirmDelete({
+                            type: 'update',
+                            id: item.id,
+                            name: item.title
+                        })}
+                    />
 
                     {/* PDFs Section */}
-                    <div className="bg-card border border-border rounded-xl p-5">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
-                                <FileText className="w-5 h-5" />
-                            </div>
-                            <h2 className="text-xl font-semibold">PDFs</h2>
-                            <span className="ml-auto bg-muted text-muted-foreground text-xs font-medium px-2.5 py-1 rounded-full">
-                                {pdfs?.length || 0}
-                            </span>
-                        </div>
-
-                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                            {pdfs?.map((pdf) => (
-                                <div key={pdf.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-sm truncate">{pdf.title}</h4>
-                                        <p className="text-xs text-muted-foreground truncate">
-                                            {pdf.category_id || 'Uncategorized'}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => setConfirmDelete({
-                                            type: 'pdf',
-                                            id: pdf.id,
-                                            name: pdf.title
-                                        })}
-                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {(!pdfs || pdfs.length === 0) && (
-                                <div className="text-center py-6 text-muted-foreground">
-                                    <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                    <p>No PDFs found</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <ContentSection
+                        title="PDFs"
+                        icon={FileText}
+                        items={pdfs || []}
+                        isLoading={pdfsLoading}
+                        colorClass="bg-green-500/10 text-green-500"
+                        getItemName={(item) => item.title}
+                        getItemSubtitle={(item) => item.category_id || 'Uncategorized'}
+                        onDelete={(item) => setConfirmDelete({
+                            type: 'pdf',
+                            id: item.id,
+                            name: item.title
+                        })}
+                    />
 
                     {/* Tools Section */}
-                    <div className="bg-card border border-border rounded-xl p-5">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
-                                <Wrench className="w-5 h-5" />
-                            </div>
-                            <h2 className="text-xl font-semibold">Tools</h2>
-                            <span className="ml-auto bg-muted text-muted-foreground text-xs font-medium px-2.5 py-1 rounded-full">
-                                {tools?.length || 0}
-                            </span>
-                        </div>
-
-                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                            {tools?.map((tool) => (
-                                <div key={tool.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-sm truncate">{tool.title}</h4>
-                                        <p className="text-xs text-muted-foreground truncate">
-                                            {tool.category_id || 'General'}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => setConfirmDelete({
-                                            type: 'tool',
-                                            id: tool.id,
-                                            name: tool.title
-                                        })}
-                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {(!tools || tools.length === 0) && (
-                                <div className="text-center py-6 text-muted-foreground">
-                                    <Wrench className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                    <p>No tools found</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <ContentSection
+                        title="Tools"
+                        icon={Wrench}
+                        items={tools || []}
+                        isLoading={toolsLoading}
+                        colorClass="bg-amber-500/10 text-amber-500"
+                        getItemName={(item) => item.title}
+                        getItemSubtitle={(item) => item.category_id || 'General'}
+                        onDelete={(item) => setConfirmDelete({
+                            type: 'tool',
+                            id: item.id,
+                            name: item.title
+                        })}
+                    />
                 </div>
             )}
 
-            <div className="mt-8 p-4 bg-muted/20 rounded-lg border border-border">
-                <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
-                    <div>
-                        <h4 className="font-medium mb-1">Important Notes</h4>
-                        <ul className="text-sm text-muted-foreground space-y-1">
-                            <li>• Deletion is permanent and cannot be undone</li>
-                            <li>• Associated files are automatically removed from Supabase Storage via Edge Functions</li>
-                            <li>• Database records will be permanently deleted</li>
-                            <li>• This action affects all users immediately</li>
+            <div className="mt-8 p-6 bg-muted/20 rounded-lg border border-border">
+                <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                        <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-2">
+                        <h4 className="font-medium">Important Notes</h4>
+                        <ul className="text-sm text-muted-foreground space-y-2">
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500 mt-0.5">•</span>
+                                <span>Deletion is permanent and cannot be undone</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500 mt-0.5">•</span>
+                                <span>Associated files are automatically removed from Supabase Storage via Edge Functions</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500 mt-0.5">•</span>
+                                <span>Database records will be permanently deleted</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500 mt-0.5">•</span>
+                                <span>This action affects all users immediately</span>
+                            </li>
                         </ul>
                     </div>
                 </div>

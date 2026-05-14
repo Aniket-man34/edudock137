@@ -46,7 +46,7 @@ const AnalyticsTracker = () => {
     const recordVisit = async () => {
       try {
         await supabase.from('page_views').insert([
-          { page_path: location.pathname }
+          { path: location.pathname }
         ]);
       } catch (error) {
         console.error("Analytics Error:", error);

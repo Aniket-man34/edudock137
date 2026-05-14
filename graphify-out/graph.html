@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduDock137 Knowledge Graph</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: #f5f5f5;
+        }
+        
+        #graph {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .info-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-size: 14px;
+            z-index: 100;
+            max-width: 360px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .info-panel h2 {
+            margin: 0 0 16px 0;
+            color: #1a1a1a;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .info-panel p {
+            margin: 8px 0;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stat-label {
+            color: #888;
+            font-size: 13px;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-size: 12px;
+            z-index: 100;
+            max-width: 200px;
+        }
+        
+        .controls h4 {
+            margin: 0 0 12px 0;
+            color: #1a1a1a;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .controls p {
+            margin: 6px 0;
+            color: #666;
+        }
+        
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        .legend h4 {
+            margin: 0 0 10px 0;
+            color: #1a1a1a;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .legend-item {
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .legend-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+        
+        .node-label {
+            font-size: 11px;
+            fill: #333;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <svg id="graph"></svg>
+    
+    <div class="info-panel">
+        <h2>📊 EduDock137 Graph</h2>
+        <div class="stat">
+            <span class="stat-label">Nodes:</span>
+            <span class="stat-value">11</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Edges:</span>
+            <span class="stat-value">9</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Type:</span>
+            <span class="stat-value">React App</span>
+        </div>
+        <p style="margin-top: 16px; font-size: 12px; color: #999;">
+            Knowledge graph of EduDock137 codebase. Built with graphify.
+        </p>
+    </div>
+    
+    <div class="controls">
+        <h4>Controls</h4>
+        <p>🖱️ Drag nodes to move</p>
+        <p>🔍 Scroll to zoom</p>
+        <p>↔️ Drag background to pan</p>
+        <p>👆 Click node for details</p>
+    </div>
+    
+    <div class="legend">
+        <h4>Technology Stack</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #61dafb;"></div>
+            <span>React Components</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #3178c6;"></div>
+            <span>TypeScript</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #f7df1e;"></div>
+            <span>Config/Data</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #9c27b0;"></div>
+            <span>Hooks</span>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data
+        const data = {
+            nodes: [
+                { id: "react_component_lib", label: "React Components", type: "tsx", size: 15 },
+                { id: "supabase_client", label: "Supabase Client", type: "ts", size: 12 },
+                { id: "tailwind_config", label: "Tailwind CSS", type: "config", size: 10 },
+                { id: "vite_config", label: "Vite Config", type: "config", size: 10 },
+                { id: "home_page", label: "Home Page", type: "tsx", size: 11 },
+                { id: "tools_page", label: "Tools Page", type: "tsx", size: 11 },
+                { id: "pdfs_page", label: "PDFs Page", type: "tsx", size: 11 },
+                { id: "use_tools_hook", label: "useTools", type: "hook", size: 8 },
+                { id: "use_pdfs_hook", label: "usePdfs", type: "hook", size: 8 },
+                { id: "ui_components", label: "shadcn/ui", type: "tsx", size: 14 },
+                { id: "eslint_config_js", label: "ESLint", type: "config", size: 9 }
+            ],
+            links: [
+                { source: "home_page", target: "react_component_lib" },
+                { source: "tools_page", target: "react_component_lib" },
+                { source: "pdfs_page", target: "react_component_lib" },
+                { source: "tools_page", target: "use_tools_hook" },
+                { source: "pdfs_page", target: "use_pdfs_hook" },
+                { source: "use_tools_hook", target: "supabase_client" },
+                { source: "use_pdfs_hook", target: "supabase_client" },
+                { source: "react_component_lib", target: "ui_components" },
+                { source: "react_component_lib", target: "tailwind_config" }
+            ]
+        };
+        
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        const svg = d3.select("#graph")
+            .attr("width", width)
+            .attr("height", height);
+        
+        const container = svg.append("g");
+        
+        // Create simulation
+        const simulation = d3.forceSimulation(data.nodes)
+            .force("link", d3.forceLink(data.links)
+                .id(d => d.id)
+                .distance(80)
+                .strength(0.4))
+            .force("charge", d3.forceManyBody().strength(-400))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide().radius(d => d.size + 5));
+        
+        // Create links
+        const link = container.selectAll("line")
+            .data(data.links)
+            .enter()
+            .append("line")
+            .attr("stroke", "#ddd")
+            .attr("stroke-width", 1.5)
+            .attr("stroke-opacity", 0.6);
+        
+        // Create nodes
+        const node = container.selectAll("circle")
+            .data(data.nodes)
+            .enter()
+            .append("circle")
+            .attr("r", d => d.size)
+            .attr("fill", d => {
+                if (d.type === "tsx") return "#61dafb";
+                if (d.type === "ts") return "#3178c6";
+                if (d.type === "hook") return "#9c27b0";
+                return "#f7df1e";
+            })
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2)
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+        
+        // Add labels
+        const labels = container.selectAll(".node-label")
+            .data(data.nodes)
+            .enter()
+            .append("text")
+            .attr("class", "node-label")
+            .attr("dy", ".35em")
+            .text(d => d.label)
+            .style("font-size", d => Math.max(10, d.size) + "px")
+            .style("font-weight", "500");
+        
+        // Add tooltips
+        node.append("title").text(d => d.label);
+        
+        // Update positions on simulation tick
+        simulation.on("tick", () => {
+            link.attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+            
+            node.attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+            
+            labels.attr("x", d => d.x)
+                .attr("y", d => d.y);
+        });
+        
+        // Zoom behavior
+        svg.call(d3.zoom()
+            .on("zoom", event => {
+                container.attr("transform", event.transform);
+            }));
+        
+        // Drag handlers
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        // Click handler
+        node.on("click", function(event, d) {
+            alert(`${d.label}\nID: ${d.id}\nType: ${d.type}`);
+        });
+    </script>
+</body>
+</html>
