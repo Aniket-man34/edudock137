@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2, Play } from 'lucide-react';
 import OptimizedImage from '@/components/OptimizedImage';
 
 type ContextType = { searchQuery: string };
@@ -14,18 +14,19 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.15,
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
     },
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
+const cardVariants = {
+  hidden: { opacity: 0, scale: 0.94, y: 12 },
   visible: {
     opacity: 1,
+    scale: 1,
     y: 0,
-    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
+    transition: { duration: 0.48, ease: [0.25, 0.46, 0.45, 0.94] as const },
   },
 };
 
@@ -42,10 +43,9 @@ function formatDate(dateString: string): string {
 
 function isNewUpdate(createdAt: string): boolean {
   if (!createdAt) return false;
-  const uploadDate = new Date(createdAt);
-  const today = new Date();
   const diffDays = Math.ceil(
-    Math.abs(today.getTime() - uploadDate.getTime()) / (1000 * 60 * 60 * 24)
+    Math.abs(new Date().getTime() - new Date(createdAt).getTime()) /
+      (1000 * 60 * 60 * 24)
   );
   return diffDays <= 7;
 }
@@ -55,7 +55,7 @@ function isNewUpdate(createdAt: string): boolean {
 export default function Updates() {
   const { searchQuery } = useOutletContext<ContextType>();
 
-  /* Fetch latest 5 updates from Supabase */
+  /* Fetch latest 6 updates — bumped from 5 for a proper 2-row layout */
   const { data: updates, isLoading } = useQuery({
     queryKey: ['updates-latest'],
     queryFn: async () => {
@@ -63,7 +63,7 @@ export default function Updates() {
         .from('updates')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(6);
 
       if (error) throw error;
       return data;
@@ -73,170 +73,164 @@ export default function Updates() {
   /* Apply search filter */
   const filtered = updates?.filter(
     (u: any) =>
-      !searchQuery || u.title.toLowerCase().includes(searchQuery.toLowerCase())
+      !searchQuery ||
+      u.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  /* Split into two columns: left (3 items), right (2 items) */
-  const leftItems = filtered ? filtered.slice(0, 3) : [];
-  const rightItems = filtered ? filtered.slice(3, 5) : [];
-
-  /* ── Render a single update row ──────────────────────────────── */
-  const renderUpdateItem = (update: any, isLastInColumn: boolean) => {
+  /* ── Render a single Netflix-style poster card ───────────────── */
+  const renderCard = (update: any) => {
     const isExternal = !!update.external_link;
+    const isNew = isNewUpdate(update.created_at);
 
-    const titleElement = (
-      <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2 text-sm md:text-base leading-snug">
-        {update.title}
-      </h3>
-    );
+    const linkProps = isExternal
+      ? { as: 'a' as const, href: update.external_link, target: '_blank', rel: 'noopener noreferrer' }
+      : { as: Link as any, to: `/updates/${update.slug || update.id}` };
+
+    const { as: Tag, ...rest } = linkProps;
 
     return (
       <motion.div
         key={update.id}
-        variants={itemVariants}
-        className={`group flex flex-row items-start gap-4 ${
-          isLastInColumn ? '' : 'border-b border-gray-100 pb-4'
-        }`}
+        variants={cardVariants}
+        className="group min-w-0 flex flex-col"
+        style={{ flexBasis: 'calc(50% - 10px)', flexShrink: 0, flexGrow: 0 }}
       >
-        {/* Thumbnail */}
-        <div className="shrink-0 w-28 md:w-32 aspect-[40/21] rounded-lg overflow-hidden">
-          <OptimizedImage
-            src={update.image_url || '/placeholder.svg'}
-            alt={update.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            width={1200}
-            height={630}
-          />
-        </div>
+        {/* ── Pure image poster (no text inside) ── */}
+        <Tag {...rest} className="block">
+          <div
+            className="relative w-full overflow-hidden rounded-xl"
+            style={{ aspectRatio: '1200 / 630' }}
+          >
+            <OptimizedImage
+              src={update.image_url || '/placeholder.svg'}
+              alt={update.title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+              width={1200}
+              height={630}
+            />
 
-        {/* Text content */}
-        <div className="flex flex-col justify-start min-w-0 flex-1">
-          {isExternal ? (
-            <a
-              href={update.external_link}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {titleElement}
-            </a>
-          ) : (
-            <Link to={`/updates/${update.slug || update.id}`}>
-              {titleElement}
-            </Link>
-          )}
+            {/* Subtle top-to-bottom dark vignette for a moodier look */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/10" />
 
-          <div className="flex items-center gap-2 mt-1.5">
-            {isNewUpdate(update.created_at) && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                New
+            {/* Hover: dim + red border glow */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300" />
+            <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-red-600/70 transition-all duration-300 group-hover:shadow-[0_0_22px_rgba(220,38,38,0.3)]" />
+          </div>
+        </Tag>
+
+        {/* ── Text content — outside the card, directly below ── */}
+        <div className="mt-3 px-0.5">
+          {/* Meta row: NEW badge + date */}
+          <div className="flex items-center gap-2 mb-1.5">
+            {isNew && (
+              <span className="bg-red-600 text-white text-[9px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm">
+                ● NEW
               </span>
             )}
-            <span className="text-sm text-blue-500 font-medium">
+            <span className="text-gray-500 text-xs font-medium">
               {formatDate(update.created_at)}
             </span>
+          </div>
+
+          {/* Title */}
+          <Tag {...rest} className="block">
+            <h3 className="text-gray-100 font-bold text-sm md:text-[15px] leading-snug line-clamp-2 group-hover:text-red-400 transition-colors duration-300 cursor-pointer">
+              {update.title}
+            </h3>
+          </Tag>
+
+          {/* Slide-up Read More — visible on hover */}
+          <div className="flex items-center gap-2 mt-2 overflow-hidden max-h-0 group-hover:max-h-10 transition-all duration-300 ease-out">
+            <Tag
+              {...rest}
+              className="inline-flex items-center gap-1.5 text-white bg-red-600 hover:bg-red-700 text-xs font-bold px-3 py-1.5 rounded-sm transition-colors duration-150"
+            >
+              <Play className="w-3 h-3 fill-white" />
+              Read More
+            </Tag>
           </div>
         </div>
       </motion.div>
     );
   };
 
-  /* ── Render ──────────────────────────────────────────────────── */
+  /* ── Page skeleton cards ─────────────────────────────────────── */
+  const renderSkeletons = () => (
+    <div className="flex flex-wrap gap-5">
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={`sk-${i}`}
+          className="flex flex-col"
+          style={{ flexBasis: 'calc(50% - 10px)', flexShrink: 0, flexGrow: 0 }}
+        >
+          <div
+            className="rounded-xl bg-[#1f1f1f] animate-pulse w-full"
+            style={{ aspectRatio: '1200 / 630' }}
+          />
+          <div className="mt-3 px-0.5 space-y-2">
+            <div className="h-2.5 w-1/4 bg-[#2a2a2a] animate-pulse rounded" />
+            <div className="h-3 w-3/4 bg-[#2a2a2a] animate-pulse rounded" />
+            <div className="h-3 w-1/2 bg-[#2a2a2a] animate-pulse rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  /* ── Main render ─────────────────────────────────────────────── */
   return (
-    <div className="w-full">
+    <div className="w-full bg-[#141414] min-h-screen">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white rounded-2xl md:rounded-3xl shadow-lg border border-gray-100 p-6 md:p-10"
+        className="px-5 md:px-10 py-8 md:py-10"
       >
-        {/* ── Section Heading ─────────────────────────────────── */}
-        <div className="text-center mb-8 md:mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold inline-flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
-            <span>Latest</span>
-            <span className="text-blue-600">Updates</span>
-          </h2>
+        {/* ── Section heading ──────────────────────────────────── */}
+        <div className="flex items-center justify-between mb-7">
+          <div className="flex items-center gap-3">
+            {/* Netflix-style red left-bar accent */}
+            <span className="block w-1 h-7 bg-red-600 rounded-full shrink-0" />
+            <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
+              Latest{' '}
+              <span className="text-red-500">Updates</span>
+            </h2>
+          </div>
+
+          <Link
+            to="/updates"
+            className="inline-flex items-center gap-1 text-gray-400 hover:text-white text-sm font-semibold transition-colors duration-200 group"
+          >
+            View All
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+          </Link>
         </div>
 
+        {/* ── Content ──────────────────────────────────────────── */}
         {isLoading ? (
-          /* ── Loading Skeleton ────────────────────────────────── */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {/* Left column skeletons */}
-            <div className="flex flex-col gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={`left-skeleton-${i}`}
-                  className="flex flex-row items-start gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
-                >
-                  <div className="shrink-0 w-28 md:w-32 aspect-[40/21] rounded-lg bg-gray-100 animate-pulse" />
-                  <div className="flex-1 space-y-2 pt-1">
-                    <div className="h-4 bg-gray-100 animate-pulse rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 animate-pulse rounded w-1/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Right column skeletons */}
-            <div className="flex flex-col gap-4">
-              {[...Array(2)].map((_, i) => (
-                <div
-                  key={`right-skeleton-${i}`}
-                  className="flex flex-row items-start gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
-                >
-                  <div className="shrink-0 w-28 md:w-32 aspect-[40/21] rounded-lg bg-gray-100 animate-pulse" />
-                  <div className="flex-1 space-y-2 pt-1">
-                    <div className="h-4 bg-gray-100 animate-pulse rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 animate-pulse rounded w-1/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          renderSkeletons()
         ) : filtered && filtered.length > 0 ? (
-          <>
-            {/* ── Two-Column Layout ─────────────────────────────── */}
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
-            >
-              {/* Left Column — 3 items */}
-              <div className="flex flex-col gap-4">
-                {leftItems.map((update: any, i: number) =>
-                  renderUpdateItem(update, i === leftItems.length - 1)
-                )}
-              </div>
-
-              {/* Right Column — 2 items */}
-              <div className="flex flex-col gap-4">
-                {rightItems.map((update: any, i: number) =>
-                  renderUpdateItem(update, i === rightItems.length - 1)
-                )}
-              </div>
-            </motion.div>
-
-            {/* ── View All Updates Button ──────────────────────── */}
-            <div className="flex justify-center md:justify-end mt-8">
-              <Link
-                to="/updates"
-                className="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-200 text-blue-700 font-medium rounded-full px-6 py-2.5 transition-colors duration-200"
-              >
-                View All Updates
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-wrap gap-5"
+          >
+            {filtered.map((update: any) => renderCard(update))}
+          </motion.div>
         ) : (
-          /* ── Empty State ─────────────────────────────────────── */
-          <div className="flex flex-col items-center justify-center py-16" role="status">
-            <div className="inline-flex p-4 rounded-2xl mb-4 bg-gray-50 border border-gray-100">
-              <Loader2 className="h-6 w-6 text-gray-400" aria-hidden="true" />
+          /* ── Empty state ──────────────────────────────────── */
+          <div
+            className="flex flex-col items-center justify-center py-24"
+            role="status"
+          >
+            <div className="inline-flex p-4 rounded-2xl mb-4 bg-[#1f1f1f] border border-[#2a2a2a]">
+              <Loader2 className="h-6 w-6 text-gray-600" aria-hidden="true" />
             </div>
             <p className="text-gray-500 text-base">
-              {searchQuery ? 'No updates match your search' : 'No updates found'}
+              {searchQuery
+                ? 'No updates match your search'
+                : 'No updates found'}
             </p>
           </div>
         )}
