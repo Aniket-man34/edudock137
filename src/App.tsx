@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect, Suspense, lazy } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -60,40 +61,42 @@ const AnalyticsTracker = () => {
 };
 
 const App = () => (
-  <ThemeProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <AnalyticsTracker />
-          <ErrorBoundary fallback={<LoadingFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                {/* Public Pages */}
-                <Route element={<PublicLayout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/tools" element={<Tools />} />
-                  <Route path="/pdfs" element={<Pdfs />} />
-                  <Route path="/pdfs/:slug" element={<Pdfs />} />
-                  <Route path="/updates" element={<Updates />} />
-                  <Route path="/updates/:slug" element={<UpdateDetail />} />
-                  {/* 🚨 REQUIRED FOR GOOGLE VERIFICATION 🚨 */}
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/terms" element={<Terms />} />
-                </Route>
+  <HelmetProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <AnalyticsTracker />
+            <ErrorBoundary fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  {/* Public Pages */}
+                  <Route element={<PublicLayout />}>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/tools" element={<Tools />} />
+                    <Route path="/pdfs" element={<Pdfs />} />
+                    <Route path="/pdfs/:slug" element={<Pdfs />} />
+                    <Route path="/updates" element={<Updates />} />
+                    <Route path="/updates/:slug" element={<UpdateDetail />} />
+                    {/* 🚨 REQUIRED FOR GOOGLE VERIFICATION 🚨 */}
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/terms" element={<Terms />} />
+                  </Route>
 
-                {/* Admin Routes */}
-                <Route path="/admin/content" element={<ContentManager />} />
+                  {/* Admin Routes */}
+                  <Route path="/admin/content" element={<ContentManager />} />
 
-                {/* Fallback */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+                  {/* Fallback */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  </HelmetProvider>
 );
 
 export default App;

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 import { ExternalLink, Calendar, ChevronRight } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import TableOfContents from '@/components/updates/TableOfContents';
@@ -154,6 +155,14 @@ export default function UpdateDetail() {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 min-h-screen">
+
+      {update.schema_markup && (
+        <Helmet>
+          <script type="application/ld+json">
+            {update.schema_markup}
+          </script>
+        </Helmet>
+      )}
 
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
         <Link to="/" className="hover:text-primary transition-colors">Home</Link>
