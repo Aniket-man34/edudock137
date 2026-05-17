@@ -119,9 +119,9 @@ export default function UpdateDetail() {
         html += `<h3 id="${id}" class="mt-4 mb-2">${text}</h3>`;
       } else {
         const escaped = line
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
+          .replace(/&/g, '&')
+          .replace(/</g, '<')
+          .replace(/>/g, '>');
         if (escaped.trim() !== '') {
           html += `<p class="whitespace-pre-wrap text-[16px] md:text-[18px] text-foreground/80 leading-[1.9] mb-4">${escaped}</p>`;
         }
@@ -299,14 +299,14 @@ export default function UpdateDetail() {
         {recentUpdates && recentUpdates.length > 0 && (
           <div className="mt-12 pt-6 border-t border-border/40">
             <h3 className="text-xl font-bold mb-4 text-foreground">Recent Updates</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="flex flex-col gap-6 w-full">
               {recentUpdates.map((item: any) => (
                 <Link
                   to={`/updates/${item.slug || item.id}`}
                   key={item.id}
-                  className="flex gap-3 group items-center bg-card p-2 rounded-xl border border-border/50 hover:border-primary/30 transition-all hover:shadow-sm"
+                  className="flex flex-row items-center gap-4 w-full bg-card p-4 rounded-xl border border-border/50 hover:border-primary/30 transition-all hover:shadow-sm"
                 >
-                  <div className="w-16 h-14 rounded-lg bg-muted/30 overflow-hidden shrink-0 border border-border/50 flex items-center justify-center p-0.5">
+                  <div className="w-40 h-24 rounded-lg bg-muted/30 overflow-hidden shrink-0 border border-border/50 flex items-center justify-center p-1">
                     <img
                       src={item.image_url ? `${item.image_url}?t=${Date.now()}` : '/placeholder.svg'}
                       alt=""
@@ -314,10 +314,10 @@ export default function UpdateDetail() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-xs font-bold text-foreground group-hover:text-primary leading-snug line-clamp-2 transition-colors">
+                    <h4 className="text-sm md:text-base font-bold text-foreground group-hover:text-primary leading-snug line-clamp-2 transition-colors">
                       {item.title}
                     </h4>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   </div>

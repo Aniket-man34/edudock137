@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, Loader2, Play } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import OptimizedImage from '@/components/OptimizedImage';
 
 type ContextType = { searchQuery: string };
@@ -21,12 +21,11 @@ const containerVariants = {
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, scale: 0.94, y: 12 },
+  hidden: { opacity: 0, x: -20 },
   visible: {
     opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: { duration: 0.48, ease: [0.25, 0.46, 0.45, 0.94] as const },
+    x: 0,
+    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
   },
 };
 
@@ -55,7 +54,7 @@ function isNewUpdate(createdAt: string): boolean {
 export default function Updates() {
   const { searchQuery } = useOutletContext<ContextType>();
 
-  /* Fetch latest 6 updates — bumped from 5 for a proper 2-row layout */
+  /* Fetch latest 6 updates */
   const { data: updates, isLoading } = useQuery({
     queryKey: ['updates-latest'],
     queryFn: async () => {
@@ -77,7 +76,7 @@ export default function Updates() {
       u.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  /* ── Render a single Netflix-style poster card ───────────────── */
+  /* ── Render a single horizontal card ────────────────────────── */
   const renderCard = (update: any) => {
     const isExternal = !!update.external_link;
     const isNew = isNewUpdate(update.created_at);
@@ -92,62 +91,38 @@ export default function Updates() {
       <motion.div
         key={update.id}
         variants={cardVariants}
-        className="group min-w-0 flex flex-col"
-        style={{ flexBasis: 'calc(50% - 10px)', flexShrink: 0, flexGrow: 0 }}
+        className="flex flex-row gap-4 items-center border-b border-gray-200 dark:border-gray-700 pb-4"
       >
-        {/* ── Pure image poster (no text inside) ── */}
-        <Tag {...rest} className="block">
-          <div
-            className="relative w-full overflow-hidden rounded-xl"
-            style={{ aspectRatio: '1200 / 630' }}
-          >
+        {/* Left: Thumbnail (1200x620 aspect ratio with contain) */}
+        <Tag {...rest} className="shrink-0">
+          <div className="w-32 h-20 bg-gray-100 dark:bg-[#1f1f1f] overflow-hidden">
             <OptimizedImage
               src={update.image_url || '/placeholder.svg'}
               alt={update.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
-              width={1200}
-              height={630}
+              className="w-full h-full object-contain"
+              width={128}
+              height={80}
             />
-
-            {/* Subtle top-to-bottom dark vignette for a moodier look */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/10" />
-
-            {/* Hover: dim + red border glow */}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300" />
-            <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-red-600/70 transition-all duration-300 group-hover:shadow-[0_0_22px_rgba(220,38,38,0.3)]" />
           </div>
         </Tag>
 
-        {/* ── Text content — outside the card, directly below ── */}
-        <div className="mt-3 px-0.5">
-          {/* Meta row: NEW badge + date */}
-          <div className="flex items-center gap-2 mb-1.5">
+        {/* Right: Content */}
+        <div className="flex-1 min-w-0">
+          <Tag {...rest} className="block">
+            <h3 className="text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base leading-snug line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+              <span className="mr-1.5">📢</span>
+              {update.title}
+            </h3>
+          </Tag>
+          <div className="flex items-center gap-2 mt-1.5">
             {isNew && (
               <span className="bg-red-600 text-white text-[9px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm">
                 ● NEW
               </span>
             )}
-            <span className="text-gray-500 text-xs font-medium">
+            <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">
               {formatDate(update.created_at)}
             </span>
-          </div>
-
-          {/* Title */}
-          <Tag {...rest} className="block">
-            <h3 className="text-gray-100 font-bold text-sm md:text-[15px] leading-snug line-clamp-2 group-hover:text-red-400 transition-colors duration-300 cursor-pointer">
-              {update.title}
-            </h3>
-          </Tag>
-
-          {/* Slide-up Read More — visible on hover */}
-          <div className="flex items-center gap-2 mt-2 overflow-hidden max-h-0 group-hover:max-h-10 transition-all duration-300 ease-out">
-            <Tag
-              {...rest}
-              className="inline-flex items-center gap-1.5 text-white bg-red-600 hover:bg-red-700 text-xs font-bold px-3 py-1.5 rounded-sm transition-colors duration-150"
-            >
-              <Play className="w-3 h-3 fill-white" />
-              Read More
-            </Tag>
           </div>
         </div>
       </motion.div>
@@ -156,21 +131,16 @@ export default function Updates() {
 
   /* ── Page skeleton cards ─────────────────────────────────────── */
   const renderSkeletons = () => (
-    <div className="flex flex-wrap gap-5">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-6xl mx-auto">
       {[...Array(6)].map((_, i) => (
         <div
           key={`sk-${i}`}
-          className="flex flex-col"
-          style={{ flexBasis: 'calc(50% - 10px)', flexShrink: 0, flexGrow: 0 }}
+          className="flex flex-row gap-4 items-center border-b border-gray-200 dark:border-gray-700 pb-4"
         >
-          <div
-            className="rounded-xl bg-[#1f1f1f] animate-pulse w-full"
-            style={{ aspectRatio: '1200 / 630' }}
-          />
-          <div className="mt-3 px-0.5 space-y-2">
-            <div className="h-2.5 w-1/4 bg-[#2a2a2a] animate-pulse rounded" />
-            <div className="h-3 w-3/4 bg-[#2a2a2a] animate-pulse rounded" />
-            <div className="h-3 w-1/2 bg-[#2a2a2a] animate-pulse rounded" />
+          <div className="w-32 h-20 bg-gray-200 dark:bg-[#1f1f1f] animate-pulse shrink-0" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3 w-3/4 bg-gray-200 dark:bg-[#2a2a2a] animate-pulse rounded" />
+            <div className="h-2.5 w-1/4 bg-gray-200 dark:bg-[#2a2a2a] animate-pulse rounded" />
           </div>
         </div>
       ))}
@@ -179,7 +149,7 @@ export default function Updates() {
 
   /* ── Main render ─────────────────────────────────────────────── */
   return (
-    <div className="w-full bg-[#141414] min-h-screen">
+    <div className="w-full bg-white dark:bg-[#141414] min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -187,47 +157,51 @@ export default function Updates() {
         className="px-5 md:px-10 py-8 md:py-10"
       >
         {/* ── Section heading ──────────────────────────────────── */}
-        <div className="flex items-center justify-between mb-7">
-          <div className="flex items-center gap-3">
-            {/* Netflix-style red left-bar accent */}
-            <span className="block w-1 h-7 bg-red-600 rounded-full shrink-0" />
-            <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
-              Latest{' '}
-              <span className="text-red-500">Updates</span>
-            </h2>
-          </div>
-
-          <Link
-            to="/updates"
-            className="inline-flex items-center gap-1 text-gray-400 hover:text-white text-sm font-semibold transition-colors duration-200 group"
-          >
-            View All
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-          </Link>
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight inline-flex items-center gap-1.5">
+            <span className="text-gray-900 dark:text-white">
+              Latest
+              <span className="inline-block w-2 h-2 bg-red-600 rounded-full ml-1 align-middle" />
+            </span>
+            <span className="text-blue-600 dark:text-blue-400">Updates</span>
+          </h2>
         </div>
 
         {/* ── Content ──────────────────────────────────────────── */}
         {isLoading ? (
           renderSkeletons()
         ) : filtered && filtered.length > 0 ? (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-wrap gap-5"
-          >
-            {filtered.map((update: any) => renderCard(update))}
-          </motion.div>
+          <>
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-6xl mx-auto"
+            >
+              {filtered.map((update: any) => renderCard(update))}
+            </motion.div>
+
+            {/* ── View All Button ──────────────────────────────── */}
+            <div className="flex justify-end w-full max-w-6xl mx-auto mt-8">
+              <Link
+                to="/updates"
+                className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors duration-200"
+              >
+                View All Updates
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </>
         ) : (
           /* ── Empty state ──────────────────────────────────── */
           <div
             className="flex flex-col items-center justify-center py-24"
             role="status"
           >
-            <div className="inline-flex p-4 rounded-2xl mb-4 bg-[#1f1f1f] border border-[#2a2a2a]">
-              <Loader2 className="h-6 w-6 text-gray-600" aria-hidden="true" />
+            <div className="inline-flex p-4 rounded-2xl mb-4 bg-gray-100 dark:bg-[#1f1f1f] border border-gray-200 dark:border-[#2a2a2a]">
+              <Loader2 className="h-6 w-6 text-gray-400 dark:text-gray-600" aria-hidden="true" />
             </div>
-            <p className="text-gray-500 text-base">
+            <p className="text-gray-500 dark:text-gray-500 text-base">
               {searchQuery
                 ? 'No updates match your search'
                 : 'No updates found'}
