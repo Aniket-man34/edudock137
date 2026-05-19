@@ -42,5 +42,3 @@ Visit: `/admin/content`
 ## Future Enhancements
 - [ ] User authentication for admin routes
 - [ ] Activity logging for deletions
-- [ ] Bulk deletion options
-- [ ] Soft delete with recovery option
