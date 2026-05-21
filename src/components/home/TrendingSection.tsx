@@ -192,12 +192,12 @@ export default function TrendingSection({
                                             className="block group"
                                             aria-label={`View ${pdf.title} PDF`}
                                         >
-                                            <div className="aspect-[3/4] glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl">
+                                            <div className="aspect-[3/4] glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl bg-gray-100 dark:bg-[#1f1f1f]">
                                                 {pdf.cover_image_url ? (
                                                     <img
                                                         src={pdf.cover_image_url}
                                                         alt={pdf.title}
-                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3">
@@ -259,11 +259,12 @@ export default function TrendingSection({
                                             aria-label={`Read ${update.title} update`}
                                         >
                                             {update.image_url && (
-                                                <div className="aspect-video overflow-hidden">
+                                                <div className="aspect-video overflow-hidden bg-gray-100 dark:bg-[#1f1f1f]">
                                                     <img
                                                         src={update.image_url}
                                                         alt={update.title}
-                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                                                        loading="lazy"
                                                     />
                                                 </div>
                                             )}
@@ -407,12 +408,12 @@ export default function TrendingSection({
                                                     className="block group"
                                                     aria-label={`View ${pdf.title} PDF`}
                                                 >
-                                                    <div className="aspect-[3/4] glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl">
+                                                    <div className="aspect-[3/4] glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl bg-gray-100 dark:bg-[#1f1f1f]">
                                                         {pdf.cover_image_url ? (
                                                             <img
                                                                 src={pdf.cover_image_url}
                                                                 alt={pdf.title}
-                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                                                             />
                                                         ) : (
                                                             <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3">
@@ -479,11 +480,12 @@ export default function TrendingSection({
                                                     aria-label={`Read ${update.title} update`}
                                                 >
                                                     {update.image_url && (
-                                                        <div className="aspect-video overflow-hidden">
+                                                        <div className="aspect-video overflow-hidden bg-gray-100 dark:bg-[#1f1f1f]">
                                                             <img
                                                                 src={update.image_url}
                                                                 alt={update.title}
-                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                                                                loading="lazy"
                                                             />
                                                         </div>
                                                     )}

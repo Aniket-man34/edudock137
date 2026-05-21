@@ -308,13 +308,14 @@ export default function Home() {
                       to={`/pdfs/${pdf.slug || pdf.id}`}
                       className="group/pdf relative block rounded-2xl overflow-hidden border border-slate-200 bg-white transition-all duration-500 hover:scale-[1.04] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] hover:border-sky-400/50"
                     >
-                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100">
+                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
                         <img
                           src={pdf.cover_image_url || '/placeholder.svg'}
-                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/pdf:scale-110"
+                          className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover/pdf:scale-110"
                           alt={pdf.title}
+                          loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
                         {pdf.clicks > 0 && (
                           <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
                             <Eye className="h-3 w-3" />
@@ -365,13 +366,14 @@ export default function Home() {
                       to={`/updates/${update.slug || update.id}`}
                       className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-500 hover:scale-[1.03] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] hover:border-sky-400/50"
                     >
-                      <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+                      <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
                         <img
                           src={update.image_url || '/placeholder.svg'}
-                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                          className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-110"
                           alt=""
+                          loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
                         {update.clicks > 0 && (
                           <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
                             <Eye className="h-3 w-3" />
@@ -577,9 +579,9 @@ export default function Home() {
                       {pdf.clicks > 0 && (
                         <div className="absolute top-3 right-3 z-30 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10"><Eye className="h-3 w-3" />{pdf.clicks}</div>
                       )}
-                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100">
-                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/card:scale-110" alt={pdf.title} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
+                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover/card:scale-110" alt={pdf.title} loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/card:text-sky-300 transition-colors duration-300">{pdf.title}</h4>
@@ -592,37 +594,104 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* Hot Updates */}
+        {/* Hot Updates — Netflix-style horizontal scroll */}
         {trendingUpdates && trendingUpdates.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-            <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-bold flex items-center gap-2.5 text-slate-800">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-purple-500/10 ring-1 ring-purple-500/20"><Bell className="h-4 w-4 text-purple-500" /></span>
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-12"
+          >
+            {/* Section heading */}
+            <div className="container mx-auto px-4 mb-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold flex items-center gap-2.5 text-slate-800 dark:text-slate-200">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-purple-500/10 ring-1 ring-purple-500/20">
+                    <Bell className="h-4 w-4 text-purple-500" />
+                  </span>
                   Hot Updates
                 </h3>
-                <Link to="/updates" className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-500 transition-colors group">
-                  See all <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                <Link
+                  to="/updates"
+                  className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-purple-500 transition-colors group"
+                >
+                  See all
+                  <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>
             </div>
+
+            {/* Scrollable row container */}
             <div className="relative">
-              <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-slate-50/50 to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-slate-50/50 to-transparent z-10 pointer-events-none" />
-              <div className="flex overflow-x-auto gap-4 md:gap-5 pb-4 pt-2 px-4 md:px-8 snap-x snap-mandatory scrollbar-hide">
+              {/* Left fade gradient */}
+              <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-slate-50 dark:from-[#141414] to-transparent z-10 pointer-events-none" />
+              {/* Right fade gradient */}
+              <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-slate-50 dark:from-[#141414] to-transparent z-10 pointer-events-none" />
+
+              {/* Cards row */}
+              <div className="flex overflow-x-auto gap-4 md:gap-5 pb-6 pt-2 px-4 md:px-8 snap-x snap-mandatory scrollbar-hide">
                 {trendingUpdates.map((update: any, i: number) => (
-                  <motion.div key={update.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="snap-start shrink-0">
-                    <Link to={`/updates/${update.slug || update.id}`} className="group/card relative block w-[280px] md:w-[340px] lg:w-[380px] rounded-2xl overflow-hidden border border-slate-200 bg-white transition-all duration-500 hover:scale-[1.03] hover:z-20 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] hover:border-sky-400/50">
-                      <div className={`absolute top-3 left-3 z-30 w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border-2 transition-all duration-500 group-hover/card:scale-110 ${getRankStyle(i)}`}>{i + 1}</div>
-                      {update.clicks > 0 && (
-                        <div className="absolute top-3 right-3 z-30 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10"><Eye className="h-3 w-3" />{update.clicks}</div>
-                      )}
-                      <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
-                        <img src={update.image_url || '/placeholder.svg'} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/card:scale-110" alt="" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <motion.div
+                    key={update.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    className="snap-start shrink-0"
+                  >
+                    <Link
+                      to={`/updates/${update.slug || update.id}`}
+                      className="group/card relative flex flex-col w-[260px] sm:w-[300px] md:w-[340px] lg:w-[380px] rounded-2xl bg-[#1a1a2e] dark:bg-[#12121a] border border-slate-700/60 hover:border-purple-500/50 overflow-hidden transition-all duration-500 hover:scale-[1.03] hover:z-20 hover:shadow-[0_8px_40px_rgba(168,85,247,0.15)]"
+                    >
+                      {/* Rank badge */}
+                      <div
+                        className={`absolute top-3 left-3 z-30 w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border-2 transition-all duration-500 group-hover/card:scale-110 ${getRankStyle(i)}`}
+                      >
+                        {i + 1}
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                        <h4 className="font-bold text-sm md:text-base text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/card:text-sky-300 transition-colors duration-300">{update.title}</h4>
+
+                      {/* Views badge */}
+                      {update.clicks > 0 && (
+                        <div className="absolute top-3 right-3 z-30 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
+                          <Eye className="h-3 w-3" />
+                          {update.clicks}
+                        </div>
+                      )}
+
+                      {/* 16:9 Poster — object-contain, no cropping */}
+                      <div className="relative aspect-video w-full overflow-hidden bg-[#0f0f1a]">
+                        {update.image_url ? (
+                          <img
+                            src={update.image_url}
+                            alt={update.title}
+                            className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover/card:scale-105"
+                            loading="lazy"
+                          />
+                        ) : (
+                          /* Dark placeholder for missing images */
+                          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-[#0f0f1a]">
+                            <Bell className="w-8 h-8 text-purple-500/40" />
+                            <span className="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">
+                              No Preview
+                            </span>
+                          </div>
+                        )}
+                        {/* Bottom gradient overlay for text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e] via-transparent to-transparent pointer-events-none" />
+                      </div>
+
+                      {/* Title bar at bottom */}
+                      <div className="p-4 md:p-5 bg-[#1a1a2e] dark:bg-[#12121a]">
+                        <h4 className="font-bold text-sm md:text-base text-slate-200 leading-snug line-clamp-2 group-hover/card:text-purple-400 transition-colors duration-300">
+                          {update.title}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-1.5 font-medium tracking-wide uppercase">
+                          {new Date(update.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </p>
                       </div>
                     </Link>
                   </motion.div>
@@ -666,8 +735,8 @@ export default function Home() {
                 {newPdfs?.map((pdf: any, idx: number) => (
                   <motion.div key={pdf.id} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.08 }}>
                     <Link to={`/pdfs/${pdf.slug || pdf.id}`} className="flex items-center gap-4 p-3 rounded-xl bg-white/60 hover:bg-white/90 transition-all duration-300 border border-slate-200 hover:border-sky-400/40 group">
-                      <div className="relative w-10 h-12 rounded-lg overflow-hidden bg-slate-100 ring-1 ring-slate-200 shrink-0">
-                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="w-full h-full object-cover" alt="" />
+                      <div className="relative w-10 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-[#1f1f1f] ring-1 ring-slate-200 shrink-0">
+                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="w-full h-full object-contain" alt="" loading="lazy" />
                       </div>
                       <p className="text-sm font-medium flex-1 truncate text-slate-700 group-hover:text-sky-500 transition-colors">{pdf.title}</p>
                       <ArrowRight className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 shrink-0" />
@@ -694,8 +763,8 @@ export default function Home() {
                 {newUpdates?.map((update: any, idx: number) => (
                   <motion.div key={update.id} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.08 }}>
                     <Link to={`/updates/${update.slug || update.id}`} className="flex items-center gap-4 p-3 rounded-xl bg-white/60 hover:bg-white/90 transition-all duration-300 border border-slate-200 hover:border-violet-400/40 group">
-                      <div className="relative w-12 h-10 rounded-lg overflow-hidden bg-slate-100 ring-1 ring-slate-200 shrink-0">
-                        <img src={update.image_url || '/placeholder.svg'} className="w-full h-full object-cover" alt="" />
+                      <div className="relative w-16 aspect-video rounded-lg overflow-hidden bg-slate-100 dark:bg-[#1f1f1f] ring-1 ring-slate-200 shrink-0">
+                        <img src={update.image_url || '/placeholder.svg'} className="w-full h-full object-contain" alt="" loading="lazy" />
                       </div>
                       <p className="text-sm font-medium flex-1 truncate text-slate-700 group-hover:text-violet-500 transition-colors">{update.title}</p>
                       <ArrowRight className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 shrink-0" />

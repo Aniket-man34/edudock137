@@ -93,15 +93,15 @@ export default function Updates() {
         variants={cardVariants}
         className="flex flex-row gap-4 items-center border-b border-gray-200 dark:border-gray-700 pb-4"
       >
-        {/* Left: Thumbnail (1200x620 aspect ratio with contain) */}
+        {/* Left: Thumbnail (16:9 aspect ratio with contain — no cropping) */}
         <Tag {...rest} className="shrink-0">
-          <div className="w-32 h-20 bg-gray-100 dark:bg-[#1f1f1f] overflow-hidden">
+          <div className="w-40 sm:w-48 aspect-video bg-gray-100 dark:bg-[#1f1f1f] overflow-hidden rounded-lg">
             <OptimizedImage
               src={update.image_url || '/placeholder.svg'}
               alt={update.title}
               className="w-full h-full object-contain"
-              width={128}
-              height={80}
+              width={192}
+              height={108}
             />
           </div>
         </Tag>
@@ -137,7 +137,7 @@ export default function Updates() {
           key={`sk-${i}`}
           className="flex flex-row gap-4 items-center border-b border-gray-200 dark:border-gray-700 pb-4"
         >
-          <div className="w-32 h-20 bg-gray-200 dark:bg-[#1f1f1f] animate-pulse shrink-0" />
+          <div className="w-40 sm:w-48 aspect-video bg-gray-200 dark:bg-[#1f1f1f] animate-pulse shrink-0 rounded-lg" />
           <div className="flex-1 space-y-2">
             <div className="h-3 w-3/4 bg-gray-200 dark:bg-[#2a2a2a] animate-pulse rounded" />
             <div className="h-2.5 w-1/4 bg-gray-200 dark:bg-[#2a2a2a] animate-pulse rounded" />

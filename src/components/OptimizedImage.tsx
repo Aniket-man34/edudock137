@@ -41,7 +41,7 @@ export default function OptimizedImage({
 
     return (
         <div
-            className={`relative overflow-hidden ${className}`}
+            className={`relative overflow-hidden bg-gray-100 dark:bg-[#1f1f1f] ${className}`}
             style={width && height ? { aspectRatio: `${width}/${height}` } : undefined}
         >
             {/* Blur placeholder shown until image loads */}
@@ -57,7 +57,7 @@ export default function OptimizedImage({
                 loading={loading}
                 onLoad={handleLoad}
                 onError={handleError}
-                className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'
+                className={`w-full h-full object-contain transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'
                     }`}
             />
         </div>

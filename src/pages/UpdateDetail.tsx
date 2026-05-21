@@ -225,13 +225,14 @@ export default function UpdateDetail() {
           />
         </div>
 
-        {/* Featured Image */}
+        {/* Featured Image — 16:9 container, object-contain: no cropping */}
         {update.image_url && (
-          <div className="w-full mt-6 mb-8 overflow-hidden rounded-xl shadow-sm">
+          <div className="w-full mt-6 mb-8 overflow-hidden rounded-xl shadow-sm bg-gray-100 dark:bg-[#1f1f1f]">
             <img
               src={`${update.image_url}?t=${Date.now()}`}
               alt={update.title}
-              className="w-full aspect-video object-cover rounded-xl"
+              className="w-full aspect-video object-contain rounded-xl"
+              loading="lazy"
             />
           </div>
         )}
@@ -325,11 +326,12 @@ export default function UpdateDetail() {
                       key={item.id}
                       className="flex flex-row items-center gap-4 w-full bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:shadow-sm"
                     >
-                      <div className="w-40 h-24 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700 flex items-center justify-center p-1">
+                      <div className="w-48 aspect-video rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700 flex items-center justify-center p-1">
                         <img
                           src={item.image_url ? `${item.image_url}?t=${Date.now()}` : '/placeholder.svg'}
                           alt=""
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
                         />
                       </div>
                       <div className="min-w-0">
