@@ -104,8 +104,11 @@ export async function onRequest(context: PagesFunctionContext): Promise<Response
 function generateSitemapXml(updates: UpdateRow[]): string {
   const staticPages: SitemapPage[] = [
     { loc: 'https://edudock.in/', lastmod: getTodayISO(), priority: '1.0' },
-    { loc: 'https://edudock.in/updates', lastmod: getTodayISO(), priority: '0.8' },
-    { loc: 'https://edudock.in/pdfs', lastmod: getTodayISO(), priority: '0.7' },
+    { loc: 'https://edudock.in/updates', lastmod: getTodayISO(), priority: '0.9' },
+    { loc: 'https://edudock.in/pdfs', lastmod: getTodayISO(), priority: '0.8' },
+    { loc: 'https://edudock.in/tools', lastmod: getTodayISO(), priority: '0.8' },
+    { loc: 'https://edudock.in/privacy', lastmod: getTodayISO(), priority: '0.3' },
+    { loc: 'https://edudock.in/terms', lastmod: getTodayISO(), priority: '0.3' },
   ];
 
   var xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "\n";
@@ -127,7 +130,7 @@ function generateSitemapXml(updates: UpdateRow[]): string {
 
       const lastmod: string = formatDate(update.created_at);
       xml += "  <url>" + "\n";
-      xml += '    <loc>https://edudock.in/update/' + escapeXml(update.slug) + '</loc>' + '\n';
+      xml += '    <loc>https://edudock.in/updates/' + escapeXml(update.slug) + '</loc>' + '\n';
       xml += "    <lastmod>" + lastmod + "</lastmod>" + "\n";
       xml += "    <priority>0.6</priority>" + "\n";
       xml += "  </url>" + "\n";

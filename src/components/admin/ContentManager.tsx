@@ -113,13 +113,13 @@ export default function ContentManager() {
             />
 
             {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_320px]">
                     <SectionSkeleton />
                     <SectionSkeleton />
                     <SectionSkeleton />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_320px]">
                     {/* Updates Section */}
                     <ContentSection
                         title="Updates"

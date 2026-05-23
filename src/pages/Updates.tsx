@@ -131,7 +131,7 @@ export default function Updates() {
 
   /* ── Page skeleton cards ─────────────────────────────────────── */
   const renderSkeletons = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-6xl mx-auto">
+    <div className="flex flex-wrap gap-6 w-full max-w-6xl mx-auto [&>*]:flex-[1_1_320px]">
       {[...Array(6)].map((_, i) => (
         <div
           key={`sk-${i}`}
@@ -176,7 +176,7 @@ export default function Updates() {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-6xl mx-auto"
+              className="flex flex-wrap gap-6 w-full max-w-6xl mx-auto [&>*]:flex-[1_1_340px]"
             >
               {filtered.map((update: any) => renderCard(update))}
             </motion.div>

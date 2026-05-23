@@ -199,14 +199,14 @@ export default function Tools() {
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" role="status" aria-live="polite" aria-label="Loading tools">
+        <div className="flex flex-wrap gap-5 items-stretch justify-start [&>*]:flex-[1_1_260px]" role="status" aria-live="polite" aria-label="Loading tools">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="h-60 glass-card animate-pulse rounded-2xl" aria-hidden="true" />
           ))}
         </div>
       ) : filtered && filtered.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" role="list" aria-label="Tools list">
+          <div className="flex flex-wrap gap-5 items-stretch justify-start [&>*]:flex-[1_1_260px]" role="list" aria-label="Tools list">
             {filtered.map((tool: any, i: number) => (
               <ToolCard key={tool.id} tool={tool} index={i} />
             ))}

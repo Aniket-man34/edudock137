@@ -116,7 +116,7 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                                className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_260px]"
                                 role="list"
                                 aria-label="Search results for tools"
                             >
@@ -181,7 +181,7 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                                className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_160px]"
                                 role="list"
                                 aria-label="Search results for PDFs"
                             >
@@ -192,7 +192,7 @@ export default function TrendingSection({
                                             className="block group"
                                             aria-label={`View ${pdf.title} PDF`}
                                         >
-                                            <div className="aspect-[3/4] glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl bg-gray-100 dark:bg-[#1f1f1f]">
+                                            <div className="aspect-[2/3] max-w-[220px] mx-auto glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl bg-gray-100 dark:bg-[#1f1f1f]">
                                                 {pdf.cover_image_url ? (
                                                     <img
                                                         src={pdf.cover_image_url}
@@ -247,7 +247,7 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                                className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_300px]"
                                 role="list"
                                 aria-label="Search results for updates"
                             >
@@ -259,11 +259,18 @@ export default function TrendingSection({
                                             aria-label={`Read ${update.title} update`}
                                         >
                                             {update.image_url && (
-                                                <div className="aspect-video overflow-hidden bg-gray-100 dark:bg-[#1f1f1f]">
+                                                <div className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-[#1f1f1f]">
+                                                    <img
+                                                        src={update.image_url}
+                                                        alt=""
+                                                        aria-hidden="true"
+                                                        className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
+                                                        loading="lazy"
+                                                    />
                                                     <img
                                                         src={update.image_url}
                                                         alt={update.title}
-                                                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                                                        className="relative z-10 w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                                                         loading="lazy"
                                                     />
                                                 </div>
@@ -322,7 +329,7 @@ export default function TrendingSection({
                                     initial="hidden"
                                     whileInView="show"
                                     viewport={{ once: true }}
-                                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                                    className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_260px]"
                                     role="list"
                                     aria-label="Trending tools"
                                 >
@@ -397,7 +404,7 @@ export default function TrendingSection({
                                         initial="hidden"
                                         whileInView="show"
                                         viewport={{ once: true }}
-                                        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                                        className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_160px]"
                                         role="list"
                                         aria-label="Hot PDFs"
                                     >
@@ -408,7 +415,7 @@ export default function TrendingSection({
                                                     className="block group"
                                                     aria-label={`View ${pdf.title} PDF`}
                                                 >
-                                                    <div className="aspect-[3/4] glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl bg-gray-100 dark:bg-[#1f1f1f]">
+                                                    <div className="aspect-[2/3] max-w-[220px] mx-auto glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl bg-gray-100 dark:bg-[#1f1f1f]">
                                                         {pdf.cover_image_url ? (
                                                             <img
                                                                 src={pdf.cover_image_url}
@@ -468,7 +475,7 @@ export default function TrendingSection({
                                         initial="hidden"
                                         whileInView="show"
                                         viewport={{ once: true }}
-                                        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                                        className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_300px]"
                                         role="list"
                                         aria-label="Latest updates"
                                     >
@@ -480,11 +487,18 @@ export default function TrendingSection({
                                                     aria-label={`Read ${update.title} update`}
                                                 >
                                                     {update.image_url && (
-                                                        <div className="aspect-video overflow-hidden bg-gray-100 dark:bg-[#1f1f1f]">
+                                                        <div className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-[#1f1f1f]">
+                                                            <img
+                                                                src={update.image_url}
+                                                                alt=""
+                                                                aria-hidden="true"
+                                                                className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
+                                                                loading="lazy"
+                                                            />
                                                             <img
                                                                 src={update.image_url}
                                                                 alt={update.title}
-                                                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                                                                className="relative z-10 w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                                                                 loading="lazy"
                                                             />
                                                         </div>

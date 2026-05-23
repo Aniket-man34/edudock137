@@ -188,13 +188,13 @@ export default function Pdfs() {
           <span className="text-foreground font-medium truncate max-w-[200px] sm:max-w-[400px]">{selectedPdf.title}</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 w-full max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-12 w-full max-w-7xl mx-auto">
 
           <motion.main
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="lg:col-span-8 flex flex-col"
+            className="lg:w-2/3 flex flex-col"
           >
             <article className="w-full">
               <div className="flex flex-col md:flex-row gap-10 mb-10">
@@ -205,10 +205,10 @@ export default function Pdfs() {
                       <img
                         src={selectedPdf.cover_image_url}
                         alt={selectedPdf.title}
-                        className="w-full h-auto object-contain max-h-[500px] rounded-xl shadow-lg border border-border/20"
+                        className="w-full max-w-[250px] mx-auto h-auto object-contain max-h-[380px] rounded-xl shadow-lg border border-border/20"
                       />
                     ) : (
-                      <div className="w-full aspect-[3/4] flex items-center justify-center bg-primary/5 rounded-xl border border-border/20">
+                      <div className="w-full max-w-[220px] mx-auto aspect-[2/3] flex items-center justify-center bg-primary/5 rounded-xl border border-border/20">
                         <BookOpen className="w-16 h-16 text-primary/30" />
                       </div>
                     )}
@@ -287,7 +287,7 @@ export default function Pdfs() {
             </article>
           </motion.main>
 
-          <aside className="lg:col-span-4 space-y-8">
+          <aside className="lg:w-1/3 space-y-8">
 
             <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
@@ -435,14 +435,14 @@ export default function Pdfs() {
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" role="status" aria-live="polite" aria-label="Loading PDFs">
+        <div className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_170px]" role="status" aria-live="polite" aria-label="Loading PDFs">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="aspect-[3/4] glass-card animate-pulse rounded-2xl" aria-hidden="true" />
+            <div key={i} className="aspect-[2/3] max-w-[220px] mx-auto glass-card animate-pulse rounded-2xl" aria-hidden="true" />
           ))}
         </div>
       ) : filtered && filtered.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" role="list" aria-label="PDFs list">
+          <div className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_170px]" role="list" aria-label="PDFs list">
             {filtered.map((pdf: any, i: number) => (
               <motion.div
                 key={pdf.id}
@@ -461,7 +461,7 @@ export default function Pdfs() {
                       if (error) console.error("Error updating PDF clicks:", error);
                     });
                 }}
-                className="relative aspect-[3/4] glass-card overflow-hidden cursor-pointer group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                className="relative aspect-[2/3] max-w-[220px] mx-auto glass-card overflow-hidden cursor-pointer group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
                 role="listitem"
                 tabIndex={0}
                 aria-label={`View ${pdf.title} PDF${isNewPdf(pdf.created_at) ? ' - New' : ''}`}

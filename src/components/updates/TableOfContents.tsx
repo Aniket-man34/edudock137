@@ -14,7 +14,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
     <aside className="w-full shrink-0">
       <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-5">
         <h4 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">
-          On This Page
+          Table of Contents
         </h4>
 
         <nav aria-label="Table of contents" className="text-sm">

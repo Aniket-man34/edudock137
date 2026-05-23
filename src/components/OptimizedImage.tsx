@@ -8,6 +8,8 @@ interface OptimizedImageProps {
     height?: number;
     loading?: 'lazy' | 'eager';
     fallbackSrc?: string;
+    /** Renders a blurred copy of the image behind the sharp one to fill empty bars */
+    blurBackground?: boolean;
 }
 
 /**
@@ -16,6 +18,7 @@ interface OptimizedImageProps {
  * - Blur-up placeholder while loading
  * - Error fallback to placeholder
  * - CLS prevention via width/height
+ * - Optional blurred background fill (no ugly blank bars with object-contain)
  */
 export default function OptimizedImage({
     src,
@@ -25,6 +28,7 @@ export default function OptimizedImage({
     height,
     loading = 'lazy',
     fallbackSrc = '/placeholder.svg',
+    blurBackground = true,
 }: OptimizedImageProps) {
     const [hasError, setHasError] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -38,6 +42,7 @@ export default function OptimizedImage({
     }, []);
 
     const imgSrc = hasError ? fallbackSrc : src;
+    const showBlur = blurBackground && isLoaded && !hasError;
 
     return (
         <div
@@ -49,6 +54,18 @@ export default function OptimizedImage({
                 <div className="absolute inset-0 bg-muted/20 animate-pulse" aria-hidden="true" />
             )}
 
+            {/* Blurred background fill — eliminates blank bars with object-contain */}
+            {showBlur && (
+                <img
+                    src={imgSrc}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
+                    loading={loading}
+                />
+            )}
+
+            {/* Sharp foreground image — object-contain, fully visible */}
             <img
                 src={imgSrc}
                 alt={alt}
@@ -57,7 +74,7 @@ export default function OptimizedImage({
                 loading={loading}
                 onLoad={handleLoad}
                 onError={handleError}
-                className={`w-full h-full object-contain transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'
+                className={`relative z-10 w-full h-full object-contain transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'
                     }`}
             />
         </div>

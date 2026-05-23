@@ -266,7 +266,7 @@ export default function Home() {
                   </span>
                 </h3>
               </motion.div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="flex flex-wrap gap-5 items-stretch justify-start [&>*]:flex-[1_1_260px]">
                 {searchMatchedTools.map((tool: any, i: number) => (
                   <motion.div key={tool.id} variants={fadeUp}>
                     <ToolCard tool={tool} index={i} />
@@ -301,17 +301,24 @@ export default function Home() {
                 </h3>
               </motion.div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
+              <div className="flex flex-wrap gap-4 md:gap-5 items-stretch justify-start [&>*]:flex-[1_1_160px]">
                 {searchMatchedPdfs.map((pdf: any) => (
                   <motion.div key={pdf.id} variants={fadeUp}>
                     <Link
                       to={`/pdfs/${pdf.slug || pdf.id}`}
                       className="group/pdf relative block rounded-2xl overflow-hidden border border-slate-200 bg-white transition-all duration-500 hover:scale-[1.04] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] hover:border-sky-400/50"
                     >
-                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
+                      <div className="relative aspect-[2/3] max-w-[220px] mx-auto w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
                         <img
                           src={pdf.cover_image_url || '/placeholder.svg'}
-                          className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover/pdf:scale-110"
+                          alt=""
+                          aria-hidden="true"
+                          className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
+                          loading="lazy"
+                        />
+                        <img
+                          src={pdf.cover_image_url || '/placeholder.svg'}
+                          className="relative z-10 w-full h-full object-contain transition-transform duration-700 ease-out group-hover/pdf:scale-110"
                           alt={pdf.title}
                           loading="lazy"
                         />
@@ -359,7 +366,7 @@ export default function Home() {
                   </span>
                 </h3>
               </motion.div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              <div className="flex flex-wrap gap-5 items-stretch justify-start [&>*]:flex-[1_1_300px]">
                 {searchMatchedUpdates.map((update: any) => (
                   <motion.div key={update.id} variants={fadeUp}>
                     <Link
@@ -369,7 +376,14 @@ export default function Home() {
                       <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
                         <img
                           src={update.image_url || '/placeholder.svg'}
-                          className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-110"
+                          alt=""
+                          aria-hidden="true"
+                          className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
+                          loading="lazy"
+                        />
+                        <img
+                          src={update.image_url || '/placeholder.svg'}
+                          className="relative z-10 w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-110"
                           alt=""
                           loading="lazy"
                         />
@@ -579,8 +593,9 @@ export default function Home() {
                       {pdf.clicks > 0 && (
                         <div className="absolute top-3 right-3 z-30 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10"><Eye className="h-3 w-3" />{pdf.clicks}</div>
                       )}
-                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
-                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover/card:scale-110" alt={pdf.title} loading="lazy" />
+                      <div className="relative aspect-[2/3] max-w-[220px] w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
+                        <img src={pdf.cover_image_url || '/placeholder.svg'} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60" loading="lazy" />
+                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="relative z-10 w-full h-full object-contain transition-transform duration-700 ease-out group-hover/card:scale-110" alt={pdf.title} loading="lazy" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -662,12 +677,21 @@ export default function Home() {
                       {/* 16:9 Poster — object-contain, no cropping */}
                       <div className="relative aspect-video w-full overflow-hidden bg-[#0f0f1a]">
                         {update.image_url ? (
-                          <img
-                            src={update.image_url}
-                            alt={update.title}
-                            className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover/card:scale-105"
-                            loading="lazy"
-                          />
+                          <>
+                            <img
+                              src={update.image_url}
+                              alt=""
+                              aria-hidden="true"
+                              className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
+                              loading="lazy"
+                            />
+                            <img
+                              src={update.image_url}
+                              alt={update.title}
+                              className="relative z-10 w-full h-full object-contain transition-transform duration-700 ease-out group-hover/card:scale-105"
+                              loading="lazy"
+                            />
+                          </>
                         ) : (
                           /* Dark placeholder for missing images */
                           <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-[#0f0f1a]">
@@ -719,7 +743,7 @@ export default function Home() {
         </motion.div>
         <div className="h-px bg-gradient-to-r from-blue-400/40 via-cyan-400/20 to-transparent mb-8" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col lg:flex-row gap-6 [&>*]:flex-1">
           {/* New PDFs */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className={`relative overflow-hidden rounded-2xl ${glassCard}`}>
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-sky-400/[0.06] blur-[70px] rounded-full pointer-events-none" />
@@ -736,7 +760,8 @@ export default function Home() {
                   <motion.div key={pdf.id} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.08 }}>
                     <Link to={`/pdfs/${pdf.slug || pdf.id}`} className="flex items-center gap-4 p-3 rounded-xl bg-white/60 hover:bg-white/90 transition-all duration-300 border border-slate-200 hover:border-sky-400/40 group">
                       <div className="relative w-10 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-[#1f1f1f] ring-1 ring-slate-200 shrink-0">
-                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="w-full h-full object-contain" alt="" loading="lazy" />
+                        <img src={pdf.cover_image_url || '/placeholder.svg'} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60" loading="lazy" />
+                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="relative z-10 w-full h-full object-contain" alt="" loading="lazy" />
                       </div>
                       <p className="text-sm font-medium flex-1 truncate text-slate-700 group-hover:text-sky-500 transition-colors">{pdf.title}</p>
                       <ArrowRight className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 shrink-0" />
@@ -764,7 +789,8 @@ export default function Home() {
                   <motion.div key={update.id} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.08 }}>
                     <Link to={`/updates/${update.slug || update.id}`} className="flex items-center gap-4 p-3 rounded-xl bg-white/60 hover:bg-white/90 transition-all duration-300 border border-slate-200 hover:border-violet-400/40 group">
                       <div className="relative w-16 aspect-video rounded-lg overflow-hidden bg-slate-100 dark:bg-[#1f1f1f] ring-1 ring-slate-200 shrink-0">
-                        <img src={update.image_url || '/placeholder.svg'} className="w-full h-full object-contain" alt="" loading="lazy" />
+                        <img src={update.image_url || '/placeholder.svg'} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60" loading="lazy" />
+                        <img src={update.image_url || '/placeholder.svg'} className="relative z-10 w-full h-full object-contain" alt="" loading="lazy" />
                       </div>
                       <p className="text-sm font-medium flex-1 truncate text-slate-700 group-hover:text-violet-500 transition-colors">{update.title}</p>
                       <ArrowRight className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 shrink-0" />
@@ -792,7 +818,7 @@ export default function Home() {
         <div className="h-px bg-gradient-to-r from-emerald-400/40 via-green-400/20 to-transparent mb-10" />
 
         {categories && categories.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_300px]">
             {categories.map((cat: any, idx: number) => {
               const catTools = tools?.filter((t: any) => t.category_id === cat.id);
               const color = catColors[idx % catColors.length];
@@ -821,7 +847,7 @@ export default function Home() {
         <div className="absolute top-10 right-[15%] w-48 h-48 bg-violet-400/[0.04] blur-[100px] rounded-full pointer-events-none" />
 
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-10 max-w-5xl mx-auto [&>*]:flex-1">
             {/* About */}
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
               <div className="flex items-center gap-3 mb-5">
