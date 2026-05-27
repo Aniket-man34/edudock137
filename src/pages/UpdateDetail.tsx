@@ -7,8 +7,8 @@ import { ExternalLink, Calendar, ChevronRight } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
-import TableOfContents from '@/components/updates/TableOfContents';
 import SocialShare from '@/components/updates/SocialShare';
 
 // 🚨 HIGH-RES INTERCEPTOR FOR OLD POSTS 🚨
@@ -82,47 +82,6 @@ export default function UpdateDetail() {
       year: 'numeric'
     })
     : '';
-
-  // Extract headings from raw content for TOC sidebar
-  const headings = useMemo(() => {
-    const raw = update?.content || '';
-    if (!raw) return [] as { id: string; text: string; level: 2 | 3; number: string }[];
-
-    const slugify = (text: string) =>
-      text
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-+|-+$/g, '');
-
-    const lines = raw.split(/\r?\n/);
-    let h2 = 0;
-    let h3 = 0;
-    const result: { id: string; text: string; level: 2 | 3; number: string }[] = [];
-
-    for (const line of lines) {
-      const mdH2 = line.match(/^##\s+(.*)/);
-      const mdH3 = line.match(/^###\s+(.*)/);
-      const htmlH2 = line.match(/^<h2>(.*)<\/h2>/i);
-      const htmlH3 = line.match(/^<h3>(.*)<\/h3>/i);
-
-      if (mdH2 || htmlH2) {
-        const text = (mdH2 ? mdH2[1] : htmlH2![1]).trim();
-        h2++;
-        h3 = 0;
-        result.push({ id: slugify(text), text, level: 2, number: String(h2) });
-      } else if (mdH3 || htmlH3) {
-        const text = (mdH3 ? mdH3[1] : htmlH3![1]).trim();
-        if (h2 === 0) h2 = 1;
-        h3++;
-        result.push({ id: slugify(text), text, level: 3, number: `${h2}.${h3}` });
-      }
-    }
-
-    return result;
-  }, [update?.content]);
 
   // Convert raw DB content (plain text with markdown-like syntax) into proper markdown
   const markdownContent = useMemo(() => {
@@ -231,15 +190,11 @@ export default function UpdateDetail() {
           <img
             src={`${update.image_url}?t=${Date.now()}`}
             alt={update.title}
-            className="w-full aspect-[1200/630] object-cover rounded-xl mt-6 mb-8 shadow-sm block"
+            className="w-full aspect-[1200/630] object-cover mt-6 mb-8 block"
             loading="lazy"
           />
         )}
 
-        {/* Table of Contents — visible on all screens, vertical card */}
-        {headings && headings.length > 0 && (
-          <TableOfContents headings={headings} />
-        )}
 
         {/* Markdown Content */}
         <div className="prose prose-blue max-w-none md:prose-lg dark:prose-invert
@@ -252,7 +207,7 @@ export default function UpdateDetail() {
         ">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeSlug]}
+            rehypePlugins={[rehypeRaw, rehypeSlug]}
           >
             {markdownContent}
           </ReactMarkdown>

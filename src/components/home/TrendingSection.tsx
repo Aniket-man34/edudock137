@@ -116,17 +116,18 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_260px]"
+                                className="flex flex-row flex-nowrap overflow-x-auto gap-6 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full"
+                                style={{ touchAction: 'pan-x' }}
                                 role="list"
                                 aria-label="Search results for tools"
                             >
                                 {searchMatchedTools.map((tool: any, i: number) => (
-                                    <motion.div key={tool.id} variants={fadeUp} role="listitem">
+                                    <motion.div key={tool.id} variants={fadeUp} role="listitem" className="min-w-[280px] shrink-0">
                                         <Link
                                             to={tool.url || '#'}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="glass-card group block p-5 rounded-2xl border border-border/40 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                                            className="glass-card group block p-5 rounded-2xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1"
                                             aria-label={`Open ${tool.title} tool${tool.short_description ? `: ${tool.short_description}` : ''}`}
                                         >
                                             <div className="flex items-start gap-4">
@@ -181,33 +182,27 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_160px]"
+                                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full"
                                 role="list"
                                 aria-label="Search results for PDFs"
                             >
                                 {searchMatchedPdfs.map((pdf: any) => (
                                     <motion.div key={pdf.id} variants={fadeUp} role="listitem">
-                                        <Link
-                                            to={`/pdfs/${pdf.slug || pdf.id}`}
-                                            className="block group"
-                                            aria-label={`View ${pdf.title} PDF`}
-                                        >
-                                            <div className="aspect-[2/3] max-w-[220px] mx-auto glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl bg-gray-100 dark:bg-[#1f1f1f]">
-                                                {pdf.cover_image_url ? (
-                                                    <img
-                                                        src={pdf.cover_image_url}
-                                                        alt={pdf.title}
-                                                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3">
-                                                        <BookOpen className="h-8 w-8 text-primary/40" />
-                                                        <span className="font-display font-semibold text-sm text-center leading-snug">
-                                                            {pdf.title}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
+                                        <Link to={`/pdfs/${pdf.slug || pdf.id}`} aria-label={`View ${pdf.title} PDF`}>
+                                            {pdf.cover_image_url ? (
+                                                <img
+                                                    src={pdf.cover_image_url}
+                                                    alt={pdf.title}
+                                                    className="w-[40vw] md:w-48 flex-none snap-start aspect-[2/3] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="w-[40vw] md:w-48 flex-none snap-start aspect-[2/3] flex flex-col items-center justify-center p-2 gap-1 bg-gray-100 dark:bg-[#1f1f1f] rounded-lg shadow-sm transition-transform hover:scale-105">
+                                                    <BookOpen className="h-8 w-8 text-primary/40" />
+                                                    <span className="font-display font-semibold text-[10px] text-center leading-snug line-clamp-2">
+                                                        {pdf.title}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </Link>
                                     </motion.div>
                                 ))}
@@ -247,42 +242,25 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_300px]"
+                                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full"
                                 role="list"
                                 aria-label="Search results for updates"
                             >
                                 {searchMatchedUpdates.map((update: any) => (
                                     <motion.div key={update.id} variants={fadeUp} role="listitem">
-                                        <Link
-                                            to={`/updates/${update.slug || update.id}`}
-                                            className="glass-card group block overflow-hidden rounded-2xl border border-border/40 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
-                                            aria-label={`Read ${update.title} update`}
-                                        >
-                                            {update.image_url && (
-                                                <div className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-[#1f1f1f]">
-                                                    <img
-                                                        src={update.image_url}
-                                                        alt=""
-                                                        aria-hidden="true"
-                                                        className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
-                                                        loading="lazy"
-                                                    />
-                                                    <img
-                                                        src={update.image_url}
-                                                        alt={update.title}
-                                                        className="relative z-10 w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                                                        loading="lazy"
-                                                    />
+                                        <Link to={`/updates/${update.slug || update.id}`} aria-label={`Read ${update.title} update`}>
+                                            {update.image_url ? (
+                                                <img
+                                                    src={update.image_url}
+                                                    alt={update.title}
+                                                    className="w-[75vw] md:w-80 flex-none snap-start aspect-[1200/630] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                                                    loading="lazy"
+                                                />
+                                            ) : (
+                                                <div className="w-[75vw] md:w-80 flex-none snap-start aspect-[1200/630] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-lg shadow-sm transition-transform hover:scale-105">
+                                                    <Bell className="h-8 w-8 text-primary/40" />
                                                 </div>
                                             )}
-                                            <div className="p-5">
-                                                <h3 className="font-display font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                                                    {update.title}
-                                                </h3>
-                                                <p className="text-muted-foreground text-sm line-clamp-3">
-                                                    {update.content}
-                                                </p>
-                                            </div>
                                         </Link>
                                     </motion.div>
                                 ))}
@@ -329,17 +307,18 @@ export default function TrendingSection({
                                     initial="hidden"
                                     whileInView="show"
                                     viewport={{ once: true }}
-                                    className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_260px]"
+                                    className="flex flex-row flex-nowrap overflow-x-auto gap-6 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full"
+                                    style={{ touchAction: 'pan-x' }}
                                     role="list"
                                     aria-label="Trending tools"
                                 >
                                     {trendingTools.map((tool: any, i: number) => (
-                                        <motion.div key={tool.id} variants={fadeUp} role="listitem">
+                                        <motion.div key={tool.id} variants={fadeUp} role="listitem" className="min-w-[280px] shrink-0">
                                             <Link
                                                 to={tool.url || '#'}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="glass-card group block p-5 rounded-2xl border border-border/40 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                                                className="glass-card group block p-5 rounded-2xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1"
                                                 aria-label={`Open ${tool.title} tool, ranked ${i + 1} with ${tool.clicks || 0} views`}
                                             >
                                                 <div className="flex items-start gap-4">
@@ -404,33 +383,27 @@ export default function TrendingSection({
                                         initial="hidden"
                                         whileInView="show"
                                         viewport={{ once: true }}
-                                        className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_160px]"
+                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full"
                                         role="list"
                                         aria-label="Hot PDFs"
                                     >
                                         {trendingPdfs.map((pdf: any, i: number) => (
                                             <motion.div key={pdf.id} variants={scaleIn} role="listitem">
-                                                <Link
-                                                    to={`/pdfs/${pdf.slug || pdf.id}`}
-                                                    className="block group"
-                                                    aria-label={`View ${pdf.title} PDF`}
-                                                >
-                                                    <div className="aspect-[2/3] max-w-[220px] mx-auto glass-card overflow-hidden cursor-pointer group-hover:-translate-y-1 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl bg-gray-100 dark:bg-[#1f1f1f]">
-                                                        {pdf.cover_image_url ? (
-                                                            <img
-                                                                src={pdf.cover_image_url}
-                                                                alt={pdf.title}
-                                                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3">
-                                                                <BookOpen className="h-8 w-8 text-primary/40" />
-                                                                <span className="font-display font-semibold text-sm text-center leading-snug">
-                                                                    {pdf.title}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                <Link to={`/pdfs/${pdf.slug || pdf.id}`} aria-label={`View ${pdf.title} PDF`}>
+                                                    {pdf.cover_image_url ? (
+                                                        <img
+                                                            src={pdf.cover_image_url}
+                                                            alt={pdf.title}
+                                                            className="w-[40vw] md:w-48 flex-none snap-start aspect-[2/3] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-[40vw] md:w-48 flex-none snap-start aspect-[2/3] flex flex-col items-center justify-center p-2 gap-1 bg-gray-100 dark:bg-[#1f1f1f] rounded-lg shadow-sm transition-transform hover:scale-105">
+                                                            <BookOpen className="h-8 w-8 text-primary/40" />
+                                                            <span className="font-display font-semibold text-[10px] text-center leading-snug line-clamp-2">
+                                                                {pdf.title}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </Link>
                                             </motion.div>
                                         ))}
@@ -475,42 +448,25 @@ export default function TrendingSection({
                                         initial="hidden"
                                         whileInView="show"
                                         viewport={{ once: true }}
-                                        className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_300px]"
+                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full"
                                         role="list"
                                         aria-label="Latest updates"
                                     >
                                         {trendingUpdates.map((update: any) => (
                                             <motion.div key={update.id} variants={fadeUp} role="listitem">
-                                                <Link
-                                                    to={`/updates/${update.slug || update.id}`}
-                                                    className="glass-card group block overflow-hidden rounded-2xl border border-border/40 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
-                                                    aria-label={`Read ${update.title} update`}
-                                                >
-                                                    {update.image_url && (
-                                                        <div className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-[#1f1f1f]">
-                                                            <img
-                                                                src={update.image_url}
-                                                                alt=""
-                                                                aria-hidden="true"
-                                                                className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
-                                                                loading="lazy"
-                                                            />
-                                                            <img
-                                                                src={update.image_url}
-                                                                alt={update.title}
-                                                                className="relative z-10 w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                                                                loading="lazy"
-                                                            />
+                                                <Link to={`/updates/${update.slug || update.id}`} aria-label={`Read ${update.title} update`}>
+                                                    {update.image_url ? (
+                                                        <img
+                                                            src={update.image_url}
+                                                            alt={update.title}
+                                                            className="w-[75vw] md:w-80 flex-none snap-start aspect-[1200/630] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                                                            loading="lazy"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-[75vw] md:w-80 flex-none snap-start aspect-[1200/630] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-lg shadow-sm transition-transform hover:scale-105">
+                                                            <Bell className="h-8 w-8 text-primary/40" />
                                                         </div>
                                                     )}
-                                                    <div className="p-5">
-                                                        <h3 className="font-display font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                                                            {update.title}
-                                                        </h3>
-                                                        <p className="text-muted-foreground text-sm line-clamp-3">
-                                                            {update.content}
-                                                        </p>
-                                                    </div>
                                                 </Link>
                                             </motion.div>
                                         ))}

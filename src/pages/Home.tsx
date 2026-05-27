@@ -5,7 +5,6 @@ import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   ArrowRight,
   Sparkles,
-  TrendingUp,
   Clock,
   Info,
   Mail,
@@ -13,8 +12,6 @@ import {
   Bell,
   Wrench,
   Eye,
-  ChevronRight,
-  Flame,
   GraduationCap,
 } from 'lucide-react';
 import ToolCard from '@/components/ToolCard';
@@ -54,16 +51,6 @@ const sectionReveal: Variants = {
     transition: { duration: 0.5, ease: 'easeOut' },
   },
 };
-
-function getRankStyle(i: number) {
-  if (i === 0)
-    return 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 border-yellow-300/60 text-black shadow-[0_0_20px_rgba(234,179,8,0.4)]';
-  if (i === 1)
-    return 'bg-gradient-to-br from-gray-200 via-slate-300 to-slate-400 border-slate-200/60 text-black shadow-[0_0_16px_rgba(148,163,184,0.3)]';
-  if (i === 2)
-    return 'bg-gradient-to-br from-orange-300 via-orange-400 to-amber-600 border-orange-300/60 text-black shadow-[0_0_16px_rgba(249,115,22,0.3)]';
-  return 'bg-muted/80 border-border/60 text-muted-foreground';
-}
 
 // New-design glass card utility class
 const glassCard =
@@ -131,30 +118,6 @@ export default function Home() {
     },
   });
 
-  const { data: trendingUpdates } = useQuery({
-    queryKey: ['trending_updates'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('updates')
-        .select('*')
-        .order('clicks', { ascending: false })
-        .limit(6);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: trendingPdfs } = useQuery({
-    queryKey: ['trending_pdfs'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('pdfs')
-        .select('*')
-        .order('clicks', { ascending: false })
-        .limit(6);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const thirtyDaysIso = thirtyDaysAgo.toISOString();
@@ -184,11 +147,6 @@ export default function Home() {
       return data || [];
     },
   });
-
-  const trendingTools =
-    tools
-      ?.sort((a: any, b: any) => (b.clicks || 0) - (a.clicks || 0))
-      .slice(0, 6) || [];
 
   const term = searchQuery?.toLowerCase().trim() || '';
   const searchMatchedTools =
@@ -254,7 +212,7 @@ export default function Home() {
             >
               <motion.div
                 variants={fadeUp}
-                className="flex items-center gap-3 mb-7 border-b border-slate-200 pb-4"
+                className="flex items-center gap-3 mb-7 pb-4"
               >
                 <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
                   <Wrench className="h-5 w-5 text-emerald-500" />
@@ -266,9 +224,9 @@ export default function Home() {
                   </span>
                 </h3>
               </motion.div>
-              <div className="flex flex-wrap gap-5 items-stretch justify-start [&>*]:flex-[1_1_260px]">
+              <div className="flex flex-row flex-nowrap overflow-x-auto gap-6 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full" style={{ touchAction: 'pan-x' }}>
                 {searchMatchedTools.map((tool: any, i: number) => (
-                  <motion.div key={tool.id} variants={fadeUp}>
+                  <motion.div key={tool.id} variants={fadeUp} className="min-w-[280px] shrink-0">
                     <ToolCard tool={tool} index={i} />
                   </motion.div>
                 ))}
@@ -288,7 +246,7 @@ export default function Home() {
             >
               <motion.div
                 variants={fadeUp}
-                className="flex items-center gap-3 mb-7 border-b border-slate-200 pb-4"
+                className="flex items-center gap-3 mb-7 pb-4"
               >
                 <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/10 ring-1 ring-blue-500/20">
                   <BookOpen className="h-5 w-5 text-blue-500" />
@@ -301,39 +259,40 @@ export default function Home() {
                 </h3>
               </motion.div>
 
-              <div className="flex flex-wrap gap-4 md:gap-5 items-stretch justify-start [&>*]:flex-[1_1_160px]">
+              <div className="flex flex-row flex-nowrap overflow-x-auto gap-6 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full" style={{ touchAction: 'pan-x' }}>
                 {searchMatchedPdfs.map((pdf: any) => (
-                  <motion.div key={pdf.id} variants={fadeUp}>
+                  <motion.div key={pdf.id} variants={fadeUp} className="min-w-[300px] shrink-0">
                     <Link
                       to={`/pdfs/${pdf.slug || pdf.id}`}
-                      className="group/pdf relative block rounded-2xl overflow-hidden border border-slate-200 bg-white transition-all duration-500 hover:scale-[1.04] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] hover:border-sky-400/50"
+                      className="group/pdf flex flex-row gap-4 p-4 rounded-2xl bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1"
                     >
-                      <div className="relative aspect-[2/3] max-w-[220px] mx-auto w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
-                        <img
-                          src={pdf.cover_image_url || '/placeholder.svg'}
-                          alt=""
-                          aria-hidden="true"
-                          className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
-                          loading="lazy"
-                        />
-                        <img
-                          src={pdf.cover_image_url || '/placeholder.svg'}
-                          className="relative z-10 w-full h-full object-contain transition-transform duration-700 ease-out group-hover/pdf:scale-110"
-                          alt={pdf.title}
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
-                        {pdf.clicks > 0 && (
-                          <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
-                            <Eye className="h-3 w-3" />
-                            {pdf.clicks}
+                      <div className="w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-[#1f1f1f]">
+                        {pdf.cover_image_url ? (
+                          <img
+                            src={pdf.cover_image_url}
+                            alt={pdf.title}
+                            className="aspect-[2/3] object-cover rounded-lg shadow-sm shrink-0 block w-full h-full"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="aspect-[2/3] w-full h-full flex flex-col items-center justify-center p-2 gap-1 bg-slate-100 dark:bg-[#1f1f1f]">
+                            <BookOpen className="h-5 w-5 text-slate-400" />
+                            <span className="font-semibold text-[10px] text-center leading-snug line-clamp-2 text-slate-500">
+                              {pdf.title}
+                            </span>
                           </div>
                         )}
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/pdf:text-sky-300 transition-colors duration-300">
-                            {pdf.title}
-                          </h4>
-                        </div>
+                      </div>
+                      <div className="flex-1 flex flex-col justify-center min-w-0">
+                        <h4 className="font-bold text-sm text-slate-800 leading-snug group-hover/pdf:text-sky-500 transition-colors duration-300">
+                          {pdf.title}
+                        </h4>
+                        {pdf.clicks > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <Eye className="h-3 w-3 text-slate-400" />
+                            <span className="text-xs text-slate-400">{pdf.clicks}</span>
+                          </div>
+                        )}
                       </div>
                     </Link>
                   </motion.div>
@@ -354,7 +313,7 @@ export default function Home() {
             >
               <motion.div
                 variants={fadeUp}
-                className="flex items-center gap-3 mb-7 border-b border-slate-200 pb-4"
+                className="flex items-center gap-3 mb-7 pb-4"
               >
                 <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-purple-500/10 ring-1 ring-purple-500/20">
                   <Bell className="h-5 w-5 text-purple-500" />
@@ -366,39 +325,37 @@ export default function Home() {
                   </span>
                 </h3>
               </motion.div>
-              <div className="flex flex-wrap gap-5 items-stretch justify-start [&>*]:flex-[1_1_300px]">
+              <div className="flex flex-row flex-nowrap overflow-x-auto gap-6 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full" style={{ touchAction: 'pan-x' }}>
                 {searchMatchedUpdates.map((update: any) => (
-                  <motion.div key={update.id} variants={fadeUp}>
+                  <motion.div key={update.id} variants={fadeUp} className="min-w-[380px] shrink-0">
                     <Link
                       to={`/updates/${update.slug || update.id}`}
-                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-500 hover:scale-[1.03] hover:z-10 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] hover:border-sky-400/50"
+                      className="group flex flex-row gap-4 p-4 rounded-2xl bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1"
                     >
-                      <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
-                        <img
-                          src={update.image_url || '/placeholder.svg'}
-                          alt=""
-                          aria-hidden="true"
-                          className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
-                          loading="lazy"
-                        />
-                        <img
-                          src={update.image_url || '/placeholder.svg'}
-                          className="relative z-10 w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-110"
-                          alt=""
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
-                        {update.clicks > 0 && (
-                          <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
-                            <Eye className="h-3 w-3" />
-                            {update.clicks}
+                      <div className="w-48 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-[#1f1f1f]">
+                        {update.image_url ? (
+                          <img
+                            src={update.image_url}
+                            alt={update.title}
+                            className="w-full aspect-[1200/630] object-cover rounded-lg shrink-0 block"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full aspect-[1200/630] flex items-center justify-center bg-slate-200 dark:bg-[#2a2a2a] rounded-lg">
+                            <Bell className="h-6 w-6 text-slate-400" />
                           </div>
                         )}
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover:text-sky-300 transition-colors duration-300">
-                            {update.title}
-                          </h4>
-                        </div>
+                      </div>
+                      <div className="flex-1 flex flex-col justify-center min-w-0">
+                        <h4 className="font-bold text-sm text-slate-800 leading-snug group-hover:text-sky-500 transition-colors duration-300">
+                          {update.title}
+                        </h4>
+                        {update.clicks > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <Eye className="h-3 w-3 text-slate-400" />
+                            <span className="text-xs text-slate-400">{update.clicks}</span>
+                          </div>
+                        )}
                       </div>
                     </Link>
                   </motion.div>
@@ -516,223 +473,9 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ──────── TRENDING NOW ──────── */}
-      <section className="pb-16 overflow-hidden">
-        <div className="container mx-auto px-4">
-          <motion.div variants={sectionReveal} initial="hidden" whileInView="show" viewport={{ once: true }} className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-400/20 to-red-400/10 ring-1 ring-orange-400/25">
-                <Flame className="h-5 w-5 text-orange-400" />
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-orange-500 rounded-full animate-ping" />
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-orange-500 rounded-full" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Trending Now</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Most popular across the platform</p>
-              </div>
-            </div>
-            <div className="hidden sm:flex items-center space-x-2">
-              <div className="h-2 w-2 rounded-full bg-slate-300" />
-              <div className="h-2 w-6 rounded-full bg-blue-500" />
-              <div className="h-2 w-2 rounded-full bg-slate-300" />
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Top Tools */}
-        {trendingTools.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="mb-12">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-bold flex items-center gap-2.5 text-slate-800">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20"><Wrench className="h-4 w-4 text-emerald-500" /></span>
-                  Top Tools
-                </h3>
-                <Link to="/tools" className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-500 transition-colors group">
-                  See all <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </div>
-            </div>
-            <div className="relative group/row">
-              <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-slate-50/50 to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-slate-50/50 to-transparent z-10 pointer-events-none" />
-              <div className="flex overflow-x-auto gap-4 md:gap-5 pb-4 pt-2 px-4 md:px-8 snap-x snap-mandatory scrollbar-hide">
-                {trendingTools.map((tool: any, i: number) => (
-                  <motion.div key={tool.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="min-w-[260px] md:min-w-[300px] lg:min-w-[320px] snap-start shrink-0 relative group/card">
-                    <div className={`absolute -top-2.5 -left-2.5 z-30 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm border-2 transform -rotate-6 transition-all duration-500 group-hover/card:rotate-0 group-hover/card:scale-110 ${getRankStyle(i)}`}>{i + 1}</div>
-                    <ToolCard tool={tool} index={i} />
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Trending PDFs */}
-        {trendingPdfs && trendingPdfs.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="mb-12">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-bold flex items-center gap-2.5 text-slate-800">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-500/10 ring-1 ring-blue-500/20"><BookOpen className="h-4 w-4 text-blue-500" /></span>
-                  Most Read PDFs
-                </h3>
-                <Link to="/pdfs" className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-500 transition-colors group">
-                  See all <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-slate-50/50 to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-slate-50/50 to-transparent z-10 pointer-events-none" />
-              <div className="flex overflow-x-auto gap-4 md:gap-5 pb-4 pt-2 px-4 md:px-8 snap-x snap-mandatory scrollbar-hide">
-                {trendingPdfs.map((pdf: any, i: number) => (
-                  <motion.div key={pdf.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="snap-start shrink-0">
-                    <Link to={`/pdfs/${pdf.slug || pdf.id}`} className="group/card relative block w-[180px] md:w-[220px] lg:w-[240px] rounded-2xl overflow-hidden border border-slate-200 bg-white transition-all duration-500 hover:scale-[1.05] hover:z-20 hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] hover:border-sky-400/50">
-                      <div className={`absolute top-3 left-3 z-30 w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border-2 transition-all duration-500 group-hover/card:scale-110 ${getRankStyle(i)}`}>{i + 1}</div>
-                      {pdf.clicks > 0 && (
-                        <div className="absolute top-3 right-3 z-30 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10"><Eye className="h-3 w-3" />{pdf.clicks}</div>
-                      )}
-                      <div className="relative aspect-[2/3] max-w-[220px] w-full overflow-hidden bg-slate-100 dark:bg-[#1f1f1f]">
-                        <img src={pdf.cover_image_url || '/placeholder.svg'} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60" loading="lazy" />
-                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="relative z-10 w-full h-full object-contain transition-transform duration-700 ease-out group-hover/card:scale-110" alt={pdf.title} loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h4 className="font-bold text-sm text-white leading-snug line-clamp-2 drop-shadow-lg group-hover/card:text-sky-300 transition-colors duration-300">{pdf.title}</h4>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Hot Updates — Netflix-style horizontal scroll */}
-        {trendingUpdates && trendingUpdates.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-12"
-          >
-            {/* Section heading */}
-            <div className="container mx-auto px-4 mb-5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2.5 text-slate-800 dark:text-slate-200">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-purple-500/10 ring-1 ring-purple-500/20">
-                    <Bell className="h-4 w-4 text-purple-500" />
-                  </span>
-                  Hot Updates
-                </h3>
-                <Link
-                  to="/updates"
-                  className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-purple-500 transition-colors group"
-                >
-                  See all
-                  <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Scrollable row container */}
-            <div className="relative">
-              {/* Left fade gradient */}
-              <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-slate-50 dark:from-[#141414] to-transparent z-10 pointer-events-none" />
-              {/* Right fade gradient */}
-              <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-slate-50 dark:from-[#141414] to-transparent z-10 pointer-events-none" />
-
-              {/* Cards row */}
-              <div className="flex overflow-x-auto gap-4 md:gap-5 pb-6 pt-2 px-4 md:px-8 snap-x snap-mandatory scrollbar-hide">
-                {trendingUpdates.map((update: any, i: number) => (
-                  <motion.div
-                    key={update.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className="snap-start shrink-0"
-                  >
-                    <Link
-                      to={`/updates/${update.slug || update.id}`}
-                      className="group/card relative flex flex-col w-[260px] sm:w-[300px] md:w-[340px] lg:w-[380px] rounded-2xl bg-[#1a1a2e] dark:bg-[#12121a] border border-slate-700/60 hover:border-purple-500/50 overflow-hidden transition-all duration-500 hover:scale-[1.03] hover:z-20 hover:shadow-[0_8px_40px_rgba(168,85,247,0.15)]"
-                    >
-                      {/* Rank badge */}
-                      <div
-                        className={`absolute top-3 left-3 z-30 w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border-2 transition-all duration-500 group-hover/card:scale-110 ${getRankStyle(i)}`}
-                      >
-                        {i + 1}
-                      </div>
-
-                      {/* Views badge */}
-                      {update.clicks > 0 && (
-                        <div className="absolute top-3 right-3 z-30 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-md text-[10px] font-semibold text-white/80 border border-white/10">
-                          <Eye className="h-3 w-3" />
-                          {update.clicks}
-                        </div>
-                      )}
-
-                      {/* 16:9 Poster — object-contain, no cropping */}
-                      <div className="relative aspect-video w-full overflow-hidden bg-[#0f0f1a]">
-                        {update.image_url ? (
-                          <>
-                            <img
-                              src={update.image_url}
-                              alt=""
-                              aria-hidden="true"
-                              className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
-                              loading="lazy"
-                            />
-                            <img
-                              src={update.image_url}
-                              alt={update.title}
-                              className="relative z-10 w-full h-full object-contain transition-transform duration-700 ease-out group-hover/card:scale-105"
-                              loading="lazy"
-                            />
-                          </>
-                        ) : (
-                          /* Dark placeholder for missing images */
-                          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-[#0f0f1a]">
-                            <Bell className="w-8 h-8 text-purple-500/40" />
-                            <span className="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">
-                              No Preview
-                            </span>
-                          </div>
-                        )}
-                        {/* Bottom gradient overlay for text readability */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e] via-transparent to-transparent pointer-events-none" />
-                      </div>
-
-                      {/* Title bar at bottom */}
-                      <div className="p-4 md:p-5 bg-[#1a1a2e] dark:bg-[#12121a]">
-                        <h4 className="font-bold text-sm md:text-base text-slate-200 leading-snug line-clamp-2 group-hover/card:text-purple-400 transition-colors duration-300">
-                          {update.title}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 mt-1.5 font-medium tracking-wide uppercase">
-                          {new Date(update.created_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </p>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        <div className="container mx-auto px-4 mt-8">
-          <div className="h-px bg-gradient-to-r from-transparent via-orange-400/30 to-transparent" />
-        </div>
-      </section>
-
       {/* ──────── FRESH ARRIVALS ──────── */}
       <section className="container mx-auto px-4 pb-20">
-        <motion.div variants={sectionReveal} initial="hidden" whileInView="show" viewport={{ once: true }} className="flex items-center gap-3 mb-3">
+        <motion.div variants={sectionReveal} initial="hidden" whileInView="show" viewport={{ once: true }} className="flex items-center gap-3 mb-8">
           <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-400/20 to-cyan-400/10 ring-1 ring-blue-400/25">
             <Clock className="h-5 w-5 text-blue-500" />
           </div>
@@ -741,66 +484,85 @@ export default function Home() {
             <p className="text-xs text-slate-500 mt-0.5">Added in the last 30 days</p>
           </div>
         </motion.div>
-        <div className="h-px bg-gradient-to-r from-blue-400/40 via-cyan-400/20 to-transparent mb-8" />
 
-        <div className="flex flex-col lg:flex-row gap-6 [&>*]:flex-1">
-          {/* New PDFs */}
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className={`relative overflow-hidden rounded-2xl ${glassCard}`}>
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-sky-400/[0.06] blur-[70px] rounded-full pointer-events-none" />
-            <div className="relative p-6">
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="font-bold text-lg flex items-center gap-2.5 text-slate-800 tracking-tight">
-                  <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400/20 to-sky-400/5 ring-1 ring-sky-400/20"><BookOpen className="h-4 w-4 text-sky-500" /></span>
-                  New PDFs
-                </h3>
-                <Link to="/pdfs" className="text-xs text-sky-500/70 hover:text-sky-500 font-medium transition-colors flex items-center gap-1 group">View All <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" /></Link>
-              </div>
-              <div className="space-y-2.5">
-                {newPdfs?.map((pdf: any, idx: number) => (
-                  <motion.div key={pdf.id} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.08 }}>
-                    <Link to={`/pdfs/${pdf.slug || pdf.id}`} className="flex items-center gap-4 p-3 rounded-xl bg-white/60 hover:bg-white/90 transition-all duration-300 border border-slate-200 hover:border-sky-400/40 group">
-                      <div className="relative w-10 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-[#1f1f1f] ring-1 ring-slate-200 shrink-0">
-                        <img src={pdf.cover_image_url || '/placeholder.svg'} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60" loading="lazy" />
-                        <img src={pdf.cover_image_url || '/placeholder.svg'} className="relative z-10 w-full h-full object-contain" alt="" loading="lazy" />
+        {/* New PDFs — horizontal image-only carousel, no grid, no borders */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-lg font-bold flex items-center gap-2.5 text-slate-800">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-sky-500/10 ring-1 ring-sky-500/20"><BookOpen className="h-4 w-4 text-sky-500" /></span>
+              New PDFs
+            </h3>
+            <Link to="/pdfs" className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-sky-500 transition-colors group">
+              View All <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+          {newPdfs && newPdfs.length > 0 ? (
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full">
+              {newPdfs.map((pdf: any, idx: number) => (
+                <motion.div key={pdf.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: idx * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+                  <Link to={`/pdfs/${pdf.slug || pdf.id}`}>
+                    {pdf.cover_image_url ? (
+                      <img
+                        src={pdf.cover_image_url}
+                        alt={pdf.title}
+                        className="w-[35vw] md:w-44 flex-none snap-start aspect-[2/3] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-[35vw] md:w-44 flex-none snap-start aspect-[2/3] flex flex-col items-center justify-center p-2 gap-1 bg-slate-100 dark:bg-[#1f1f1f] rounded-lg shadow-sm transition-transform hover:scale-105">
+                        <BookOpen className="h-8 w-8 text-slate-400" />
+                        <span className="font-semibold text-[10px] text-center leading-snug line-clamp-2 text-slate-500">
+                          {pdf.title}
+                        </span>
                       </div>
-                      <p className="text-sm font-medium flex-1 truncate text-slate-700 group-hover:text-sky-500 transition-colors">{pdf.title}</p>
-                      <ArrowRight className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 shrink-0" />
-                    </Link>
-                  </motion.div>
-                ))}
-                {newPdfs?.length === 0 && <p className="text-xs text-slate-500 py-3 text-center">No new PDFs in the last 30 days.</p>}
-              </div>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
+          ) : (
+            <p className="text-xs text-slate-500 py-6 text-center">No new PDFs in the last 30 days.</p>
+          )}
+        </div>
 
-          {/* Latest Updates */}
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }} className={`relative overflow-hidden rounded-2xl ${glassCard}`}>
-            <div className="absolute -top-20 -left-20 w-40 h-40 bg-violet-400/[0.06] blur-[70px] rounded-full pointer-events-none" />
-            <div className="relative p-6">
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="font-bold text-lg flex items-center gap-2.5 text-slate-800 tracking-tight">
-                  <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-violet-400/20 to-violet-400/5 ring-1 ring-violet-400/20"><Bell className="h-4 w-4 text-violet-500" /></span>
-                  Latest Updates
-                </h3>
-                <Link to="/updates" className="text-xs text-violet-500/70 hover:text-violet-500 font-medium transition-colors flex items-center gap-1 group">View All <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" /></Link>
-              </div>
-              <div className="space-y-2.5">
-                {newUpdates?.map((update: any, idx: number) => (
-                  <motion.div key={update.id} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.08 }}>
-                    <Link to={`/updates/${update.slug || update.id}`} className="flex items-center gap-4 p-3 rounded-xl bg-white/60 hover:bg-white/90 transition-all duration-300 border border-slate-200 hover:border-violet-400/40 group">
-                      <div className="relative w-16 aspect-video rounded-lg overflow-hidden bg-slate-100 dark:bg-[#1f1f1f] ring-1 ring-slate-200 shrink-0">
-                        <img src={update.image_url || '/placeholder.svg'} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60" loading="lazy" />
-                        <img src={update.image_url || '/placeholder.svg'} className="relative z-10 w-full h-full object-contain" alt="" loading="lazy" />
+        {/* Latest Updates — horizontal image-only carousel, 1200×620, no grid, no borders */}
+        <div>
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-lg font-bold flex items-center gap-2.5 text-slate-800">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-violet-500/10 ring-1 ring-violet-500/20"><Bell className="h-4 w-4 text-violet-500" /></span>
+              Latest Updates
+            </h3>
+            <Link to="/updates" className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-violet-500 transition-colors group">
+              View All <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+          {newUpdates && newUpdates.length > 0 ? (
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full">
+              {newUpdates.map((update: any, idx: number) => (
+                <motion.div key={update.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: idx * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}>
+                  <Link to={`/updates/${update.slug || update.id}`}>
+                    {update.image_url ? (
+                      <img
+                        src={update.image_url}
+                        alt={update.title}
+                        className="w-[90vw] md:w-[420px] flex-none snap-start aspect-[1200/620] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-[90vw] md:w-[420px] flex-none snap-start aspect-[1200/620] flex flex-col items-center justify-center gap-2 bg-slate-200 dark:bg-[#0f0f1a] rounded-lg shadow-sm transition-transform hover:scale-105">
+                        <Bell className="h-8 w-8 text-slate-400 dark:text-violet-500/40" />
+                        <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-600 font-semibold">
+                          No Preview
+                        </span>
                       </div>
-                      <p className="text-sm font-medium flex-1 truncate text-slate-700 group-hover:text-violet-500 transition-colors">{update.title}</p>
-                      <ArrowRight className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 shrink-0" />
-                    </Link>
-                  </motion.div>
-                ))}
-                {newUpdates?.length === 0 && <p className="text-xs text-slate-500 py-3 text-center">No new updates in the last 30 days.</p>}
-              </div>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
+          ) : (
+            <p className="text-xs text-slate-500 py-6 text-center">No new updates in the last 30 days.</p>
+          )}
         </div>
       </section>
 
@@ -815,8 +577,6 @@ export default function Home() {
             <p className="text-xs text-slate-500 mt-0.5">Browse by category</p>
           </div>
         </motion.div>
-        <div className="h-px bg-gradient-to-r from-emerald-400/40 via-green-400/20 to-transparent mb-10" />
-
         {categories && categories.length > 0 ? (
           <div className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_300px]">
             {categories.map((cat: any, idx: number) => {
@@ -841,7 +601,7 @@ export default function Home() {
       </section>
 
       {/* ──────── ABOUT + GET IN TOUCH ──────── */}
-      <section className="relative border-t border-slate-200 py-20 overflow-hidden">
+      <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-slate-50/50 pointer-events-none" />
         <div className="absolute bottom-10 left-[20%] w-64 h-64 bg-sky-400/[0.04] blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute top-10 right-[15%] w-48 h-48 bg-violet-400/[0.04] blur-[100px] rounded-full pointer-events-none" />

@@ -187,9 +187,15 @@
   }
 }
 
+/* ===== Highlight (<mark>) styling for UpdateDetail ReactMarkdown ===== */
+mark {
+  @apply bg-yellow-200 text-gray-900 px-1 rounded-sm font-medium;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -200,4 +206,13 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.3);
+}
+
+/* Hide scrollbar for Netflix-style carousels (Chrome/Safari/Opera) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE/Edge */
+  scrollbar-width: none;      /* Firefox */
 }
