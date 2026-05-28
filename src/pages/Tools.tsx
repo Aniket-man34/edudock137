@@ -1,11 +1,51 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import ToolCard from '@/components/ToolCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, Filter, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTools } from '@/hooks/useTools';
+import { useSiteSeo } from '@/hooks/useSiteSeo';
+import { generateCollectionPageSchema, SEO_DEFAULTS, SITE_URL, DEFAULT_OG_IMAGE, PAGE_SEO } from '@/lib/seo';
+
+function ToolsHelmet() {
+  const { data: seo } = useSiteSeo("tools");
+  const defaults = PAGE_SEO.tools;
+
+  const title = seo?.meta_title?.trim() || defaults.title;
+  const description = seo?.meta_description?.trim() || defaults.description;
+  const ogTitle = seo?.og_title?.trim() || title;
+  const ogDescription = seo?.og_description?.trim() || description;
+  const ogImage = seo?.og_image?.trim() || DEFAULT_OG_IMAGE;
+  const ogType = seo?.og_type?.trim() || "website";
+  const twitterCard = seo?.twitter_card?.trim() || "summary_large_image";
+  const canonical = seo?.canonical_url?.trim() || `${SITE_URL}${defaults.path}`;
+
+  const schemaJson = seo?.schema_markup
+    ? seo.schema_markup
+    : JSON.stringify(generateCollectionPageSchema(defaults));
+
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:url" content={canonical} />
+      <meta property="og:title" content={ogTitle} />
+      <meta property="og:description" content={ogDescription} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:site_name" content="EduDock" />
+      <meta name="twitter:card" content={twitterCard} />
+      <meta name="twitter:title" content={ogTitle} />
+      <meta name="twitter:description" content={ogDescription} />
+      <meta name="twitter:image" content={ogImage} />
+      <link rel="canonical" href={canonical} />
+      <script type="application/ld+json">{schemaJson}</script>
+    </Helmet>
+  );
+}
 
 type ContextType = { searchQuery: string };
 
@@ -118,7 +158,9 @@ export default function Tools() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <ToolsHelmet />
+      <div className="container mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="page-header">All Tools</h1>
         <p className="page-subtitle">Browse our curated collection of educational tools</p>
@@ -240,5 +282,6 @@ export default function Tools() {
         </div>
       )}
     </div>
+    </>
   );
 }

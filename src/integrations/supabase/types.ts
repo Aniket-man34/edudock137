@@ -111,6 +111,8 @@ export type Database = {
           file_type: string
           file_url: string | null
           id: string
+          meta_description: string | null
+          meta_title: string | null
           slug: string | null
           title: string
           updated_at: string
@@ -127,6 +129,8 @@ export type Database = {
           file_type?: string
           file_url?: string | null
           id?: string
+          meta_description?: string | null
+          meta_title?: string | null
           slug?: string | null
           title: string
           updated_at?: string
@@ -143,6 +147,8 @@ export type Database = {
           file_type?: string
           file_url?: string | null
           id?: string
+          meta_description?: string | null
+          meta_title?: string | null
           slug?: string | null
           title?: string
           updated_at?: string
@@ -227,6 +233,8 @@ export type Database = {
           external_url: string | null
           id: string
           image_url: string | null
+          meta_description: string | null
+          meta_title: string | null
           schema_markup: string | null
           slug: string | null
           title: string
@@ -242,6 +250,8 @@ export type Database = {
           external_url?: string | null
           id?: string
           image_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           schema_markup?: string | null
           slug?: string | null
           title: string
@@ -257,6 +267,8 @@ export type Database = {
           external_url?: string | null
           id?: string
           image_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           schema_markup?: string | null
           slug?: string | null
           title?: string

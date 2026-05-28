@@ -10,6 +10,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
 import SocialShare from '@/components/updates/SocialShare';
+import { generateArticleSchema, SITE_URL, DEFAULT_OG_IMAGE, fallbackMetaTitle, fallbackMetaDescription, fallbackOgImage } from '@/lib/seo';
 
 // 🚨 HIGH-RES INTERCEPTOR FOR OLD POSTS 🚨
 const getHighResAvatar = (url: string | null) => {
@@ -119,16 +120,35 @@ export default function UpdateDetail() {
     );
   }
 
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-8 bg-white dark:bg-gray-950 min-h-screen">
+  const seoTitle = update.meta_title?.trim() || update.title + " | EduDock";
+  const seoDescription = update.meta_description?.trim() || update.content?.replace(/\n/g, " ").substring(0, 160) || "Read the full update on EduDock.";
+  const seoImage = update.image_url || "https://edudock.in/social.png";
+  const canonicalUrl = `https://edudock.in/updates/${update.slug || update.id}`;
 
-      {update.schema_markup && (
-        <Helmet>
-          <script type="application/ld+json">
-            {update.schema_markup}
-          </script>
-        </Helmet>
-      )}
+  return (
+    <>
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:image" content={seoImage} />
+        <meta property="og:site_name" content="EduDock" />
+        <meta property="article:published_time" content={update.created_at || undefined} />
+        <meta property="article:modified_time" content={update.updated_at || update.created_at || undefined} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl} />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content={seoImage} />
+        <link rel="canonical" href={canonicalUrl} />
+        <script type="application/ld+json">
+          {update.schema_markup || JSON.stringify(generateArticleSchema({ ...update, description: seoDescription }))}
+        </script>
+      </Helmet>
+      <div className="max-w-3xl mx-auto px-4 py-8 bg-white dark:bg-gray-950 min-h-screen">
 
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
@@ -295,5 +315,6 @@ export default function UpdateDetail() {
 
       </motion.article>
     </div>
+    </>
   );
 }

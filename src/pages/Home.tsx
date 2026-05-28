@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext, Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   ArrowRight,
@@ -17,6 +18,8 @@ import {
 import ToolCard from '@/components/ToolCard';
 import ParticleBackground from '@/components/ParticleBackground';
 import { useState } from 'react';
+import { useSiteSeo } from '@/hooks/useSiteSeo';
+import { generateHomeSchemas, SEO_DEFAULTS, SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo';
 
 type ContextType = { searchQuery: string };
 
@@ -67,6 +70,51 @@ const catColors = [
   'bg-amber-50 group-hover:bg-amber-100 text-amber-500',
   'bg-rose-50 group-hover:bg-rose-100 text-rose-500',
 ];
+
+/**
+ * HomeHelmet — dynamic SEO injection for the homepage.
+ * Fetches from site_seo_settings where page_name = 'home'.
+ * Falls back gracefully to hardcoded defaults when the DB row is missing.
+ */
+function HomeHelmet() {
+  const { data: seo } = useSiteSeo("home");
+
+  const title = seo?.meta_title?.trim() || SEO_DEFAULTS.title;
+  const description = seo?.meta_description?.trim() || SEO_DEFAULTS.description;
+  const ogTitle = seo?.og_title?.trim() || title;
+  const ogDescription = seo?.og_description?.trim() || description;
+  const ogImage = seo?.og_image?.trim() || DEFAULT_OG_IMAGE;
+  const ogType = seo?.og_type?.trim() || "website";
+  const twitterCard = seo?.twitter_card?.trim() || "summary_large_image";
+  const canonical = seo?.canonical_url?.trim() || `${SITE_URL}/`;
+
+  // Use DB stringified schema if provided, otherwise generate from the utility
+  const schemaJson = seo?.schema_markup
+    ? seo.schema_markup
+    : JSON.stringify(generateHomeSchemas());
+
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:url" content={canonical} />
+      <meta property="og:title" content={ogTitle} />
+      <meta property="og:description" content={ogDescription} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:site_name" content="EduDock" />
+      <meta name="twitter:card" content={twitterCard} />
+      <meta name="twitter:url" content={canonical} />
+      <meta name="twitter:title" content={ogTitle} />
+      <meta name="twitter:description" content={ogDescription} />
+      <meta name="twitter:image" content={ogImage} />
+      <link rel="canonical" href={canonical} />
+      <script type="application/ld+json">{schemaJson}</script>
+    </Helmet>
+  );
+}
 
 export default function Home() {
   const { searchQuery } = useOutletContext<ContextType>();
@@ -259,41 +307,22 @@ export default function Home() {
                 </h3>
               </motion.div>
 
-              <div className="flex flex-row flex-nowrap overflow-x-auto gap-6 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full" style={{ touchAction: 'pan-x' }}>
+              <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full">
                 {searchMatchedPdfs.map((pdf: any) => (
-                  <motion.div key={pdf.id} variants={fadeUp} className="min-w-[300px] shrink-0">
-                    <Link
-                      to={`/pdfs/${pdf.slug || pdf.id}`}
-                      className="group/pdf flex flex-row gap-4 p-4 rounded-2xl bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1"
-                    >
-                      <div className="w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-[#1f1f1f]">
-                        {pdf.cover_image_url ? (
-                          <img
-                            src={pdf.cover_image_url}
-                            alt={pdf.title}
-                            className="aspect-[2/3] object-cover rounded-lg shadow-sm shrink-0 block w-full h-full"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="aspect-[2/3] w-full h-full flex flex-col items-center justify-center p-2 gap-1 bg-slate-100 dark:bg-[#1f1f1f]">
-                            <BookOpen className="h-5 w-5 text-slate-400" />
-                            <span className="font-semibold text-[10px] text-center leading-snug line-clamp-2 text-slate-500">
-                              {pdf.title}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 flex flex-col justify-center min-w-0">
-                        <h4 className="font-bold text-sm text-slate-800 leading-snug group-hover/pdf:text-sky-500 transition-colors duration-300">
-                          {pdf.title}
-                        </h4>
-                        {pdf.clicks > 0 && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Eye className="h-3 w-3 text-slate-400" />
-                            <span className="text-xs text-slate-400">{pdf.clicks}</span>
-                          </div>
-                        )}
-                      </div>
+                  <motion.div key={pdf.id} variants={fadeUp}>
+                    <Link to={`/pdfs/${pdf.slug || pdf.id}`}>
+                      {pdf.cover_image_url ? (
+                        <img
+                          src={pdf.cover_image_url}
+                          alt={pdf.title}
+                          className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] object-cover rounded-lg shadow-md block transition-transform hover:scale-[1.02]"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-slate-100 dark:bg-[#1f1f1f] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
+                          <BookOpen className="h-8 w-8 text-slate-400" />
+                        </div>
+                      )}
                     </Link>
                   </motion.div>
                 ))}
@@ -325,38 +354,22 @@ export default function Home() {
                   </span>
                 </h3>
               </motion.div>
-              <div className="flex flex-row flex-nowrap overflow-x-auto gap-6 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full" style={{ touchAction: 'pan-x' }}>
+              <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full">
                 {searchMatchedUpdates.map((update: any) => (
-                  <motion.div key={update.id} variants={fadeUp} className="min-w-[380px] shrink-0">
-                    <Link
-                      to={`/updates/${update.slug || update.id}`}
-                      className="group flex flex-row gap-4 p-4 rounded-2xl bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1"
-                    >
-                      <div className="w-48 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-[#1f1f1f]">
-                        {update.image_url ? (
-                          <img
-                            src={update.image_url}
-                            alt={update.title}
-                            className="w-full aspect-[1200/630] object-cover rounded-lg shrink-0 block"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full aspect-[1200/630] flex items-center justify-center bg-slate-200 dark:bg-[#2a2a2a] rounded-lg">
-                            <Bell className="h-6 w-6 text-slate-400" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 flex flex-col justify-center min-w-0">
-                        <h4 className="font-bold text-sm text-slate-800 leading-snug group-hover:text-sky-500 transition-colors duration-300">
-                          {update.title}
-                        </h4>
-                        {update.clicks > 0 && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Eye className="h-3 w-3 text-slate-400" />
-                            <span className="text-xs text-slate-400">{update.clicks}</span>
-                          </div>
-                        )}
-                      </div>
+                  <motion.div key={update.id} variants={fadeUp}>
+                    <Link to={`/updates/${update.slug || update.id}`}>
+                      {update.image_url ? (
+                        <img
+                          src={update.image_url}
+                          alt={update.title}
+                          className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-slate-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+                          <Bell className="h-10 w-10 text-slate-400" />
+                        </div>
+                      )}
                     </Link>
                   </motion.div>
                 ))}
@@ -370,7 +383,9 @@ export default function Home() {
 
   // ═══════════════ MAIN HOME VIEW ═══════════════
   return (
-    <div className="relative bg-slate-50/50">
+    <>
+      <HomeHelmet />
+      <div className="relative bg-slate-50/50">
       {/* ──────── HERO ──────── */}
       <section className="relative overflow-hidden px-4 pb-20 pt-10 md:pb-32 min-h-[55vh] flex items-center mt-4">
         <ParticleBackground />
@@ -497,7 +512,7 @@ export default function Home() {
             </Link>
           </div>
           {newPdfs && newPdfs.length > 0 ? (
-            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full">
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full">
               {newPdfs.map((pdf: any, idx: number) => (
                 <motion.div key={pdf.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: idx * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
                   <Link to={`/pdfs/${pdf.slug || pdf.id}`}>
@@ -505,15 +520,12 @@ export default function Home() {
                       <img
                         src={pdf.cover_image_url}
                         alt={pdf.title}
-                        className="w-[35vw] md:w-44 flex-none snap-start aspect-[2/3] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                        className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] object-cover rounded-lg shadow-md block transition-transform hover:scale-[1.02]"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-[35vw] md:w-44 flex-none snap-start aspect-[2/3] flex flex-col items-center justify-center p-2 gap-1 bg-slate-100 dark:bg-[#1f1f1f] rounded-lg shadow-sm transition-transform hover:scale-105">
+                      <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-slate-100 dark:bg-[#1f1f1f] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
                         <BookOpen className="h-8 w-8 text-slate-400" />
-                        <span className="font-semibold text-[10px] text-center leading-snug line-clamp-2 text-slate-500">
-                          {pdf.title}
-                        </span>
                       </div>
                     )}
                   </Link>
@@ -537,29 +549,26 @@ export default function Home() {
             </Link>
           </div>
           {newUpdates && newUpdates.length > 0 ? (
-            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full">
-              {newUpdates.map((update: any, idx: number) => (
-                <motion.div key={update.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: idx * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}>
-                  <Link to={`/updates/${update.slug || update.id}`}>
-                    {update.image_url ? (
-                      <img
-                        src={update.image_url}
-                        alt={update.title}
-                        className="w-[90vw] md:w-[420px] flex-none snap-start aspect-[1200/620] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-[90vw] md:w-[420px] flex-none snap-start aspect-[1200/620] flex flex-col items-center justify-center gap-2 bg-slate-200 dark:bg-[#0f0f1a] rounded-lg shadow-sm transition-transform hover:scale-105">
-                        <Bell className="h-8 w-8 text-slate-400 dark:text-violet-500/40" />
-                        <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-600 font-semibold">
-                          No Preview
-                        </span>
-                      </div>
-                    )}
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full">
+          {newUpdates.map((update: any, idx: number) => (
+            <motion.div key={update.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: idx * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}>
+              <Link to={`/updates/${update.slug || update.id}`}>
+                {update.image_url ? (
+                  <img
+                    src={update.image_url}
+                    alt={update.title}
+                    className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-slate-200 dark:bg-[#0f0f1a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+                    <Bell className="h-10 w-10 text-slate-400 dark:text-violet-500/40" />
+                  </div>
+                )}
+              </Link>
+            </motion.div>
+          ))}
+        </div>
           ) : (
             <p className="text-xs text-slate-500 py-6 text-center">No new updates in the last 30 days.</p>
           )}
@@ -644,5 +653,6 @@ export default function Home() {
         </div>
       </section>
     </div>
+    </>
   );
 }

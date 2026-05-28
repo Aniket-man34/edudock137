@@ -1,10 +1,42 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { FileText, ArrowLeft } from 'lucide-react';
+import { useSiteSeo } from '@/hooks/useSiteSeo';
+import { SEO_DEFAULTS, SITE_URL, DEFAULT_OG_IMAGE, PAGE_SEO } from '@/lib/seo';
+
+function TermsHelmet() {
+  const { data: seo } = useSiteSeo("terms");
+  const defaults = PAGE_SEO.terms;
+  const title = seo?.meta_title?.trim() || defaults.title;
+  const description = seo?.meta_description?.trim() || defaults.description;
+  const ogImage = seo?.og_image?.trim() || DEFAULT_OG_IMAGE;
+  const canonical = seo?.canonical_url?.trim() || `${SITE_URL}${defaults.path}`;
+
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content={canonical} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:site_name" content="EduDock" />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={ogImage} />
+      <link rel="canonical" href={canonical} />
+    </Helmet>
+  );
+}
 
 export default function Terms() {
   return (
-    <div className="container mx-auto px-4 py-16 max-w-4xl min-h-screen">
+    <>
+      <TermsHelmet />
+      <div className="container mx-auto px-4 py-16 max-w-4xl min-h-screen">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         {/* Back link */}
         <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
@@ -93,5 +125,6 @@ export default function Terms() {
         </div>
       </motion.div>
     </div>
+    </>
   );
 }

@@ -182,7 +182,7 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full"
+                                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full"
                                 role="list"
                                 aria-label="Search results for PDFs"
                             >
@@ -193,14 +193,11 @@ export default function TrendingSection({
                                                 <img
                                                     src={pdf.cover_image_url}
                                                     alt={pdf.title}
-                                                    className="w-[40vw] md:w-48 flex-none snap-start aspect-[2/3] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                                                    className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] object-cover rounded-lg shadow-md block transition-transform hover:scale-[1.02]"
                                                 />
                                             ) : (
-                                                <div className="w-[40vw] md:w-48 flex-none snap-start aspect-[2/3] flex flex-col items-center justify-center p-2 gap-1 bg-gray-100 dark:bg-[#1f1f1f] rounded-lg shadow-sm transition-transform hover:scale-105">
+                                                <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-gray-100 dark:bg-[#1f1f1f] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
                                                     <BookOpen className="h-8 w-8 text-primary/40" />
-                                                    <span className="font-display font-semibold text-[10px] text-center leading-snug line-clamp-2">
-                                                        {pdf.title}
-                                                    </span>
                                                 </div>
                                             )}
                                         </Link>
@@ -242,7 +239,7 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full"
+                                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full"
                                 role="list"
                                 aria-label="Search results for updates"
                             >
@@ -253,11 +250,11 @@ export default function TrendingSection({
                                                 <img
                                                     src={update.image_url}
                                                     alt={update.title}
-                                                    className="w-[75vw] md:w-80 flex-none snap-start aspect-[1200/630] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                                                    className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
                                                     loading="lazy"
                                                 />
                                             ) : (
-                                                <div className="w-[75vw] md:w-80 flex-none snap-start aspect-[1200/630] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-lg shadow-sm transition-transform hover:scale-105">
+                                                <div className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
                                                     <Bell className="h-8 w-8 text-primary/40" />
                                                 </div>
                                             )}
@@ -383,7 +380,7 @@ export default function TrendingSection({
                                         initial="hidden"
                                         whileInView="show"
                                         viewport={{ once: true }}
-                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full"
+                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full"
                                         role="list"
                                         aria-label="Hot PDFs"
                                     >
@@ -394,14 +391,11 @@ export default function TrendingSection({
                                                         <img
                                                             src={pdf.cover_image_url}
                                                             alt={pdf.title}
-                                                            className="w-[40vw] md:w-48 flex-none snap-start aspect-[2/3] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                                                            className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] object-cover rounded-lg shadow-md block transition-transform hover:scale-[1.02]"
                                                         />
                                                     ) : (
-                                                        <div className="w-[40vw] md:w-48 flex-none snap-start aspect-[2/3] flex flex-col items-center justify-center p-2 gap-1 bg-gray-100 dark:bg-[#1f1f1f] rounded-lg shadow-sm transition-transform hover:scale-105">
+                                                        <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-gray-100 dark:bg-[#1f1f1f] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
                                                             <BookOpen className="h-8 w-8 text-primary/40" />
-                                                            <span className="font-display font-semibold text-[10px] text-center leading-snug line-clamp-2">
-                                                                {pdf.title}
-                                                            </span>
                                                         </div>
                                                     )}
                                                 </Link>
@@ -448,7 +442,7 @@ export default function TrendingSection({
                                         initial="hidden"
                                         whileInView="show"
                                         viewport={{ once: true }}
-                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide w-full"
+                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full"
                                         role="list"
                                         aria-label="Latest updates"
                                     >
@@ -459,11 +453,11 @@ export default function TrendingSection({
                                                         <img
                                                             src={update.image_url}
                                                             alt={update.title}
-                                                            className="w-[75vw] md:w-80 flex-none snap-start aspect-[1200/630] object-cover rounded-lg block shadow-sm transition-transform hover:scale-105"
+                                                            className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
                                                             loading="lazy"
                                                         />
                                                     ) : (
-                                                        <div className="w-[75vw] md:w-80 flex-none snap-start aspect-[1200/630] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-lg shadow-sm transition-transform hover:scale-105">
+                                                        <div className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
                                                             <Bell className="h-8 w-8 text-primary/40" />
                                                         </div>
                                                     )}

@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOutletContext, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import OptimizedImage from '@/components/OptimizedImage';
+import { useSiteSeo } from '@/hooks/useSiteSeo';
+import { generateCollectionPageSchema, SEO_DEFAULTS, SITE_URL, DEFAULT_OG_IMAGE, PAGE_SEO } from '@/lib/seo';
 
 type ContextType = { searchQuery: string };
 
@@ -50,6 +53,43 @@ function isNewUpdate(createdAt: string): boolean {
 }
 
 /* ── Component ───────────────────────────────────────────────────── */
+
+function UpdatesHelmet() {
+  const { data: seo } = useSiteSeo("updates");
+  const defaults = PAGE_SEO.updates;
+
+  const title = seo?.meta_title?.trim() || defaults.title;
+  const description = seo?.meta_description?.trim() || defaults.description;
+  const ogTitle = seo?.og_title?.trim() || title;
+  const ogDescription = seo?.og_description?.trim() || description;
+  const ogImage = seo?.og_image?.trim() || DEFAULT_OG_IMAGE;
+  const ogType = seo?.og_type?.trim() || "website";
+  const twitterCard = seo?.twitter_card?.trim() || "summary_large_image";
+  const canonical = seo?.canonical_url?.trim() || `${SITE_URL}${defaults.path}`;
+
+  const schemaJson = seo?.schema_markup
+    ? seo.schema_markup
+    : JSON.stringify(generateCollectionPageSchema(defaults));
+
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:url" content={canonical} />
+      <meta property="og:title" content={ogTitle} />
+      <meta property="og:description" content={ogDescription} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:site_name" content="EduDock" />
+      <meta name="twitter:card" content={twitterCard} />
+      <meta name="twitter:title" content={ogTitle} />
+      <meta name="twitter:description" content={ogDescription} />
+      <meta name="twitter:image" content={ogImage} />
+      <link rel="canonical" href={canonical} />
+      <script type="application/ld+json">{schemaJson}</script>
+    </Helmet>
+  );
+}
 
 export default function Updates() {
   const { searchQuery } = useOutletContext<ContextType>();
@@ -149,7 +189,9 @@ export default function Updates() {
 
   /* ── Main render ─────────────────────────────────────────────── */
   return (
-    <div className="w-full bg-white dark:bg-[#141414] min-h-screen">
+    <>
+      <UpdatesHelmet />
+      <div className="w-full bg-white dark:bg-[#141414] min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -210,5 +252,6 @@ export default function Updates() {
         )}
       </motion.div>
     </div>
+    </>
   );
 }

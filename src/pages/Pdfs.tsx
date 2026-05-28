@@ -5,9 +5,47 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, BookOpen, Filter, ChevronRight, Calendar, Download, Loader2 } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Helmet } from 'react-helmet-async';
 import OptimizedImage from '@/components/OptimizedImage';
+import { useSiteSeo } from '@/hooks/useSiteSeo';
+import { generateCollectionPageSchema, generateDigitalDocumentSchema, SEO_DEFAULTS, SITE_URL, DEFAULT_OG_IMAGE, PAGE_SEO, fallbackMetaTitle, fallbackMetaDescription, fallbackOgImage } from '@/lib/seo';
 
 type ContextType = { searchQuery: string };
+
+function PdfsListHelmet() {
+  const { data: seo } = useSiteSeo("pdfs");
+  const defaults = PAGE_SEO.pdfs;
+  const title = seo?.meta_title?.trim() || defaults.title;
+  const description = seo?.meta_description?.trim() || defaults.description;
+  const ogTitle = seo?.og_title?.trim() || title;
+  const ogDescription = seo?.og_description?.trim() || description;
+  const ogImage = seo?.og_image?.trim() || DEFAULT_OG_IMAGE;
+  const ogType = seo?.og_type?.trim() || "website";
+  const twitterCard = seo?.twitter_card?.trim() || "summary_large_image";
+  const canonical = seo?.canonical_url?.trim() || `${SITE_URL}${defaults.path}`;
+  const schemaJson = seo?.schema_markup
+    ? seo.schema_markup
+    : JSON.stringify(generateCollectionPageSchema(defaults));
+
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:url" content={canonical} />
+      <meta property="og:title" content={ogTitle} />
+      <meta property="og:description" content={ogDescription} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:site_name" content="EduDock" />
+      <meta name="twitter:card" content={twitterCard} />
+      <meta name="twitter:title" content={ogTitle} />
+      <meta name="twitter:description" content={ogDescription} />
+      <meta name="twitter:image" content={ogImage} />
+      <link rel="canonical" href={canonical} />
+      <script type="application/ld+json">{schemaJson}</script>
+    </Helmet>
+  );
+}
 
 const ITEMS_PER_PAGE = 12;
 
@@ -177,8 +215,34 @@ export default function Pdfs() {
 
     const sidebarSuggestions = recentPdfs?.filter((p: any) => p.id !== selectedPdf.id && p.slug !== selectedPdf.slug).slice(0, 4);
 
+    const pdfCanonicalUrl = `https://edudock.in/pdfs/${selectedPdf.slug || selectedPdf.id}`;
+    const pdfSeoTitle = selectedPdf.meta_title || `${selectedPdf.title} | EduDock PDF`;
+    const pdfSeoDesc = selectedPdf.meta_description || selectedPdf.description?.replace(/\n/g, ' ').substring(0, 160) || 'Download this free PDF study material from EduDock.';
+    const pdfSeoImage = selectedPdf.cover_image_url || 'https://edudock.in/social.png';
+
     return (
-      <div className="container mx-auto px-4 py-8 md:py-12 min-h-screen">
+      <>
+        <Helmet>
+          <title>{pdfSeoTitle}</title>
+          <meta name="description" content={pdfSeoDesc} />
+          <meta property="og:type" content="article" />
+          <meta property="og:url" content={pdfCanonicalUrl} />
+          <meta property="og:title" content={pdfSeoTitle} />
+          <meta property="og:description" content={pdfSeoDesc} />
+          <meta property="og:image" content={pdfSeoImage} />
+          <meta property="og:site_name" content="EduDock" />
+          <meta property="article:published_time" content={selectedPdf.created_at || undefined} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:url" content={pdfCanonicalUrl} />
+          <meta name="twitter:title" content={pdfSeoTitle} />
+          <meta name="twitter:description" content={pdfSeoDesc} />
+          <meta name="twitter:image" content={pdfSeoImage} />
+          <link rel="canonical" href={pdfCanonicalUrl} />
+          <script type="application/ld+json">
+            {JSON.stringify(generateDigitalDocumentSchema(selectedPdf))}
+          </script>
+        </Helmet>
+        <div className="container mx-auto px-4 py-8 md:py-12 min-h-screen">
 
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
@@ -205,10 +269,10 @@ export default function Pdfs() {
                       <img
                         src={selectedPdf.cover_image_url}
                         alt={selectedPdf.title}
-                        className="w-full max-w-[250px] mx-auto h-auto object-contain max-h-[380px] rounded-xl shadow-lg border border-border/20"
+                        className="w-full max-w-[250px] mx-auto aspect-[2/3] object-cover rounded-lg shadow-md block"
                       />
                     ) : (
-                      <div className="w-full max-w-[220px] mx-auto aspect-[2/3] flex items-center justify-center bg-primary/5 rounded-xl border border-border/20">
+                      <div className="w-full max-w-[250px] mx-auto aspect-[2/3] flex items-center justify-center bg-primary/5 rounded-lg shadow-md border border-border/20">
                         <BookOpen className="w-16 h-16 text-primary/30" />
                       </div>
                     )}
@@ -330,15 +394,17 @@ export default function Pdfs() {
                       key={item.id}
                       className="flex gap-4 group items-center"
                     >
-                      <div className="w-14 h-20 rounded-lg bg-muted/30 overflow-hidden shrink-0 border border-border/50 flex items-center justify-center p-0.5">
+                      <div className="w-14 shrink-0">
                         {item.cover_image_url ? (
                           <img
                             src={item.cover_image_url}
                             alt=""
-                            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                            className="w-full aspect-[2/3] object-cover rounded-lg shadow-md block group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <BookOpen className="w-6 h-6 text-primary/30" />
+                          <div className="w-full aspect-[2/3] flex items-center justify-center bg-muted/30 rounded-lg border border-border/50">
+                            <BookOpen className="w-6 h-6 text-primary/30" />
+                          </div>
                         )}
                       </div>
 
@@ -356,11 +422,14 @@ export default function Pdfs() {
           </aside>
         </div>
       </div>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <PdfsListHelmet />
+      <div className="container mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="page-header">PDF Library</h1>
         <p className="page-subtitle">Explore our collection of study materials and books</p>
@@ -435,14 +504,20 @@ export default function Pdfs() {
       )}
 
       {isLoading ? (
-        <div className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_170px]" role="status" aria-live="polite" aria-label="Loading PDFs">
+        <div className="flex flex-col md:flex-row md:flex-wrap gap-6 w-full" role="status" aria-live="polite" aria-label="Loading PDFs">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="aspect-[2/3] max-w-[220px] mx-auto glass-card animate-pulse rounded-2xl" aria-hidden="true" />
+            <div key={i} className="flex flex-row gap-4 items-center w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-transparent">
+              <div className="w-24 md:w-28 shrink-0 aspect-[2/3] bg-muted/20 animate-pulse rounded-lg" aria-hidden="true" />
+              <div className="flex flex-col flex-1 justify-center gap-2">
+                <div className="h-4 w-3/4 bg-muted/20 animate-pulse rounded" />
+                <div className="h-3 w-1/3 bg-muted/20 animate-pulse rounded" />
+              </div>
+            </div>
           ))}
         </div>
       ) : filtered && filtered.length > 0 ? (
         <>
-          <div className="flex flex-wrap gap-4 items-stretch justify-start [&>*]:flex-[1_1_170px]" role="list" aria-label="PDFs list">
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-6 w-full" role="list" aria-label="PDFs list">
             {filtered.map((pdf: any, i: number) => (
               <motion.div
                 key={pdf.id}
@@ -461,7 +536,7 @@ export default function Pdfs() {
                       if (error) console.error("Error updating PDF clicks:", error);
                     });
                 }}
-                className="relative aspect-[2/3] max-w-[220px] mx-auto glass-card overflow-hidden cursor-pointer group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                className="flex flex-row gap-4 items-center w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-transparent cursor-pointer group transition-all duration-300 hover:-translate-y-1"
                 role="listitem"
                 tabIndex={0}
                 aria-label={`View ${pdf.title} PDF${isNewPdf(pdf.created_at) ? ' - New' : ''}`}
@@ -474,34 +549,48 @@ export default function Pdfs() {
                   }
                 }}
               >
-
-                {isNewPdf(pdf.created_at) && (
-                  <div className="absolute top-3 left-3 z-30" aria-label="New PDF">
-                    <span className="relative flex h-5 w-12 items-center justify-center">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-30" aria-hidden="true"></span>
-                      <span className="relative inline-flex rounded-full h-5 w-12 items-center justify-center bg-blue-50 border border-blue-400 text-[9px] font-bold text-white uppercase tracking-wider shadow-[0_0_15px_rgba(59,130,246,0.6)]">
-                        New
+                {/* Left: Cover Image */}
+                <div className="relative w-24 md:w-28 shrink-0">
+                  {isNewPdf(pdf.created_at) && (
+                    <div className="absolute -top-1.5 -left-1.5 z-30" aria-label="New PDF">
+                      <span className="relative flex h-5 w-12 items-center justify-center">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-30" aria-hidden="true"></span>
+                        <span className="relative inline-flex rounded-full h-5 w-12 items-center justify-center bg-blue-50 border border-blue-400 text-[9px] font-bold text-white uppercase tracking-wider shadow-[0_0_15px_rgba(59,130,246,0.6)]">
+                          New
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                )}
-
-                {pdf.cover_image_url ? (
-                  <>
-                    <OptimizedImage src={pdf.cover_image_url} alt={pdf.title} className="w-full h-full transition-transform duration-500 group-hover:scale-105 relative z-10" />
-
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pt-16 z-20 transition-opacity duration-300">
-                      <h3 className="text-white font-semibold text-sm line-clamp-2 leading-snug drop-shadow-md">
-                        {pdf.title}
-                      </h3>
                     </div>
-                  </>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3 relative z-10">
-                    <BookOpen className="h-8 w-8 text-primary/40" aria-hidden="true" />
-                    <span className="font-display font-semibold text-sm text-center leading-snug">{pdf.title}</span>
-                  </div>
-                )}
+                  )}
+                  {pdf.cover_image_url ? (
+                    <img
+                      src={pdf.cover_image_url}
+                      alt={pdf.title}
+                      className="w-full aspect-[2/3] object-cover rounded-lg shadow-md block group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full aspect-[2/3] flex items-center justify-center bg-muted/20 rounded-lg shadow-md border border-border/30">
+                      <BookOpen className="h-6 w-6 text-primary/40" aria-hidden="true" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Text Content */}
+                <div className="flex flex-col flex-1 justify-center min-w-0">
+                  <h3 className="font-bold text-sm md:text-base text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                    {pdf.title}
+                  </h3>
+                  {pdf.description && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {pdf.description}
+                    </p>
+                  )}
+                  {pdf.created_at && (
+                    <span className="text-[11px] text-muted-foreground mt-1">
+                      {new Date(pdf.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -526,13 +615,14 @@ export default function Pdfs() {
           )}
         </>
       ) : (
-        <div className="empty-state" role="status">
-          <div className="glass-card inline-flex p-4 rounded-2xl mb-4">
+        <div className="flex flex-col items-center justify-center py-24 text-center" role="status">
+          <div className="inline-flex p-4 rounded-2xl mb-4 bg-muted/30 border border-border/30">
             <BookOpen className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           </div>
-          <p>No PDFs found.</p>
+          <p className="text-muted-foreground">No PDFs found.</p>
         </div>
       )}
     </div>
+    </>
   );
 }

@@ -1,5 +1,5 @@
 // Cloudflare Pages Function: Dynamic XML Sitemap
-// Fetches all update slugs from Supabase and generates a valid sitemap.xml
+// Fetches all update + pdf slugs from Supabase and generates a valid sitemap.xml
 // URL: https://edudock.in/sitemap.xml
 
 /* ------------------------------------------------------------------ */
@@ -25,9 +25,9 @@ interface SitemapPage {
   readonly priority: string;
 }
 
-interface UpdateRow {
+interface SitemapRow {
   readonly slug: string | null;
-  readonly created_at: string | null;
+  readonly updated_at: string | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -41,7 +41,7 @@ export async function onRequest(context: PagesFunctionContext): Promise<Response
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables");
       return new Response(
-        generateErrorSitemap("Configuration error: Missing environment variables"),
+        generateErrorSitemap(),
         {
           status: 200,
           headers: { "Content-Type": "application/xml" },
@@ -49,46 +49,53 @@ export async function onRequest(context: PagesFunctionContext): Promise<Response
       );
     }
 
-    // Fetch slugs and created_at from the updates table via Supabase REST API
-    const supabaseResponse: Response = await fetch(
-      SUPABASE_URL + "/rest/v1/updates?select=slug,created_at&order=created_at.desc",
-      {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    if (!supabaseResponse.ok) {
-      console.error("Supabase API error: " + supabaseResponse.status + " " + supabaseResponse.statusText);
-      return new Response(
-        generateErrorSitemap("Database fetch failed"),
+    // Fetch slugs and updated_at from updates & pdfs (parallel)
+    const [updatesRes, pdfsRes] = await Promise.all([
+      fetch(
+        SUPABASE_URL + "/rest/v1/updates?select=slug,updated_at&order=updated_at.desc",
         {
-          status: 200,
-          headers: { "Content-Type": "application/xml" },
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: "Bearer " + SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+          },
         },
-      );
-    }
+      ),
+      fetch(
+        SUPABASE_URL + "/rest/v1/pdfs?select=slug,updated_at&order=updated_at.desc",
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: "Bearer " + SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+          },
+        },
+      ),
+    ]);
 
-    const updates: UpdateRow[] = await supabaseResponse.json() as UpdateRow[];
+    let updates: SitemapRow[] = [];
+    let pdfs: SitemapRow[] = [];
 
-    // Generate the XML sitemap
-    const xmlString: string = generateSitemapXml(updates);
+    if (updatesRes.ok) updates = (await updatesRes.json()) as SitemapRow[];
+    else console.warn("Sitemap: updates fetch failed " + updatesRes.status);
+
+    if (pdfsRes.ok) pdfs = (await pdfsRes.json()) as SitemapRow[];
+    else console.warn("Sitemap: pdfs fetch failed " + pdfsRes.status);
+
+    const xmlString: string = generateSitemapXml(updates, pdfs);
 
     return new Response(xmlString, {
       status: 200,
       headers: {
-        'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        "Content-Type": "application/xml",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
       },
     });
   } catch (error: unknown) {
     const message: string = error instanceof Error ? error.message : "Unknown error";
     console.error("Sitemap generation error:", message);
     return new Response(
-      generateErrorSitemap("Internal server error"),
+      generateErrorSitemap(),
       {
         status: 200,
         headers: { "Content-Type": "application/xml" },
@@ -101,20 +108,19 @@ export async function onRequest(context: PagesFunctionContext): Promise<Response
 /*  XML Generation Helpers                                             */
 /* ------------------------------------------------------------------ */
 
-function generateSitemapXml(updates: UpdateRow[]): string {
+function generateSitemapXml(updates: SitemapRow[], pdfs: SitemapRow[]): string {
   const staticPages: SitemapPage[] = [
-    { loc: 'https://edudock.in/', lastmod: getTodayISO(), priority: '1.0' },
-    { loc: 'https://edudock.in/updates', lastmod: getTodayISO(), priority: '0.9' },
-    { loc: 'https://edudock.in/pdfs', lastmod: getTodayISO(), priority: '0.8' },
-    { loc: 'https://edudock.in/tools', lastmod: getTodayISO(), priority: '0.8' },
-    { loc: 'https://edudock.in/privacy', lastmod: getTodayISO(), priority: '0.3' },
-    { loc: 'https://edudock.in/terms', lastmod: getTodayISO(), priority: '0.3' },
+    { loc: "https://edudock.in/", lastmod: getTodayISO(), priority: "1.0" },
+    { loc: "https://edudock.in/updates", lastmod: getTodayISO(), priority: "0.9" },
+    { loc: "https://edudock.in/pdfs", lastmod: getTodayISO(), priority: "0.8" },
+    { loc: "https://edudock.in/tools", lastmod: getTodayISO(), priority: "0.8" },
+    { loc: "https://edudock.in/privacy", lastmod: getTodayISO(), priority: "0.3" },
+    { loc: "https://edudock.in/terms", lastmod: getTodayISO(), priority: "0.3" },
   ];
 
-  var xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "\n";
-  xml += "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">" + "\n";
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>' + "\n";
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + "\n";
 
-  // Static pages
   for (const page of staticPages) {
     xml += "  <url>" + "\n";
     xml += "    <loc>" + escapeXml(page.loc) + "</loc>" + "\n";
@@ -123,15 +129,23 @@ function generateSitemapXml(updates: UpdateRow[]): string {
     xml += "  </url>" + "\n";
   }
 
-  // Dynamic update pages
   if (Array.isArray(updates)) {
     for (const update of updates) {
       if (!update.slug) continue;
-
-      const lastmod: string = formatDate(update.created_at);
       xml += "  <url>" + "\n";
-      xml += '    <loc>https://edudock.in/updates/' + escapeXml(update.slug) + '</loc>' + '\n';
-      xml += "    <lastmod>" + lastmod + "</lastmod>" + "\n";
+      xml += "    <loc>https://edudock.in/updates/" + escapeXml(update.slug) + "</loc>" + "\n";
+      xml += "    <lastmod>" + formatDate(update.updated_at) + "</lastmod>" + "\n";
+      xml += "    <priority>0.6</priority>" + "\n";
+      xml += "  </url>" + "\n";
+    }
+  }
+
+  if (Array.isArray(pdfs)) {
+    for (const pdf of pdfs) {
+      if (!pdf.slug) continue;
+      xml += "  <url>" + "\n";
+      xml += "    <loc>https://edudock.in/pdfs/" + escapeXml(pdf.slug) + "</loc>" + "\n";
+      xml += "    <lastmod>" + formatDate(pdf.updated_at) + "</lastmod>" + "\n";
       xml += "    <priority>0.6</priority>" + "\n";
       xml += "  </url>" + "\n";
     }
@@ -141,24 +155,25 @@ function generateSitemapXml(updates: UpdateRow[]): string {
   return xml;
 }
 
-function generateErrorSitemap(_reason: string): string {
-  var nl = "\n";
+function generateErrorSitemap(): string {
+  const nl = "\n";
+  const today = getTodayISO();
 
-  var str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + nl;
-  str += "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">" + nl;
+  let str = '<?xml version="1.0" encoding="UTF-8"?>' + nl;
+  str += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + nl;
   str += "  <url>" + nl;
   str += "    <loc>https://edudock.in/</loc>" + nl;
-  str += "    <lastmod>" + getTodayISO() + "</lastmod>" + nl;
+  str += "    <lastmod>" + today + "</lastmod>" + nl;
   str += "    <priority>1.0</priority>" + nl;
   str += "  </url>" + nl;
   str += "  <url>" + nl;
   str += "    <loc>https://edudock.in/updates</loc>" + nl;
-  str += "    <lastmod>" + getTodayISO() + "</lastmod>" + nl;
+  str += "    <lastmod>" + today + "</lastmod>" + nl;
   str += "    <priority>0.8</priority>" + nl;
   str += "  </url>" + nl;
   str += "  <url>" + nl;
   str += "    <loc>https://edudock.in/pdfs</loc>" + nl;
-  str += "    <lastmod>" + getTodayISO() + "</lastmod>" + nl;
+  str += "    <lastmod>" + today + "</lastmod>" + nl;
   str += "    <priority>0.7</priority>" + nl;
   str += "  </url>" + nl;
   str += "</urlset>";
@@ -183,11 +198,11 @@ function getTodayISO(): string {
  */
 function escapeXml(str: string): string {
   if (typeof str !== "string") return "";
-  var a = String.fromCharCode(38);
+  const a = String.fromCharCode(38);
   return str
     .replace(/&/g, a + "amp;")
     .replace(/</g, a + "lt;")
     .replace(/>/g, a + "gt;")
     .replace(/"/g, a + "quot;")
-    .replace(/'/g, a + 'apos;');
+    .replace(/'/g, a + "apos;");
 }
