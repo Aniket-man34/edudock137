@@ -182,7 +182,7 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full"
+                                className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 scrollbar-hide w-full"
                                 role="list"
                                 aria-label="Search results for PDFs"
                             >
@@ -239,7 +239,7 @@ export default function TrendingSection({
                                 variants={stagger}
                                 initial="hidden"
                                 animate="show"
-                                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full"
+                                className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 scrollbar-hide w-full"
                                 role="list"
                                 aria-label="Search results for updates"
                             >
@@ -250,11 +250,11 @@ export default function TrendingSection({
                                                 <img
                                                     src={update.image_url}
                                                     alt={update.title}
-                                                    className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
+                                                    className="w-[88vw] md:w-[720px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
                                                     loading="lazy"
                                                 />
                                             ) : (
-                                                <div className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+                                                <div className="w-[88vw] md:w-[720px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
                                                     <Bell className="h-8 w-8 text-primary/40" />
                                                 </div>
                                             )}
@@ -380,7 +380,7 @@ export default function TrendingSection({
                                         initial="hidden"
                                         whileInView="show"
                                         viewport={{ once: true }}
-                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full"
+                                        className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 scrollbar-hide w-full"
                                         role="list"
                                         aria-label="Hot PDFs"
                                     >
@@ -442,28 +442,30 @@ export default function TrendingSection({
                                         initial="hidden"
                                         whileInView="show"
                                         viewport={{ once: true }}
-                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full"
+                                        className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 scrollbar-hide w-full"
                                         role="list"
                                         aria-label="Latest updates"
                                     >
                                         {trendingUpdates.map((update: any) => (
-                                            <motion.div key={update.id} variants={fadeUp} role="listitem">
-                                                <Link to={`/updates/${update.slug || update.id}`} aria-label={`Read ${update.title} update`}>
-                                                    {update.image_url ? (
-                                                        <img
-                                                            src={update.image_url}
-                                                            alt={update.title}
-                                                            className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
-                                                            loading="lazy"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
-                                                            <Bell className="h-8 w-8 text-primary/40" />
-                                                        </div>
-                                                    )}
-                                                </Link>
-                                            </motion.div>
-                                        ))}
+                                                    <motion.div key={update.id} variants={fadeUp} role="listitem" className="flex-none w-[88vw] md:w-[720px] snap-center">
+                                                        <Link to={`/updates/${update.slug || update.id}`} aria-label={`Read ${update.title} update`} className="block rounded-xl overflow-hidden shadow-md">
+                                                            {update.image_url ? (
+                                                                <div className="aspect-[1200/620] w-full h-full">
+                                                                    <img
+                                                                        src={update.image_url}
+                                                                        alt={update.title}
+                                                                        className="w-full h-full object-cover block transition-transform hover:scale-[1.02]"
+                                                                        loading="lazy"
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="aspect-[1200/620] w-full h-full flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a]">
+                                                                    <Bell className="h-8 w-8 text-primary/40" />
+                                                                </div>
+                                                            )}
+                                                        </Link>
+                                                    </motion.div>
+                                                ))}
                                     </motion.div>
                                 </motion.div>
                             </div>

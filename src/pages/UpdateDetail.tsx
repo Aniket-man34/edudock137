@@ -10,7 +10,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
 import SocialShare from '@/components/updates/SocialShare';
-import { generateArticleSchema, SITE_URL, DEFAULT_OG_IMAGE, fallbackMetaTitle, fallbackMetaDescription, fallbackOgImage } from '@/lib/seo';
+import { generateArticleSchema, SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo';
 
 // 🚨 HIGH-RES INTERCEPTOR FOR OLD POSTS 🚨
 const getHighResAvatar = (url: string | null) => {
@@ -29,25 +29,49 @@ export default function UpdateDetail() {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  const { data: update, isLoading } = useQuery({
+  const { data: update, isLoading, isError, error, failureCount } = useQuery({
     queryKey: ['update', slug],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || '');
       const searchColumn = isUUID ? 'id' : 'slug';
 
-      const { data, error } = await supabase
-        .from('updates')
-        .select('*')
-        .eq(searchColumn, slug)
-        .single();
+      // Hard timeout: if Supabase hangs, force-reject after 8 seconds
+      const TIMEOUT_MS = 8_000;
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Request timed out after ${TIMEOUT_MS / 1000}s`)), TIMEOUT_MS)
+      );
 
-      if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw error;
-      }
-      return data;
+      let aborted = false;
+      signal?.addEventListener('abort', () => { aborted = true; });
+
+      const fetchPromise = (async () => {
+        try {
+          const { data, error } = await supabase
+            .from('updates')
+            .select('*')
+            .eq(searchColumn, slug)
+            .single();
+
+          if (aborted) throw new Error('Query aborted by React Query');
+
+          if (error) {
+            if (error.code === 'PGRST116') return null;
+            throw error;
+          }
+          return data;
+        } catch (err) {
+          console.error('Error fetching update detail:', err);
+          throw err;
+        } finally {
+          /* intentional no-op in finally to ensure promise resolution path is consistent */
+        }
+      })();
+
+      return Promise.race([fetchPromise, timeoutPromise]);
     },
     enabled: !!slug,
+    retry: 1,
+    staleTime: 60_000,
   });
 
   const { data: recentUpdates } = useQuery({
@@ -103,6 +127,29 @@ export default function UpdateDetail() {
         <div className="h-10 bg-muted rounded w-3/4 mb-4" />
         <div className="h-6 bg-muted rounded w-1/2 mb-8" />
         <div className="h-64 bg-muted rounded-xl w-full" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error fetching data';
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-32 text-center flex flex-col items-center justify-center bg-white dark:bg-gray-950 min-h-screen">
+        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-8 rounded-2xl text-center max-w-md">
+          <p className="text-red-600 dark:text-red-400 text-lg font-medium mb-2">Failed to load update</p>
+          <p className="text-sm text-muted-foreground mb-2 font-mono break-all">{errMsg}</p>
+          {failureCount > 0 && (
+            <p className="text-xs text-muted-foreground mb-5">Retry attempts: {failureCount}</p>
+          )}
+          <div className="flex flex-wrap justify-center gap-3">
+            <button onClick={() => window.location.reload()} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition text-sm">
+              Retry
+            </button>
+            <button onClick={() => navigate('/updates')} className="px-6 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition text-sm">
+              Back to Updates
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

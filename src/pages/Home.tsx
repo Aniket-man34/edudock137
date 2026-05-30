@@ -191,7 +191,7 @@ export default function Home() {
         .select('*')
         .gte('created_at', thirtyDaysIso)
         .order('created_at', { ascending: false })
-        .limit(3);
+        ;
       return data || [];
     },
   });
@@ -307,7 +307,7 @@ export default function Home() {
                 </h3>
               </motion.div>
 
-              <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full">
+              <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 scrollbar-hide w-full">
                 {searchMatchedPdfs.map((pdf: any) => (
                   <motion.div key={pdf.id} variants={fadeUp}>
                     <Link to={`/pdfs/${pdf.slug || pdf.id}`}>
@@ -354,7 +354,7 @@ export default function Home() {
                   </span>
                 </h3>
               </motion.div>
-              <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full">
+              <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 scrollbar-hide w-full">
                 {searchMatchedUpdates.map((update: any) => (
                   <motion.div key={update.id} variants={fadeUp}>
                     <Link to={`/updates/${update.slug || update.id}`}>
@@ -362,11 +362,11 @@ export default function Home() {
                         <img
                           src={update.image_url}
                           alt={update.title}
-                          className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
+                          className="w-[88vw] md:w-[720px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-slate-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+                        <div className="w-[88vw] md:w-[720px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-slate-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
                           <Bell className="h-10 w-10 text-slate-400" />
                         </div>
                       )}
@@ -512,7 +512,7 @@ export default function Home() {
             </Link>
           </div>
           {newPdfs && newPdfs.length > 0 ? (
-            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full">
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 scrollbar-hide w-full">
               {newPdfs.map((pdf: any, idx: number) => (
                 <motion.div key={pdf.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: idx * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
                   <Link to={`/pdfs/${pdf.slug || pdf.id}`}>
@@ -549,19 +549,28 @@ export default function Home() {
             </Link>
           </div>
           {newUpdates && newUpdates.length > 0 ? (
-        <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 scrollbar-hide w-full">
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 scrollbar-hide w-full">
           {newUpdates.map((update: any, idx: number) => (
-            <motion.div key={update.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: idx * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}>
-              <Link to={`/updates/${update.slug || update.id}`}>
+            <motion.div
+              key={update.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="flex-none w-[88vw] md:w-[720px] snap-center"
+            >
+              <Link to={`/updates/${update.slug || update.id}`} className="block rounded-xl overflow-hidden shadow-md">
                 {update.image_url ? (
-                  <img
-                    src={update.image_url}
-                    alt={update.title}
-                    className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] object-cover rounded-xl shadow-md block transition-transform hover:scale-[1.02]"
-                    loading="lazy"
-                  />
+                  <div className="aspect-[1200/620] w-full h-full">
+                    <img
+                      src={update.image_url}
+                      alt={update.title}
+                      className="w-full h-full object-cover block transition-transform hover:scale-[1.02]"
+                      loading="lazy"
+                    />
+                  </div>
                 ) : (
-                  <div className="w-[80vw] sm:w-[60vw] md:w-[600px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-slate-200 dark:bg-[#0f0f1a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+                  <div className="aspect-[1200/620] w-full h-full flex items-center justify-center bg-slate-200 dark:bg-[#0f0f1a]">
                     <Bell className="h-10 w-10 text-slate-400 dark:text-violet-500/40" />
                   </div>
                 )}

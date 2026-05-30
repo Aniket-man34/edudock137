@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useOutletContext, Link } from 'react-router-dom';
+import { useOutletContext, Link, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ChevronRight, Loader2 } from 'lucide-react';
@@ -94,16 +94,17 @@ function UpdatesHelmet() {
 export default function Updates() {
   const { searchQuery } = useOutletContext<ContextType>();
 
-  /* Fetch latest 6 updates */
-  const { data: updates, isLoading } = useQuery({
-    queryKey: ['updates-latest'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('updates')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(6);
+  const location = useLocation();
+  const isFullPage = location.pathname === '/updates';
 
+  /* Fetch updates — on the widget we show latest 6, on the full /updates page fetch all */
+  const { data: updates, isLoading, refetch } = useQuery({
+    queryKey: ['updates-list', isFullPage ? 'all' : 'latest'],
+    queryFn: async () => {
+      let q = supabase.from('updates').select('*').order('created_at', { ascending: false });
+      if (!isFullPage) q = q.limit(6);
+
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -225,13 +226,23 @@ export default function Updates() {
 
             {/* ── View All Button ──────────────────────────────── */}
             <div className="flex justify-end w-full max-w-6xl mx-auto mt-8">
-              <Link
-                to="/updates"
-                className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors duration-200"
-              >
-                View All Updates
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+              {!isFullPage ? (
+                <Link
+                  to="/updates"
+                  className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors duration-200"
+                >
+                  View All Updates
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <button
+                  onClick={() => refetch()}
+                  className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors duration-200"
+                >
+                  Refresh All Updates
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </>
         ) : (
