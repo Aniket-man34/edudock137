@@ -196,7 +196,7 @@ export default function TrendingSection({
                                                     className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] object-cover rounded-lg shadow-md block transition-transform hover:scale-[1.02]"
                                                 />
                                             ) : (
-                                                <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-gray-100 dark:bg-[#1f1f1f] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
+                                                <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-gray-100 dark:bg-[#111111] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
                                                     <BookOpen className="h-8 w-8 text-primary/40" />
                                                 </div>
                                             )}
@@ -254,7 +254,7 @@ export default function TrendingSection({
                                                     loading="lazy"
                                                 />
                                             ) : (
-                                                <div className="w-[88vw] md:w-[720px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-gray-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+                                                <div className="w-[88vw] md:w-[720px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-gray-200 dark:bg-[#111111] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
                                                     <Bell className="h-8 w-8 text-primary/40" />
                                                 </div>
                                             )}

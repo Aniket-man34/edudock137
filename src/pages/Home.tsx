@@ -121,18 +121,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [heroImageError, setHeroImageError] = useState(false);
 
-  const { data: categories } = useQuery({
-    queryKey: ['tool_categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('entity_type', 'tool')
-        .order('title');
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // categories removed for simplified home tools section
 
   const { data: tools } = useQuery({
     queryKey: ['tools'],
@@ -141,6 +130,20 @@ export default function Home() {
         .from('tools')
         .select('*')
         .order('title');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Newest 4 tools for Home "All Tools Repository" section
+  const { data: newestTools } = useQuery({
+    queryKey: ['home_newest_tools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4);
       if (error) throw error;
       return data || [];
     },
@@ -319,7 +322,7 @@ export default function Home() {
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-slate-100 dark:bg-[#1f1f1f] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
+                        <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-slate-100 dark:bg-[#111111] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
                           <BookOpen className="h-8 w-8 text-slate-400" />
                         </div>
                       )}
@@ -366,7 +369,7 @@ export default function Home() {
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-[88vw] md:w-[720px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-slate-200 dark:bg-[#2a2a2a] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+                        <div className="w-[88vw] md:w-[720px] flex-none snap-center aspect-[1200/620] flex items-center justify-center bg-slate-200 dark:bg-[#111111] rounded-xl shadow-md transition-transform hover:scale-[1.02]">
                           <Bell className="h-10 w-10 text-slate-400" />
                         </div>
                       )}
@@ -523,8 +526,8 @@ export default function Home() {
                         className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] object-cover rounded-lg shadow-md block transition-transform hover:scale-[1.02]"
                         loading="lazy"
                       />
-                    ) : (
-                      <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-slate-100 dark:bg-[#1f1f1f] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
+                      ) : (
+                      <div className="w-[40vw] md:w-[200px] flex-none snap-start aspect-[2/3] flex items-center justify-center bg-slate-100 dark:bg-[#111111] rounded-lg shadow-md transition-transform hover:scale-[1.02]">
                         <BookOpen className="h-8 w-8 text-slate-400" />
                       </div>
                     )}
@@ -570,7 +573,7 @@ export default function Home() {
                     />
                   </div>
                 ) : (
-                  <div className="aspect-[1200/620] w-full h-full flex items-center justify-center bg-slate-200 dark:bg-[#0f0f1a]">
+                  <div className="aspect-[1200/620] w-full h-full flex items-center justify-center bg-slate-200 dark:bg-[#111111]">
                     <Bell className="h-10 w-10 text-slate-400 dark:text-violet-500/40" />
                   </div>
                 )}
@@ -592,26 +595,17 @@ export default function Home() {
           </div>
           <div>
             <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">All Tools Repository</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Browse by category</p>
+            <p className="text-xs text-slate-500 mt-0.5">Newest tools</p>
           </div>
         </motion.div>
-        {categories && categories.length > 0 ? (
-          <div className="flex flex-wrap gap-6 items-stretch justify-start [&>*]:flex-[1_1_300px]">
-            {categories.map((cat: any, idx: number) => {
-              const catTools = tools?.filter((t: any) => t.category_id === cat.id);
-              const color = catColors[idx % catColors.length];
-              return (
-                <motion.div key={cat.id} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: idx * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-                  <Link to={`/tools?category=${cat.id}`} className={`${glassCard} p-10 rounded-3xl flex flex-col items-center justify-center space-y-6 group hover:scale-[1.02] transition duration-300 cursor-pointer block`}>
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition duration-300 ${color}`}>
-                      <Wrench className="w-8 h-8" />
-                    </div>
-                    <span className="font-bold text-slate-700 text-lg text-center">{cat.name || cat.title}</span>
-                    {catTools && <span className="text-xs text-slate-400 -mt-4">{catTools.length} tool{catTools.length !== 1 ? 's' : ''}</span>}
-                  </Link>
-                </motion.div>
-              );
-            })}
+
+        {newestTools && newestTools.length > 0 ? (
+          <div className="flex flex-wrap gap-3 w-full">
+            {newestTools.map((tool: any, i: number) => (
+              <div key={tool.id} className="w-[calc(50%-6px)] sm:w-[calc(25%-9px)] flex-none">
+                <ToolCard tool={tool} index={i} />
+              </div>
+            ))}
           </div>
         ) : (
           <p className="text-slate-500 text-center py-10">No tools found.</p>

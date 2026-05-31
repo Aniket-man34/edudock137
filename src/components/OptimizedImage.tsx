@@ -46,7 +46,7 @@ export default function OptimizedImage({
 
     return (
         <div
-            className={`relative overflow-hidden bg-gray-100 dark:bg-[#1f1f1f] ${className}`}
+            className={`relative overflow-hidden bg-gray-100 dark:bg-[#111111] ${className}`}
             style={width && height ? { aspectRatio: `${width}/${height}` } : undefined}
         >
             {/* Blur placeholder shown until image loads */}

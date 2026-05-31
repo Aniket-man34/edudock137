@@ -241,16 +241,20 @@ export default function Tools() {
       )}
 
       {isLoading ? (
-        <div className="flex flex-wrap gap-5 items-stretch justify-start [&>*]:flex-[1_1_260px]" role="status" aria-live="polite" aria-label="Loading tools">
+        <div className="flex flex-wrap gap-3 w-full" role="status" aria-live="polite" aria-label="Loading tools">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-60 glass-card animate-pulse rounded-2xl" aria-hidden="true" />
+            <div key={i} className="w-[calc(50%-6px)] sm:w-[calc(33.333%-8px)] md:w-[calc(25%-9px)] lg:w-[calc(16.666%-10px)] flex-none">
+              <div className="h-40 glass-card animate-pulse rounded-2xl" aria-hidden="true" />
+            </div>
           ))}
         </div>
       ) : filtered && filtered.length > 0 ? (
         <>
-          <div className="flex flex-wrap gap-5 items-stretch justify-start [&>*]:flex-[1_1_260px]" role="list" aria-label="Tools list">
+          <div className="flex flex-wrap gap-3 w-full" role="list" aria-label="Tools list">
             {filtered.map((tool: any, i: number) => (
-              <ToolCard key={tool.id} tool={tool} index={i} />
+              <div key={tool.id} className="w-[calc(50%-6px)] sm:w-[calc(33.333%-8px)] md:w-[calc(25%-9px)] lg:w-[calc(16.666%-10px)] flex-none">
+                <ToolCard tool={tool} index={i} />
+              </div>
             ))}
           </div>
 

@@ -12,6 +12,20 @@ type ContextType = { searchQuery: string };
 
 /* ── Framer Motion variants ─────────────────────────────────────── */
 
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useOutletContext, Link, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { motion } from 'framer-motion';
+import { ChevronRight, Loader2 } from 'lucide-react';
+import OptimizedImage from '@/components/OptimizedImage';
+import { useSiteSeo } from '@/hooks/useSiteSeo';
+import { generateCollectionPageSchema, SEO_DEFAULTS, SITE_URL, DEFAULT_OG_IMAGE, PAGE_SEO } from '@/lib/seo';
+
+type ContextType = { searchQuery: string };
+
+/* ── Framer Motion variants ─────────────────────────────────────── */
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -55,7 +69,7 @@ function isNewUpdate(createdAt: string): boolean {
 /* ── Component ───────────────────────────────────────────────────── */
 
 function UpdatesHelmet() {
-  const { data: seo } = useSiteSeo("updates");
+  const { data: seo } = useSiteSeo('updates');
   const defaults = PAGE_SEO.updates;
 
   const title = seo?.meta_title?.trim() || defaults.title;
@@ -63,8 +77,8 @@ function UpdatesHelmet() {
   const ogTitle = seo?.og_title?.trim() || title;
   const ogDescription = seo?.og_description?.trim() || description;
   const ogImage = seo?.og_image?.trim() || DEFAULT_OG_IMAGE;
-  const ogType = seo?.og_type?.trim() || "website";
-  const twitterCard = seo?.twitter_card?.trim() || "summary_large_image";
+  const ogType = seo?.og_type?.trim() || 'website';
+  const twitterCard = seo?.twitter_card?.trim() || 'summary_large_image';
   const canonical = seo?.canonical_url?.trim() || `${SITE_URL}${defaults.path}`;
 
   const schemaJson = seo?.schema_markup
@@ -136,7 +150,7 @@ export default function Updates() {
       >
         {/* Left: Thumbnail (16:9 aspect ratio with contain — no cropping) */}
         <Tag {...rest} className="shrink-0">
-          <div className="w-40 sm:w-48 aspect-video bg-gray-100 dark:bg-[#1f1f1f] overflow-hidden rounded-lg">
+          <div className="w-40 sm:w-48 aspect-video bg-gray-100 dark:bg-[#111111] overflow-hidden rounded-lg">
             <OptimizedImage
               src={update.image_url || '/placeholder.svg'}
               alt={update.title}
@@ -178,10 +192,10 @@ export default function Updates() {
           key={`sk-${i}`}
           className="flex flex-row gap-4 items-center border-b border-gray-200 dark:border-gray-700 pb-4"
         >
-          <div className="w-40 sm:w-48 aspect-video bg-gray-200 dark:bg-[#1f1f1f] animate-pulse shrink-0 rounded-lg" />
+          <div className="w-40 sm:w-48 aspect-video bg-gray-200 dark:bg-[#111111] animate-pulse shrink-0 rounded-lg" />
           <div className="flex-1 space-y-2">
-            <div className="h-3 w-3/4 bg-gray-200 dark:bg-[#2a2a2a] animate-pulse rounded" />
-            <div className="h-2.5 w-1/4 bg-gray-200 dark:bg-[#2a2a2a] animate-pulse rounded" />
+            <div className="h-3 w-3/4 bg-gray-200 dark:bg-[#111111] animate-pulse rounded" />
+            <div className="h-2.5 w-1/4 bg-gray-200 dark:bg-[#111111] animate-pulse rounded" />
           </div>
         </div>
       ))}
@@ -192,7 +206,7 @@ export default function Updates() {
   return (
     <>
       <UpdatesHelmet />
-      <div className="w-full bg-white dark:bg-[#141414] min-h-screen">
+      <div className="w-full bg-white dark:bg-black min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -251,7 +265,7 @@ export default function Updates() {
             className="flex flex-col items-center justify-center py-24"
             role="status"
           >
-            <div className="inline-flex p-4 rounded-2xl mb-4 bg-gray-100 dark:bg-[#1f1f1f] border border-gray-200 dark:border-[#2a2a2a]">
+            <div className="inline-flex p-4 rounded-2xl mb-4 bg-gray-100 dark:bg-[#111111] border border-gray-200 dark:border-[#111111]">
               <Loader2 className="h-6 w-6 text-gray-400 dark:text-gray-600" aria-hidden="true" />
             </div>
             <p className="text-gray-500 dark:text-gray-500 text-base">

@@ -122,7 +122,7 @@ export default function UpdateDetail() {
 
   if (isLoading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-12 animate-pulse min-h-screen bg-white dark:bg-gray-950">
+      <div className="max-w-3xl mx-auto px-4 py-12 animate-pulse min-h-screen bg-white dark:bg-black">
         <div className="h-5 bg-muted rounded w-48 mb-6" />
         <div className="h-10 bg-muted rounded w-3/4 mb-4" />
         <div className="h-6 bg-muted rounded w-1/2 mb-8" />
@@ -134,7 +134,7 @@ export default function UpdateDetail() {
   if (isError) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error fetching data';
     return (
-      <div className="max-w-3xl mx-auto px-4 py-32 text-center flex flex-col items-center justify-center bg-white dark:bg-gray-950 min-h-screen">
+      <div className="max-w-3xl mx-auto px-4 py-32 text-center flex flex-col items-center justify-center bg-white dark:bg-black min-h-screen">
         <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-8 rounded-2xl text-center max-w-md">
           <p className="text-red-600 dark:text-red-400 text-lg font-medium mb-2">Failed to load update</p>
           <p className="text-sm text-muted-foreground mb-2 font-mono break-all">{errMsg}</p>
@@ -156,8 +156,8 @@ export default function UpdateDetail() {
 
   if (!update) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-32 text-center flex flex-col items-center justify-center bg-white dark:bg-gray-950 min-h-screen">
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-8 rounded-2xl text-center">
+      <div className="max-w-3xl mx-auto px-4 py-32 text-center flex flex-col items-center justify-center bg-white dark:bg-black min-h-screen">
+        <div className="bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-gray-800 p-8 rounded-2xl text-center">
           <p className="text-foreground text-lg font-medium mb-4">Update not found.</p>
           <button onClick={() => navigate('/updates')} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition">
             Go Back
@@ -192,7 +192,7 @@ export default function UpdateDetail() {
         <meta name="twitter:image" content={seoImage} />
         <link rel="canonical" href={canonicalUrl} />
         <script type="application/ld+json">
-          {update.schema_markup || JSON.stringify(generateArticleSchema({ ...update, description: seoDescription }))}
+          {typeof update.schema_markup === 'object' ? JSON.stringify(update.schema_markup) : update.schema_markup || JSON.stringify(generateArticleSchema({ ...update, description: seoDescription }))}
         </script>
       </Helmet>
       <div className="max-w-3xl mx-auto px-4 py-8 bg-white dark:bg-gray-950 min-h-screen">
@@ -225,7 +225,7 @@ export default function UpdateDetail() {
             <img
               src={getHighResAvatar(update.author_avatar)}
               alt="Author"
-              className="w-12 h-12 rounded-full object-cover border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 shadow-sm"
+              className="w-12 h-12 rounded-full object-cover border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[#111111] shadow-sm"
             />
             <div>
               <div className="flex items-center gap-1.5">
@@ -304,7 +304,7 @@ export default function UpdateDetail() {
         />
 
         {/* Community Banner */}
-        <div className="mt-10 bg-gray-50 dark:bg-gray-900 p-6 rounded-lg text-center border border-gray-200 dark:border-gray-800">
+          <div className="mt-10 bg-gray-50 dark:bg-[#111111] p-6 rounded-lg text-center border border-gray-200 dark:border-gray-800">
           <p className="text-lg font-bold text-foreground mb-1">Stay Updated! 🚀</p>
           <p className="text-sm text-muted-foreground mb-6">Join our groups for fresh updates & resources</p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -340,10 +340,15 @@ export default function UpdateDetail() {
                   key={item.id}
                   className="flex flex-row items-center gap-4 w-full bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:shadow-sm"
                 >
+                  <Link
+                    to={`/updates/${item.slug || item.id}`}
+                    key={item.id}
+                    className="flex flex-row items-center gap-4 w-full bg-gray-50 dark:bg-[#111111] p-4 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:shadow-sm"
+                  >
                   <img
                     src={item.image_url ? `${item.image_url}?t=${Date.now()}` : '/placeholder.svg'}
                     alt={item.title}
-                    className="w-48 aspect-video object-cover rounded-lg shrink-0 border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800"
+                      className="w-48 aspect-video object-cover rounded-lg shrink-0 border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[#111111]"
                     loading="lazy"
                   />
                   <div className="min-w-0">
