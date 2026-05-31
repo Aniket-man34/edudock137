@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS public.site_seo_settings (
 
 ALTER TABLE public.site_seo_settings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can view seo settings"
   ON public.site_seo_settings FOR SELECT USING (true);
 
 CREATE POLICY "Authenticated users can manage seo settings"
