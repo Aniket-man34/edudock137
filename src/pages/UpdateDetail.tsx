@@ -338,17 +338,12 @@ export default function UpdateDetail() {
                 <Link
                   to={`/updates/${item.slug || item.id}`}
                   key={item.id}
-                  className="flex flex-row items-center gap-4 w-full bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:shadow-sm"
+                  className="flex flex-row items-center gap-4 w-full bg-gray-50 dark:bg-[#111111] p-4 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:shadow-sm"
                 >
-                  <Link
-                    to={`/updates/${item.slug || item.id}`}
-                    key={item.id}
-                    className="flex flex-row items-center gap-4 w-full bg-gray-50 dark:bg-[#111111] p-4 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:shadow-sm"
-                  >
                   <img
                     src={item.image_url ? `${item.image_url}?t=${Date.now()}` : '/placeholder.svg'}
                     alt={item.title}
-                      className="w-48 aspect-video object-cover rounded-lg shrink-0 border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[#111111]"
+                    className="w-48 aspect-video object-cover rounded-lg shrink-0 border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[#111111]"
                     loading="lazy"
                   />
                   <div className="min-w-0">
