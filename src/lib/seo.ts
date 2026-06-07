@@ -1,33 +1,29 @@
-/**
- * EduDock SEO Utility
- * Shared defaults, schema generators, and helper functions
- * for react-helmet-async across all pages.
- */
+import type { Metadata } from "next";
 
 // ── DOMAIN CONSTANTS ──────────────────────────────────────────────
-export const SITE_URL = "https://edudock.in";
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://edudock.in";
 export const SITE_NAME = "EduDock";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/social.png`;
 export const DEFAULT_OG_IMAGE_WIDTH = 1200;
 export const DEFAULT_OG_IMAGE_HEIGHT = 630;
 
-// Android App package for Google Play verification / install prompts
 export const ANDROID_PACKAGE_NAME = "in.edudock.app";
-export const ANDROID_APP_ID = "REPLACE_WITH_GOOGLE_PLAY_APP_ID"; // e.g. com.example.app -> numeric ID
 
-// ── DEFAULT META ──────────────────────────────────────────────────
+// ── DEFAULTS ──────────────────────────────────────────────────────
 export const SEO_DEFAULTS = {
   title: "EduDock — Your Educational Resource Hub",
   description:
     "Discover curated educational tools, PDFs, study materials, and real-time updates for students and educators.",
-  canonical: SITE_URL,
   ogType: "website" as const,
   twitterCard: "summary_large_image" as const,
   ogImage: DEFAULT_OG_IMAGE,
 };
 
-// ── PAGE-SPECIFIC SEO DEFAULTS ────────────────────────────────────
-export const PAGE_SEO: Record<string, { title: string; description: string; path: string }> = {
+export const PAGE_SEO: Record<
+  string,
+  { title: string; description: string; path: string }
+> = {
   home: {
     title: "EduDock — Your Educational Resource Hub",
     description:
@@ -71,29 +67,139 @@ export const PAGE_SEO: Record<string, { title: string; description: string; path
   },
 };
 
-// ── HELPER: Build full meta object for static pages ────────────────
-export interface SEOMeta {
-  title: string;
-  description: string;
-  canonical: string;
-  ogType?: string;
-  ogImage?: string;
+// ── SEO ROW (DB site_seo_settings) ────────────────────────────────
+export interface SiteSeoRow {
+  id: string;
+  page_name: string;
+  meta_title: string | null;
+  meta_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image: string | null;
+  og_type: string | null;
+  twitter_card: string | null;
+  schema_markup: string | null;
+  canonical_url: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export function buildSeoMeta(pageKey: string, overrides?: Partial<SEOMeta>): SEOMeta {
-  const defaults = PAGE_SEO[pageKey] || PAGE_SEO.home;
+// ── METADATA BUILDERS ─────────────────────────────────────────────
+
+interface BuildArgs {
+  pageKey: keyof typeof PAGE_SEO;
+  seo?: SiteSeoRow | null;
+  noindex?: boolean;
+  ogType?: "website" | "article";
+}
+
+export function buildPageMetadata({
+  pageKey,
+  seo,
+  noindex = false,
+  ogType,
+}: BuildArgs): Metadata {
+  const defaults = PAGE_SEO[pageKey] ?? PAGE_SEO.home;
+  const title = seo?.meta_title?.trim() || defaults.title;
+  const description = seo?.meta_description?.trim() || defaults.description;
+  const ogTitle = seo?.og_title?.trim() || title;
+  const ogDescription = seo?.og_description?.trim() || description;
+  const ogImage = seo?.og_image?.trim() || DEFAULT_OG_IMAGE;
+  const resolvedOgType =
+    (ogType || (seo?.og_type?.trim() as "website" | "article" | undefined)) ||
+    "website";
+  const canonical =
+    seo?.canonical_url?.trim() || `${SITE_URL}${defaults.path}`;
+
   return {
-    title: overrides?.title || defaults.title,
-    description: overrides?.description || defaults.description,
-    canonical: overrides?.canonical || `${SITE_URL}${defaults.path}`,
-    ogType: overrides?.ogType || "website",
-    ogImage: overrides?.ogImage || DEFAULT_OG_IMAGE,
+    metadataBase: new URL(SITE_URL),
+    title,
+    description,
+    alternates: { canonical },
+    robots: noindex ? { index: false, follow: true } : undefined,
+    openGraph: {
+      type: resolvedOgType,
+      url: canonical,
+      title: ogTitle,
+      description: ogDescription,
+      siteName: SITE_NAME,
+      images: [
+        {
+          url: ogImage,
+          width: DEFAULT_OG_IMAGE_WIDTH,
+          height: DEFAULT_OG_IMAGE_HEIGHT,
+          alt: ogTitle,
+        },
+      ],
+    },
+    twitter: {
+      card: (seo?.twitter_card?.trim() as any) || "summary_large_image",
+      title: ogTitle,
+      description: ogDescription,
+      images: [ogImage],
+    },
   };
 }
 
-// ── SCHEMA GENERATORS ────────────────────────────────────────────
+interface ArticleArgs {
+  title: string;
+  description: string;
+  image: string | null;
+  url: string;
+  publishedTime?: string | null;
+  modifiedTime?: string | null;
+  authorName?: string | null;
+  metaTitleOverride?: string | null;
+  metaDescriptionOverride?: string | null;
+}
 
-/** Homepage composite schema: WebSite + SearchAction + SoftwareApplication (Google Play install prompt) */
+export function buildArticleMetadata(args: ArticleArgs): Metadata {
+  const title =
+    args.metaTitleOverride?.trim() || `${args.title} | ${SITE_NAME}`;
+  const description =
+    args.metaDescriptionOverride?.trim() ||
+    args.description?.trim().substring(0, 160) ||
+    SEO_DEFAULTS.description;
+  const image = args.image?.trim() || DEFAULT_OG_IMAGE;
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title,
+    description,
+    alternates: { canonical: args.url },
+    openGraph: {
+      type: "article",
+      url: args.url,
+      title,
+      description,
+      siteName: SITE_NAME,
+      images: [
+        {
+          url: image,
+          width: DEFAULT_OG_IMAGE_WIDTH,
+          height: DEFAULT_OG_IMAGE_HEIGHT,
+          alt: args.title,
+        },
+      ],
+      publishedTime: args.publishedTime ?? undefined,
+      modifiedTime: args.modifiedTime ?? args.publishedTime ?? undefined,
+      authors: args.authorName ? [args.authorName] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+    other: args.authorName
+      ? {
+          "article:author": args.authorName,
+        }
+      : undefined,
+  };
+}
+
+// ── SCHEMA GENERATORS (JSON-LD) ───────────────────────────────────
 export function generateHomeSchemas(): object[] {
   return [
     {
@@ -113,22 +219,18 @@ export function generateHomeSchemas(): object[] {
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "EduDock",
+      name: SITE_NAME,
       operatingSystem: "Android",
       applicationCategory: "EducationalApplication",
       url: `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE_NAME}`,
-      offers: {
-        "@type": "Offer",
-        price: "0",
-      },
+      offers: { "@type": "Offer", price: "0" },
     },
   ];
 }
 
-/** Blog/Update post schema: Article */
 export function generateArticleSchema(post: {
   title: string;
-  description: string;
+  description: string | null;
   image_url: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -166,7 +268,6 @@ export function generateArticleSchema(post: {
   };
 }
 
-/** PDF/Document schema: DigitalDocument */
 export function generateDigitalDocumentSchema(doc: {
   title: string;
   description: string | null;
@@ -190,18 +291,11 @@ export function generateDigitalDocumentSchema(doc: {
       "@type": "Person",
       name: doc.author_name || "EduDock Official",
     },
-    publisher: {
-      "@type": "Organization",
-      name: SITE_NAME,
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": canonicalUrl,
-    },
+    publisher: { "@type": "Organization", name: SITE_NAME },
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
   };
 }
 
-/** Tools listing page schema: CollectionPage */
 export function generateCollectionPageSchema(page: {
   title: string;
   description: string;
@@ -221,22 +315,109 @@ export function generateCollectionPageSchema(page: {
   };
 }
 
-// ── FALLBACK HELPER: null-safe field extraction ────────────────────
-export function fallbackMetaTitle(dbTitle: string | null | undefined, rawTitle: string): string {
-  return dbTitle?.trim() || rawTitle;
+export function generateSoftwareApplicationSchema(tool: {
+  title: string;
+  short_description: string | null;
+  description: string | null;
+  image_url: string | null;
+  url: string;
+  slug: string | null;
+  id: string;
+  author_name?: string | null;
+}): object {
+  const canonicalUrl = `${SITE_URL}/tools/${tool.slug || tool.id}`;
+  const desc =
+    tool.short_description?.trim() ||
+    tool.description?.substring(0, 160).replace(/\n/g, " ") ||
+    "Explore this educational tool on EduDock.";
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: tool.title,
+    description: desc,
+    image: tool.image_url || DEFAULT_OG_IMAGE,
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    url: tool.url,
+    offers: { "@type": "Offer", price: "0" },
+    author: {
+      "@type": "Person",
+      name: tool.author_name || "EduDock Official",
+    },
+    publisher: { "@type": "Organization", name: SITE_NAME },
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+  };
 }
 
-export function fallbackMetaDescription(
-  dbDesc: string | null | undefined,
-  content: string | null | undefined,
-): string {
-  if (dbDesc?.trim()) return dbDesc.trim().substring(0, 160);
-  if (content?.trim()) return content.trim().replace(/\n/g, " ").substring(0, 160);
-  return SEO_DEFAULTS.description;
-}
+// ── DB FETCHER (server, request-deduplicated) ─────────────────────
+import { cache } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createServerClient } from "@/integrations/supabase/server";
 
-export function fallbackOgImage(
-  dbImage: string | null | undefined,
-): string {
-  return dbImage?.trim() || DEFAULT_OG_IMAGE;
-}
+const isUUID = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+export const fetchSiteSeo = cache(async (
+  supabase: SupabaseClient,
+  pageName: string
+): Promise<SiteSeoRow | null> => {
+  try {
+    const { data, error } = await (supabase as any)
+      .from("site_seo_settings")
+      .select("*")
+      .eq("page_name", pageName)
+      .maybeSingle();
+    if (error) return null;
+    return (data as SiteSeoRow) ?? null;
+  } catch {
+    return null;
+  }
+});
+
+export const fetchUpdate = cache(async (slug: string): Promise<any> => {
+  try {
+    const supabase = createServerClient();
+    const column = isUUID(slug) ? "id" : "slug";
+    const { data, error } = await (supabase as any)
+      .from("updates")
+      .select("*, categories(name)")
+      .eq(column, slug)
+      .maybeSingle();
+    if (error) return null;
+    return data;
+  } catch {
+    return null;
+  }
+});
+
+export const fetchPdf = cache(async (slug: string): Promise<any> => {
+  try {
+    const supabase = createServerClient();
+    const column = isUUID(slug) ? "id" : "slug";
+    const { data, error } = await (supabase as any)
+      .from("pdfs")
+      .select("*, categories(name)")
+      .eq(column, slug)
+      .maybeSingle();
+    if (error) return null;
+    return data;
+  } catch {
+    return null;
+  }
+});
+
+export const fetchTool = cache(async (slug: string): Promise<any> => {
+  try {
+    const supabase = createServerClient();
+    const column = isUUID(slug) ? "id" : "slug";
+    const { data, error } = await (supabase as any)
+      .from("tools")
+      .select("*, categories(name)")
+      .eq(column, slug)
+      .maybeSingle();
+    if (error) return null;
+    return data;
+  } catch {
+    return null;
+  }
+});

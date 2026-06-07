@@ -1,8 +1,10 @@
-import { Sun, Moon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from './ThemeProvider';
+"use client";
 
-export default function ThemeToggle({ className = '' }: { className?: string }) {
+import { Sun, Moon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "./ThemeProvider";
+
+export default function ThemeToggle({ className = "" }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -19,7 +21,11 @@ export default function ThemeToggle({ className = '' }: { className?: string }) 
           exit={{ scale: 0, rotate: 60, opacity: 0 }}
           transition={{ duration: 0.15 }}
         >
-          {theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+          {theme === "dark" ? (
+            <Sun className="h-[18px] w-[18px]" />
+          ) : (
+            <Moon className="h-[18px] w-[18px]" />
+          )}
         </motion.div>
       </AnimatePresence>
     </button>

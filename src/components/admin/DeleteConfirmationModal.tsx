@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, X, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

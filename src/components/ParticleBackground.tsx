@@ -1,4 +1,6 @@
-import { useRef, useEffect, useCallback } from 'react';
+"use client";
+
+import { useRef, useEffect, useCallback } from "react";
 
 interface Particle {
   x: number;
@@ -30,7 +32,7 @@ export default function ParticleBackground() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const resize = () => {
@@ -39,8 +41,8 @@ export default function ParticleBackground() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = parent.offsetWidth * dpr;
       canvas.height = parent.offsetHeight * dpr;
-      canvas.style.width = parent.offsetWidth + 'px';
-      canvas.style.height = parent.offsetHeight + 'px';
+      canvas.style.width = parent.offsetWidth + "px";
+      canvas.style.height = parent.offsetHeight + "px";
       ctx.scale(dpr, dpr);
       particles.current = createParticles(parent.offsetWidth, parent.offsetHeight);
     };
@@ -49,12 +51,14 @@ export default function ParticleBackground() {
       const rect = canvas.getBoundingClientRect();
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
-    const handleMouseLeave = () => { mouseRef.current = { x: -1000, y: -1000 }; };
+    const handleMouseLeave = () => {
+      mouseRef.current = { x: -1000, y: -1000 };
+    };
 
     resize();
-    window.addEventListener('resize', resize);
-    canvas.addEventListener('mousemove', handleMouse);
-    canvas.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener("resize", resize);
+    canvas.addEventListener("mousemove", handleMouse);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
 
     const animate = () => {
       const parent = canvas.parentElement;
@@ -63,8 +67,8 @@ export default function ParticleBackground() {
       const h = parent.offsetHeight;
       ctx.clearRect(0, 0, w, h);
 
-      const isDark = document.documentElement.classList.contains('dark');
-      const rgb = isDark ? '56, 189, 248' : '14, 165, 233';
+      const isDark = document.documentElement.classList.contains("dark");
+      const rgb = isDark ? "56, 189, 248" : "14, 165, 233";
 
       const pts = particles.current;
       const mx = mouseRef.current.x;
@@ -81,7 +85,7 @@ export default function ParticleBackground() {
         const dy = p.y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 100) {
-          const force = (100 - dist) / 100 * 0.015;
+          const force = ((100 - dist) / 100) * 0.015;
           p.vx += dx * force;
           p.vy += dy * force;
         }
@@ -114,9 +118,9 @@ export default function ParticleBackground() {
 
     return () => {
       cancelAnimationFrame(animationRef.current);
-      window.removeEventListener('resize', resize);
-      canvas.removeEventListener('mousemove', handleMouse);
-      canvas.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener("resize", resize);
+      canvas.removeEventListener("mousemove", handleMouse);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, [createParticles]);
 
@@ -125,6 +129,7 @@ export default function ParticleBackground() {
       ref={canvasRef}
       className="absolute inset-0 pointer-events-auto"
       style={{ zIndex: 0 }}
+      aria-hidden="true"
     />
   );
 }

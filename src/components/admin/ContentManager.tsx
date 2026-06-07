@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -124,12 +126,12 @@ export default function ContentManager() {
                     <ContentSection
                         title="Updates"
                         icon={Bell}
-                        items={updates || []}
+                        items={(updates || []) as any[]}
                         isLoading={updatesLoading}
                         colorClass="bg-primary/10 text-primary"
-                        getItemName={(item) => item.title}
-                        getItemSubtitle={(item) => new Date(item.created_at).toLocaleDateString()}
-                        onDelete={(item) => setConfirmDelete({
+                        getItemName={(item: any) => item.title}
+                        getItemSubtitle={(item: any) => new Date(item.created_at).toLocaleDateString()}
+                        onDelete={(item: any) => setConfirmDelete({
                             type: 'update',
                             id: item.id,
                             name: item.title
@@ -140,12 +142,12 @@ export default function ContentManager() {
                     <ContentSection
                         title="PDFs"
                         icon={FileText}
-                        items={pdfs || []}
+                        items={(pdfs || []) as any[]}
                         isLoading={pdfsLoading}
                         colorClass="bg-green-500/10 text-green-500"
-                        getItemName={(item) => item.title}
-                        getItemSubtitle={(item) => item.category_id || 'Uncategorized'}
-                        onDelete={(item) => setConfirmDelete({
+                        getItemName={(item: any) => item.title}
+                        getItemSubtitle={(item: any) => item.category_id || 'Uncategorized'}
+                        onDelete={(item: any) => setConfirmDelete({
                             type: 'pdf',
                             id: item.id,
                             name: item.title
@@ -156,12 +158,12 @@ export default function ContentManager() {
                     <ContentSection
                         title="Tools"
                         icon={Wrench}
-                        items={tools || []}
+                        items={(tools || []) as any[]}
                         isLoading={toolsLoading}
                         colorClass="bg-amber-500/10 text-amber-500"
-                        getItemName={(item) => item.title}
-                        getItemSubtitle={(item) => item.category_id || 'General'}
-                        onDelete={(item) => setConfirmDelete({
+                        getItemName={(item: any) => item.title}
+                        getItemSubtitle={(item: any) => item.category_id || 'General'}
+                        onDelete={(item: any) => setConfirmDelete({
                             type: 'tool',
                             id: item.id,
                             name: item.title

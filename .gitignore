@@ -7,13 +7,27 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Next.js
+.next
+out
+build
+
+# Vite leftovers
 dist
 dist-ssr
+
+# Env
 *.local
 .env
+.env.local
+.env.development.local
+.env.production.local
+
+# Editor
 .roo
-# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -23,3 +37,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Typescript
+*.tsbuildinfo
+
+# Vercel
+.vercel
+
+# Agent skills
+.agents
+.claude
+skills-lock.json
+
+# Supabase CLI local state (contains pooler URL with DB password, project ref, etc.)
+supabase/.temp
+supabase/.branches
