@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+
+export const runtime = "edge";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, Wrench, Calendar } from "lucide-react";
 import { createServerClient } from "@/integrations/supabase/server";
