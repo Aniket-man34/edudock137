@@ -3,10 +3,6 @@ import Link from "next/link";
 
 export const runtime = "edge";
 import { notFound } from "next/navigation";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import rehypeSlug from "rehype-slug";
 import { ArrowLeft, ExternalLink, Calendar } from "lucide-react";
 import { createServerClient } from "@/integrations/supabase/server";
 import {
@@ -19,6 +15,7 @@ import {
 import { JsonLd } from "@/components/seo/JsonLd";
 import SocialShare from "@/components/updates/SocialShare";
 import UpdateClickTracker from "@/components/updates/UpdateClickTracker";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 export const revalidate = 60;
 
@@ -188,12 +185,7 @@ export default async function UpdateDetailPage({
             prose-img:w-full prose-img:rounded-xl prose-img:my-6 prose-img:shadow-md
             prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
         >
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeSlug]}
-          >
-            {markdownContent}
-          </ReactMarkdown>
+          <MarkdownRenderer content={markdownContent} />
         </div>
 
         {update.external_url && (
