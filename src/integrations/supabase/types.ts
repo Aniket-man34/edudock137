@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
@@ -98,6 +100,72 @@ export type Database = {
           entity_type?: string
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      content_suggestions: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          kind: string
+          message: string
+          name: string | null
+          status: string | null
+          subject: string | null
+          url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          kind: string
+          message: string
+          name?: string | null
+          status?: string | null
+          subject?: string | null
+          url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          kind?: string
+          message?: string
+          name?: string | null
+          status?: string | null
+          subject?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          audience: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          email: string
+          id: string
+          source: string | null
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          audience?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          source?: string | null
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          audience?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          source?: string | null
+          unsubscribed_at?: string | null
         }
         Relationships: []
       }
@@ -373,6 +441,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_pdf_clicks: { Args: { p_id: string }; Returns: undefined }
+      increment_tool_clicks: { Args: { p_id: string }; Returns: undefined }
+      increment_update_clicks: { Args: { p_id: string }; Returns: undefined }
+      submit_suggestion: {
+        Args: {
+          p_email?: string
+          p_kind: string
+          p_message: string
+          p_name?: string
+          p_subject?: string
+          p_url?: string
+        }
+        Returns: undefined
+      }
+      subscribe_newsletter: {
+        Args: { p_audience?: string; p_email: string; p_source?: string }
+        Returns: undefined
+      }
       get_unread_message_count: { Args: { user_id: string }; Returns: number }
     }
     Enums: {
