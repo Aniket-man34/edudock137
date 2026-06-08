@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
+import { useReducedMotion } from "framer-motion";
 
 interface Particle {
   x: number;
@@ -16,9 +17,10 @@ export default function ParticleBackground() {
   const particles = useRef<Particle[]>([]);
   const animationRef = useRef<number>(0);
   const mouseRef = useRef({ x: -1000, y: -1000 });
+  const reducedMotion = useReducedMotion();
 
   const createParticles = useCallback((width: number, height: number) => {
-    const count = Math.min(Math.floor((width * height) / 18000), 60);
+    const count = Math.min(Math.floor((width * height) / 22000), 48);
     return Array.from({ length: count }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -30,10 +32,25 @@ export default function ParticleBackground() {
   }, []);
 
   useEffect(() => {
+    if (reducedMotion) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    let visible = true;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+      },
+      { threshold: 0 },
+    );
+    io.observe(canvas);
+
+    const onVisibility = () => {
+      visible = !document.hidden;
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     const resize = () => {
       const parent = canvas.parentElement;
@@ -43,7 +60,7 @@ export default function ParticleBackground() {
       canvas.height = parent.offsetHeight * dpr;
       canvas.style.width = parent.offsetWidth + "px";
       canvas.style.height = parent.offsetHeight + "px";
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       particles.current = createParticles(parent.offsetWidth, parent.offsetHeight);
     };
 
@@ -57,12 +74,16 @@ export default function ParticleBackground() {
 
     resize();
     window.addEventListener("resize", resize);
-    canvas.addEventListener("mousemove", handleMouse);
-    canvas.addEventListener("mouseleave", handleMouseLeave);
+    window.addEventListener("mousemove", handleMouse, { passive: true });
+    window.addEventListener("mouseout", handleMouseLeave);
 
     const animate = () => {
       const parent = canvas.parentElement;
       if (!parent) return;
+      if (!visible) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
       const w = parent.offsetWidth;
       const h = parent.offsetHeight;
       ctx.clearRect(0, 0, w, h);
@@ -119,15 +140,19 @@ export default function ParticleBackground() {
     return () => {
       cancelAnimationFrame(animationRef.current);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener("mousemove", handleMouse);
-      canvas.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("mousemove", handleMouse);
+      window.removeEventListener("mouseout", handleMouseLeave);
+      document.removeEventListener("visibilitychange", onVisibility);
+      io.disconnect();
     };
-  }, [createParticles]);
+  }, [createParticles, reducedMotion]);
+
+  if (reducedMotion) return null;
 
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 pointer-events-auto"
+      className="absolute inset-0 pointer-events-none"
       style={{ zIndex: 0 }}
       aria-hidden="true"
     />

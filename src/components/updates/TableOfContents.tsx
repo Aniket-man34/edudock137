@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import * as React from "react";
 
 type Heading = {
   id: string;
@@ -14,38 +14,54 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
 
   return (
     <aside className="w-full shrink-0">
-      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-5">
-        <h4 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">
-          Table of Contents
-        </h4>
+      <details
+        className="glass-card-static rounded-2xl p-5 group open:pb-3"
+        open
+      >
+        <summary className="flex items-center justify-between cursor-pointer list-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+          <span className="text-xs font-bold text-foreground uppercase tracking-[0.18em]">
+            Table of Contents
+          </span>
+          <span
+            className="text-xs text-muted-foreground transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          >
+            ▾
+          </span>
+        </summary>
 
-        <nav aria-label="Table of contents" className="text-sm">
-          <ol className="space-y-2.5">
+        <nav aria-label="Table of contents" className="mt-4 text-sm">
+          <ol className="space-y-2">
             {headings.map((h) => (
               <li
                 key={h.id}
-                className={`${h.level === 3 ? 'ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-3' : ''}`}
+                className={
+                  h.level === 3
+                    ? "ml-4 border-l-2 border-border pl-3"
+                    : ""
+                }
               >
                 <a
                   href={`#${h.id}`}
                   onClick={(e) => {
                     e.preventDefault();
                     const el = document.getElementById(h.id);
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    history.replaceState(null, '', `#${h.id}`);
+                    if (el)
+                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    history.replaceState(null, "", `#${h.id}`);
                   }}
-                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-snug block"
+                  className="inline-flex items-start gap-2 text-muted-foreground hover:text-primary transition-colors leading-snug focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                 >
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold mr-2">
+                  <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded bg-primary/10 text-primary text-[10px] font-bold">
                     {h.number}
                   </span>
-                  {h.text}
+                  <span>{h.text}</span>
                 </a>
               </li>
             ))}
           </ol>
         </nav>
-      </div>
+      </details>
     </aside>
   );
 }

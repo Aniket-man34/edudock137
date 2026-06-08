@@ -6,6 +6,7 @@ import { Home, Wrench, BookOpen, Bell, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import ThemeToggle from "@/components/ThemeToggle";
+import BookmarksNavLink from "@/components/BookmarksNavLink";
 import { useSiteSearch } from "./SearchProvider";
 
 const navItems = [
@@ -25,21 +26,31 @@ export default function SiteHeader() {
   return (
     <>
       {/* Desktop Navbar */}
-      <header className="hidden md:flex fixed top-0 left-0 right-0 z-50 glass-navbar h-[64px] items-center px-8 gap-8">
+      <header
+        role="banner"
+        className="hidden md:flex fixed top-0 left-0 right-0 z-50 glass-navbar h-[64px] items-center px-8 gap-8"
+      >
         <Link
           href="/"
-          className="font-display text-xl font-bold gradient-text shrink-0 tracking-tight"
+          className="font-display text-xl font-bold gradient-text shrink-0 tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
+          aria-label="EduDock home"
         >
           EduDock
         </Link>
 
         <div className="flex-1 max-w-sm mx-auto">
+          <label htmlFor="site-search-desktop" className="sr-only">
+            Search EduDock
+          </label>
           <div className="relative flex items-center w-full group">
             <Search className="absolute left-3 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary pointer-events-none" />
             <Input
-              placeholder="Search anything..."
+              id="site-search-desktop"
+              type="search"
+              placeholder="Search tools, PDFs, updates…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search EduDock"
               className="w-full h-10 pl-9 pr-9 bg-muted/40 border-transparent text-sm rounded-xl focus:bg-card focus:border-primary/30 transition-all"
             />
             <div className="absolute right-2 flex items-center justify-center">
@@ -52,7 +63,7 @@ export default function SiteHeader() {
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.15 }}
                     onClick={() => setSearchQuery("")}
-                    className="flex items-center justify-center h-5 w-5 text-muted-foreground hover:text-foreground rounded-full hover:bg-foreground/10 transition-colors"
+                    className="flex items-center justify-center h-7 w-7 text-muted-foreground hover:text-foreground rounded-full hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="Clear search"
                   >
                     <X className="h-3.5 w-3.5" />
@@ -63,14 +74,15 @@ export default function SiteHeader() {
           </div>
         </div>
 
-        <nav className="flex items-center gap-0.5">
+        <nav aria-label="Primary" className="flex items-center gap-0.5">
           {navItems.map((item) => {
             const isActive = isActiveRoute(item.path);
             return (
               <Link
                 key={item.path}
                 href={item.path}
-                className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                aria-current={isActive ? "page" : undefined}
+                className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -88,22 +100,36 @@ export default function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-1">
+          <BookmarksNavLink />
           <ThemeToggle />
         </div>
       </header>
 
       {/* Mobile Top Bar */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 glass-navbar h-14 flex items-center px-4 gap-2.5">
-        <Link href="/" className="font-display text-lg font-bold gradient-text shrink-0">
+      <header
+        role="banner"
+        className="md:hidden fixed top-0 left-0 right-0 z-50 glass-navbar h-14 flex items-center px-4 gap-2.5"
+      >
+        <Link
+          href="/"
+          className="font-display text-lg font-bold gradient-text shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+          aria-label="EduDock home"
+        >
           EduDock
         </Link>
         <div className="flex-1">
+          <label htmlFor="site-search-mobile" className="sr-only">
+            Search EduDock
+          </label>
           <div className="relative flex items-center w-full">
             <Search className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search..."
+              id="site-search-mobile"
+              type="search"
+              placeholder="Search…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search EduDock"
               className="w-full h-9 pl-8 pr-8 bg-muted/40 border-transparent text-xs rounded-lg focus:bg-card focus:border-primary/30 transition-all"
             />
             <div className="absolute right-1.5 flex items-center justify-center">
@@ -116,7 +142,7 @@ export default function SiteHeader() {
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.15 }}
                     onClick={() => setSearchQuery("")}
-                    className="flex items-center justify-center h-5 w-5 text-muted-foreground hover:text-foreground rounded-full hover:bg-foreground/10 transition-colors"
+                    className="flex items-center justify-center h-7 w-7 text-muted-foreground hover:text-foreground rounded-full hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="Clear search"
                   >
                     <X className="h-3 w-3" />
@@ -130,8 +156,11 @@ export default function SiteHeader() {
       </header>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-navbar border-t border-b-0 rounded-none safe-bottom">
-        <div className="flex items-center justify-around h-[60px] px-4">
+      <nav
+        aria-label="Primary mobile"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-navbar border-t border-b-0 rounded-none safe-bottom"
+      >
+        <div className="flex items-center justify-around h-[64px] px-2">
           {navItems.map((item) => {
             const isActive = isActiveRoute(item.path);
             const Icon = item.icon;
@@ -139,7 +168,8 @@ export default function SiteHeader() {
               <Link
                 key={item.path}
                 href={item.path}
-                className="flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl transition-all relative"
+                aria-current={isActive ? "page" : undefined}
+                className="flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] py-1.5 px-3 rounded-2xl relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {isActive && (
                   <motion.div
@@ -149,12 +179,13 @@ export default function SiteHeader() {
                   />
                 )}
                 <Icon
+                  aria-hidden="true"
                   className={`h-5 w-5 relative z-10 transition-colors ${
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                 />
                 <span
-                  className={`text-[10px] font-semibold relative z-10 transition-colors ${
+                  className={`text-[11px] font-semibold relative z-10 transition-colors ${
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                 >

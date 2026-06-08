@@ -15,6 +15,8 @@ import {
 import { JsonLd } from "@/components/seo/JsonLd";
 import SocialShare from "@/components/updates/SocialShare";
 import PdfClickTracker from "@/components/pdfs/PdfClickTracker";
+import BookmarkButton from "@/components/BookmarkButton";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export const revalidate = 60;
 
@@ -62,12 +64,31 @@ export default async function PdfDetailPage({
   if (!pdf) notFound();
 
   const supabase = createServerClient();
-  const { data: recent } = await supabase
-    .from("pdfs")
-    .select("id, title, cover_image_url, slug, created_at")
-    .neq("id", pdf.id)
-    .order("created_at", { ascending: false })
-    .limit(4);
+  const relatedQuery = pdf.category_id
+    ? supabase
+        .from("pdfs")
+        .select("id, title, cover_image_url, slug, created_at")
+        .eq("category_id", pdf.category_id)
+        .neq("id", pdf.id)
+        .order("created_at", { ascending: false })
+        .limit(4)
+    : supabase
+        .from("pdfs")
+        .select("id, title, cover_image_url, slug, created_at")
+        .neq("id", pdf.id)
+        .order("created_at", { ascending: false })
+        .limit(4);
+  const { data: relatedRaw } = await relatedQuery;
+  let related = relatedRaw ?? [];
+  if (related.length === 0 && pdf.category_id) {
+    const { data: fallback } = await supabase
+      .from("pdfs")
+      .select("id, title, cover_image_url, slug, created_at")
+      .neq("id", pdf.id)
+      .order("created_at", { ascending: false })
+      .limit(4);
+    related = fallback ?? [];
+  }
 
   const formattedDate = pdf.created_at
     ? new Date(pdf.created_at).toLocaleDateString("en-US", {
@@ -92,35 +113,41 @@ export default async function PdfDetailPage({
           author_name: pdf.author_name,
         })}
       />
-      <PdfClickTracker pdfId={pdf.id} clicks={pdf.clicks ?? 0} />
+      <PdfClickTracker pdfId={pdf.id} />
 
       <article className="max-w-4xl mx-auto px-4 py-8 md:py-12">
         <Link
           href="/pdfs"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 text-sm"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to PDFs
         </Link>
 
+        <Breadcrumbs
+          items={[
+            { label: "PDFs", href: "/pdfs" },
+            { label: pdf.title },
+          ]}
+        />
+
         <div className="glass-card-static p-6 md:p-8 rounded-3xl mb-8">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-            {/* Cover */}
             <div className="shrink-0 md:w-56">
               {pdf.cover_image_url ? (
                 <img
                   src={pdf.cover_image_url}
-                  alt={pdf.title}
+                  alt={`Cover of ${pdf.title}`}
                   className="w-full aspect-[2/3] object-cover rounded-2xl shadow-xl ring-1 ring-border/30"
+                  fetchPriority="high"
                 />
               ) : (
                 <div className="w-full aspect-[2/3] flex items-center justify-center bg-muted rounded-2xl shadow-xl ring-1 ring-border/30">
-                  <BookOpen className="h-14 w-14 text-primary/40" />
+                  <BookOpen className="h-14 w-14 text-primary/40" aria-hidden="true" />
                 </div>
               )}
             </div>
 
-            {/* Meta */}
             <div className="flex-1 min-w-0">
               {pdf.categories?.name && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-3">
@@ -131,7 +158,7 @@ export default async function PdfDetailPage({
                 {pdf.title}
               </h1>
               {pdf.description && (
-                <p className="text-muted-foreground leading-relaxed mb-5">
+                <p className="text-foreground/80 leading-relaxed mb-5">
                   {pdf.description}
                 </p>
               )}
@@ -142,11 +169,15 @@ export default async function PdfDetailPage({
                     {pdf.author_avatar ? (
                       <img
                         src={pdf.author_avatar}
-                        alt={pdf.author_name}
+                        alt={`${pdf.author_name} avatar`}
                         className="w-6 h-6 rounded-full ring-1 ring-border/40"
+                        loading="lazy"
                       />
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                      <div
+                        className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary"
+                        aria-hidden="true"
+                      >
                         {pdf.author_name[0]}
                       </div>
                     )}
@@ -157,23 +188,34 @@ export default async function PdfDetailPage({
                 )}
                 {formattedDate && (
                   <div className="flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <time>{formattedDate}</time>
+                    <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                    <time dateTime={pdf.created_at ?? undefined}>
+                      {formattedDate}
+                    </time>
                   </div>
                 )}
               </div>
 
               {downloadHref && (
-                <a
-                  href={downloadHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary w-full md:w-auto"
-                >
-                  <Download className="h-4 w-4" />
-                  Download PDF
-                  <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-                </a>
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href={downloadHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary w-full sm:w-auto"
+                  >
+                    <Download className="h-4 w-4" aria-hidden="true" />
+                    Download PDF
+                    <ExternalLink className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                  </a>
+                  <BookmarkButton
+                    kind="pdf"
+                    id={pdf.id}
+                    title={pdf.title}
+                    href={`/pdfs/${pdf.slug || pdf.id}`}
+                    image={pdf.cover_image_url}
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -186,26 +228,30 @@ export default async function PdfDetailPage({
           />
         </div>
 
-        {recent && recent.length > 0 && (
+        {related.length > 0 && (
           <section>
-            <h2 className="text-xl font-bold mb-5 tracking-tight">More PDFs</h2>
+            <h2 className="text-xl font-bold mb-5 tracking-tight font-display">
+              {pdf.category_id ? "More in this category" : "More PDFs"}
+            </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {recent.map((p: any) => (
+              {related.map((p: any) => (
                 <Link
                   key={p.id}
                   href={`/pdfs/${p.slug || p.id}`}
-                  className="group block"
+                  aria-label={p.title}
+                  className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {p.cover_image_url ? (
                     <img
                       src={p.cover_image_url}
-                      alt={p.title}
-                      className="w-full aspect-[2/3] object-cover rounded-xl shadow-md ring-1 ring-border/20 group-hover:scale-[1.03] transition-transform"
+                      alt=""
+                      aria-hidden="true"
+                      className="w-full aspect-[2/3] object-cover rounded-xl shadow-md ring-1 ring-border/20 group-hover:scale-[1.03] transition-transform duration-base ease-out"
                       loading="lazy"
                     />
                   ) : (
                     <div className="w-full aspect-[2/3] flex items-center justify-center bg-muted rounded-xl ring-1 ring-border/20">
-                      <BookOpen className="h-8 w-8 text-primary/40" />
+                      <BookOpen className="h-8 w-8 text-primary/40" aria-hidden="true" />
                     </div>
                   )}
                   <p className="text-xs font-medium mt-2 line-clamp-2 group-hover:text-primary transition-colors">

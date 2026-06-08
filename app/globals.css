@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -22,13 +20,22 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 14% 92%;
-    --muted-foreground: 220 10% 46%;
+    --muted-foreground: 220 10% 40%;
 
     --accent: 172 60% 46%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
+
+    --success: 152 60% 38%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 224 40% 14%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
 
     --border: 220 13% 87%;
     --input: 220 13% 87%;
@@ -43,6 +50,13 @@
     --glass-shadow-2: 220 30% 50% / 0.04;
 
     --particle-color: 199 89% 48%;
+
+    /* Motion tokens */
+    --motion-fast: 150ms;
+    --motion-base: 280ms;
+    --motion-slow: 480ms;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   }
 
   .dark {
@@ -62,13 +76,22 @@
     --secondary-foreground: 210 40% 96%;
 
     --muted: 225 22% 12%;
-    --muted-foreground: 218 14% 50%;
+    --muted-foreground: 218 14% 65%;
 
     --accent: 172 60% 46%;
     --accent-foreground: 225 32% 5%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 96%;
+
+    --success: 152 60% 50%;
+    --success-foreground: 225 32% 5%;
+
+    --warning: 38 92% 60%;
+    --warning-foreground: 225 32% 5%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 225 32% 5%;
 
     --border: 225 16% 16%;
     --input: 225 16% 16%;
@@ -95,16 +118,41 @@
     @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  }
+
+  /* Honor user's reduced-motion preference globally. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .skeleton::after {
+      animation: none !important;
+    }
+  }
+
+  /* Skip-to-content link (visible on focus only). */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+           focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold
+           focus:text-primary-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
   }
 }
 
 @layer components {
   /* ── Glassmorphism ─────────────────────────────────────────────── */
   .glass {
-    @apply backdrop-blur-2xl border rounded-2xl transition-all duration-300;
+    @apply backdrop-blur-2xl border rounded-2xl;
     background: hsl(var(--glass-bg));
     border-color: hsl(var(--glass-border));
+    transition: transform var(--motion-base) var(--ease-out),
+                box-shadow var(--motion-base) var(--ease-out),
+                border-color var(--motion-base) var(--ease-out);
   }
   .glass-card {
     @apply glass;
@@ -128,14 +176,16 @@
       inset 0 1px 0 hsl(var(--glass-shine));
   }
   .glass-navbar {
-    @apply backdrop-blur-2xl border-b rounded-none transition-all duration-300;
+    @apply backdrop-blur-2xl border-b rounded-none;
     background: hsl(var(--glass-bg));
     border-color: hsl(var(--glass-border));
     box-shadow: 0 1px 12px -2px hsl(var(--glass-shadow-1));
+    transition: background-color var(--motion-base) var(--ease-out);
   }
   .glass-subtle {
-    @apply backdrop-blur-lg rounded-xl transition-all duration-300;
+    @apply backdrop-blur-lg rounded-xl;
     background: hsl(var(--glass-bg));
+    transition: background-color var(--motion-base) var(--ease-out);
   }
 
   /* ── Gradient text ─────────────────────────────────────────────── */
@@ -149,38 +199,83 @@
 
   /* ── Buttons ───────────────────────────────────────────────────── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold;
     box-shadow: 0 2px 12px -2px hsl(var(--primary) / 0.4);
+    transition: transform var(--motion-fast) var(--ease-out),
+                box-shadow var(--motion-fast) var(--ease-out),
+                background-color var(--motion-fast) var(--ease-out);
   }
   .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 20px -4px hsl(var(--primary) / 0.5);
+    box-shadow: 0 8px 24px -6px hsl(var(--primary) / 0.5);
   }
   .btn-primary:active {
-    transform: translateY(0);
+    transform: translateY(0) scale(0.98);
+    transition-duration: 80ms;
   }
+  .btn-primary:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl glass-card text-sm font-semibold text-foreground transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] rounded-xl glass-card-static text-sm font-semibold text-foreground;
+    transition: transform var(--motion-fast) var(--ease-out),
+                box-shadow var(--motion-fast) var(--ease-out),
+                border-color var(--motion-fast) var(--ease-out);
   }
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+  }
+  .btn-secondary:active {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 80ms;
+  }
+  .btn-secondary:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
   .btn-icon {
-    @apply p-2 rounded-xl transition-all duration-200 text-muted-foreground;
+    @apply inline-flex items-center justify-center p-2 min-h-[40px] min-w-[40px] rounded-xl text-muted-foreground;
+    transition: color var(--motion-fast) var(--ease-out),
+                background-color var(--motion-fast) var(--ease-out),
+                transform var(--motion-fast) var(--ease-out);
   }
   .btn-icon:hover {
     @apply text-foreground bg-muted/60;
   }
+  .btn-icon:active {
+    transform: scale(0.92);
+  }
+  .btn-icon:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
 
   /* ── Typography helpers ────────────────────────────────────────── */
   .page-header {
-    @apply font-display text-2xl md:text-3xl font-bold tracking-tight;
+    @apply font-display text-3xl md:text-4xl font-bold tracking-tight;
   }
   .page-subtitle {
-    @apply text-muted-foreground text-sm mt-1;
+    @apply text-muted-foreground text-sm md:text-base mt-2;
   }
   .empty-state {
     @apply text-center py-24;
   }
   .empty-state p {
     @apply text-muted-foreground text-base;
+  }
+
+  /* ── Underline-grow link decoration ───────────────────────────── */
+  .link-underline {
+    @apply relative;
+  }
+  .link-underline::after {
+    content: "";
+    @apply absolute inset-x-0 -bottom-0.5 h-px bg-current scale-x-0 origin-left;
+    transition: transform var(--motion-base) var(--ease-out);
+  }
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    transform: scaleX(1);
   }
 
   /* ── Skeleton (premium shimmer) ───────────────────────────────── */
@@ -217,7 +312,7 @@ mark {
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background: hsl(var(--muted-foreground) / 0.4);
 }
 
 .scrollbar-hide::-webkit-scrollbar {

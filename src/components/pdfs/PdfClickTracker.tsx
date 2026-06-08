@@ -5,10 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function PdfClickTracker({
   pdfId,
-  clicks,
 }: {
   pdfId: string;
-  clicks: number;
+  /** @deprecated retained for API compatibility */
+  clicks?: number;
 }) {
   const tracked = useRef(false);
 
@@ -16,13 +16,13 @@ export default function PdfClickTracker({
     if (tracked.current) return;
     tracked.current = true;
     (supabase as any)
-      .from("pdfs")
-      .update({ clicks: (clicks || 0) + 1 })
-      .eq("id", pdfId)
+      .rpc("increment_pdf_clicks", { p_id: pdfId })
       .then(({ error }: any) => {
-        if (error) console.error("Error updating PDF clicks:", error);
+        if (error && process.env.NODE_ENV !== "production") {
+          console.error("Error incrementing PDF clicks:", error);
+        }
       });
-  }, [pdfId, clicks]);
+  }, [pdfId]);
 
   return null;
 }

@@ -5,10 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function ToolClickTracker({
   toolId,
-  clicks,
 }: {
   toolId: string;
-  clicks: number;
+  /** @deprecated retained for API compatibility */
+  clicks?: number;
 }) {
   const tracked = useRef(false);
 
@@ -16,13 +16,13 @@ export default function ToolClickTracker({
     if (tracked.current) return;
     tracked.current = true;
     (supabase as any)
-      .from("tools")
-      .update({ clicks: (clicks || 0) + 1 })
-      .eq("id", toolId)
+      .rpc("increment_tool_clicks", { p_id: toolId })
       .then(({ error }: any) => {
-        if (error) console.error("Error updating tool clicks:", error);
+        if (error && process.env.NODE_ENV !== "production") {
+          console.error("Error incrementing tool clicks:", error);
+        }
       });
-  }, [toolId, clicks]);
+  }, [toolId]);
 
   return null;
 }

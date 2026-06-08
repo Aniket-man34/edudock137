@@ -65,6 +65,29 @@ export const PAGE_SEO: Record<
     description: "The page you are looking for does not exist on EduDock.",
     path: "",
   },
+  about: {
+    title: "About EduDock — what we make and why",
+    description:
+      "EduDock is a free, ad-light hub of curated study tools, PDFs, and exam updates for students and educators.",
+    path: "/about",
+  },
+  contact: {
+    title: "Contact EduDock",
+    description:
+      "Get in touch with EduDock — questions, feedback, partnerships, or report a broken link.",
+    path: "/contact",
+  },
+  submit: {
+    title: "Submit to EduDock — tools, PDFs, fixes",
+    description:
+      "Suggest a study tool, contribute a PDF, or report a broken link. We review every submission.",
+    path: "/submit",
+  },
+  saved: {
+    title: "Saved | EduDock",
+    description: "Items you've saved for later on this device.",
+    path: "/saved",
+  },
 };
 
 // ── SEO ROW (DB site_seo_settings) ────────────────────────────────

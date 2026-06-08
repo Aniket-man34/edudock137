@@ -24,7 +24,7 @@ export default async function UpdatesPage() {
 
   const { data, count } = await supabase
     .from("updates")
-    .select("id, title, slug, image_url, created_at, external_url", {
+    .select("id, title, slug, image_url, created_at, external_url, clicks", {
       count: "exact",
     })
     .order("created_at", { ascending: false })
