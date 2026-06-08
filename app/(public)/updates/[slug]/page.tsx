@@ -14,6 +14,7 @@ import {
 } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import SocialShare from "@/components/updates/SocialShare";
+import AuthorShareRow from "@/components/updates/AuthorShareRow";
 import UpdateClickTracker from "@/components/updates/UpdateClickTracker";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import TableOfContents from "@/components/updates/TableOfContents";
@@ -221,48 +222,81 @@ export default async function UpdateDetailPage({
           {update.title}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
-          {update.author_name && (
-            <div className="flex items-center gap-2">
+        {update.author_name && (
+          <div className="mb-6">
+            <div className="flex items-start gap-4">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt={`${update.author_name} avatar`}
-                  className="w-7 h-7 rounded-full ring-1 ring-border/40"
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-full ring-2 ring-border/40 shadow-sm shrink-0"
                   loading="lazy"
                 />
               ) : (
                 <div
-                  className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-[11px] font-bold text-primary"
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/20 flex items-center justify-center text-xl md:text-2xl font-bold text-primary ring-2 ring-border/40 shrink-0"
                   aria-hidden="true"
                 >
                   {update.author_name[0]}
                 </div>
               )}
-              <span className="text-foreground font-medium">
-                {update.author_name}
-              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-base md:text-lg font-bold text-foreground leading-tight">
+                  {update.author_name}
+                </p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
+                  {formattedDate && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                      <time dateTime={update.created_at ?? undefined}>
+                        {formattedDate}
+                      </time>
+                    </span>
+                  )}
+                  <span aria-label={`${minutes} minute read`}>
+                    {minutes} min read
+                  </span>
+                </div>
+                <AuthorShareRow
+                  title={update.title}
+                  url={`${SITE_URL}/updates/${update.slug || update.id}`}
+                />
+              </div>
+              <BookmarkButton
+                kind="update"
+                id={update.id}
+                title={update.title}
+                href={`/updates/${update.slug || update.id}`}
+                image={update.image_url}
+                variant="icon"
+                className="shrink-0"
+              />
             </div>
-          )}
-          {formattedDate && (
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-              <time dateTime={update.created_at ?? undefined}>
-                {formattedDate}
-              </time>
-            </div>
-          )}
-          <span aria-label={`${minutes} minute read`}>{minutes} min read</span>
-          <BookmarkButton
-            kind="update"
-            id={update.id}
-            title={update.title}
-            href={`/updates/${update.slug || update.id}`}
-            image={update.image_url}
-            variant="icon"
-            className="ml-auto"
-          />
-        </div>
+          </div>
+        )}
+
+        {!update.author_name && (
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
+            {formattedDate && (
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                <time dateTime={update.created_at ?? undefined}>
+                  {formattedDate}
+                </time>
+              </div>
+            )}
+            <span aria-label={`${minutes} minute read`}>{minutes} min read</span>
+            <BookmarkButton
+              kind="update"
+              id={update.id}
+              title={update.title}
+              href={`/updates/${update.slug || update.id}`}
+              image={update.image_url}
+              variant="icon"
+              className="ml-auto"
+            />
+          </div>
+        )}
 
         {update.image_url && (
           <img

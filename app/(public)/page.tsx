@@ -18,7 +18,7 @@ import {
 import { JsonLd } from "@/components/seo/JsonLd";
 import ToolCard from "@/components/ToolCard";
 import HomeSearch from "@/components/home/HomeSearch";
-import AudienceChips from "@/components/home/AudienceChips";
+import CategoryMarquee from "@/components/home/CategoryMarquee";
 import NewsletterForm from "@/components/NewsletterForm";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -52,6 +52,7 @@ export default async function HomePage() {
     { count: toolsCount },
     { count: pdfsCount },
     { count: updatesCount },
+    { data: marqueeCategories },
   ] = await Promise.all([
     supabase
       .from("tools")
@@ -83,6 +84,10 @@ export default async function HomePage() {
     supabase.from("tools").select("id", { count: "exact", head: true }),
     supabase.from("pdfs").select("id", { count: "exact", head: true }),
     supabase.from("updates").select("id", { count: "exact", head: true }),
+    supabase
+      .from("categories")
+      .select("id, name")
+      .order("name"),
   ]);
 
   const totals = {
@@ -101,6 +106,14 @@ export default async function HomePage() {
   const toolGrid: Tool[] = hasNewestTools
     ? (newestTools as Tool[])
     : (popularTools as Tool[]) ?? [];
+
+  const uniqueCategories = Array.from(
+    new Map(
+      ((marqueeCategories ?? []) as Array<{ id: string; name: string }>).map(
+        (c) => [c.name.toLowerCase(), c],
+      ),
+    ).values(),
+  );
 
   return (
     <>
@@ -130,7 +143,7 @@ export default async function HomePage() {
 
             <HomeSearch totals={totals} />
 
-            <AudienceChips className="mt-6" />
+            <CategoryMarquee categories={uniqueCategories} className="mt-6" />
           </div>
         </section>
 

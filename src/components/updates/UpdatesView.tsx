@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Bell, Loader2, Sparkles, TrendingUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Filter, Loader2, Sparkles, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSearch } from "@/components/layout/SearchProvider";
+import type { Tables } from "@/integrations/supabase/types";
 
 const PAGE_SIZE = 20;
+
+type Category = Tables<"categories">;
 
 type SortKey = "newest" | "popular";
 
@@ -24,11 +27,13 @@ interface UpdateRow {
   created_at: string;
   external_url?: string | null;
   clicks?: number | null;
+  category_id?: string | null;
 }
 
 interface UpdatesViewProps {
   initialUpdates: UpdateRow[];
   totalCount: number;
+  categories: Category[];
 }
 
 function isNew(createdAt: string) {
@@ -51,6 +56,7 @@ function formatDate(dateString: string): string {
 export default function UpdatesView({
   initialUpdates,
   totalCount,
+  categories,
 }: UpdatesViewProps) {
   const { debouncedSearch } = useSiteSearch();
   const [updates, setUpdates] = useState<UpdateRow[]>(initialUpdates);
@@ -58,13 +64,18 @@ export default function UpdatesView({
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(initialUpdates.length < totalCount);
   const [sort, setSort] = useState<SortKey>("newest");
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     const term = debouncedSearch.toLowerCase().trim();
-    const list = term
-      ? updates.filter((u) => u.title?.toLowerCase().includes(term))
-      : updates;
+    const list = updates.filter((u) => {
+      const matchSearch = !term || u.title?.toLowerCase().includes(term);
+      const matchCategory =
+        !activeCategoryId || u.category_id === activeCategoryId;
+      return matchSearch && matchCategory;
+    });
     const sorted = [...list];
     if (sort === "popular") {
       sorted.sort((a, b) => (b.clicks ?? 0) - (a.clicks ?? 0));
@@ -75,7 +86,7 @@ export default function UpdatesView({
       );
     }
     return sorted;
-  }, [updates, debouncedSearch, sort]);
+  }, [updates, debouncedSearch, sort, activeCategoryId]);
 
   useEffect(() => {
     const target = observerTarget.current;
@@ -99,7 +110,9 @@ export default function UpdatesView({
     const to = from + PAGE_SIZE - 1;
     const { data, error } = await supabase
       .from("updates")
-      .select("id, title, slug, image_url, created_at, external_url, clicks")
+      .select(
+        "id, title, slug, image_url, created_at, external_url, clicks, category_id",
+      )
       .order("created_at", { ascending: false })
       .range(from, to);
 
@@ -115,6 +128,10 @@ export default function UpdatesView({
     setIsFetching(false);
   }
 
+  const activeCategoryName = activeCategoryId
+    ? categories.find((c) => c.id === activeCategoryId)?.name
+    : null;
+
   return (
     <div className="container mx-auto px-4 py-10">
       <motion.div
@@ -127,29 +144,112 @@ export default function UpdatesView({
         <p className="page-subtitle">
           Fresh news, alerts, and resources for students.
         </p>
+        {totalCount > 0 && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Showing {filtered.length} of {totalCount}
+            {activeCategoryName ? ` · ${activeCategoryName}` : ""}
+          </p>
+        )}
       </motion.div>
 
-      <div role="tablist" aria-label="Sort updates" className="inline-flex p-1 glass-card-static rounded-xl mb-6">
-        {SORTS.map(({ key, label, icon: Icon }) => {
-          const isActive = sort === key;
-          return (
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div role="tablist" aria-label="Sort updates" className="inline-flex p-1 glass-card-static rounded-xl">
+          {SORTS.map(({ key, label, icon: Icon }) => {
+            const isActive = sort === key;
+            return (
+              <button
+                key={key}
+                role="tab"
+                type="button"
+                aria-selected={isActive}
+                onClick={() => setSort(key)}
+                className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {categories.length > 0 && (
+          <div className="relative z-40">
             <button
-              key={key}
-              role="tab"
               type="button"
-              aria-selected={isActive}
-              onClick={() => setSort(key)}
-              className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="flex items-center gap-2 px-4 py-2 min-h-[40px] glass-card-static rounded-lg hover:shadow-md transition-all duration-fast text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              aria-expanded={isFilterOpen}
+              aria-haspopup="listbox"
             >
-              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-              {label}
+              <Filter className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              {activeCategoryName ?? "All Categories"}
             </button>
-          );
-        })}
+
+            <AnimatePresence>
+              {isFilterOpen && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Close filter"
+                    className="fixed inset-0 z-30 cursor-default"
+                    onClick={() => setIsFilterOpen(false)}
+                  />
+                  <motion.ul
+                    role="listbox"
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute left-0 mt-2 w-56 rounded-xl shadow-xl glass-card-static z-40 overflow-hidden"
+                  >
+                    <li>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={activeCategoryId === null}
+                        onClick={() => {
+                          setActiveCategoryId(null);
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
+                          activeCategoryId === null
+                            ? "bg-primary/10 text-primary font-semibold"
+                            : ""
+                        }`}
+                      >
+                        All Categories
+                      </button>
+                    </li>
+                    {categories.map((cat) => (
+                      <li key={cat.id}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={activeCategoryId === cat.id}
+                          onClick={() => {
+                            setActiveCategoryId(cat.id);
+                            setIsFilterOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
+                            activeCategoryId === cat.id
+                              ? "bg-primary/10 text-primary font-semibold"
+                              : ""
+                          }`}
+                        >
+                          {cat.name}
+                        </button>
+                      </li>
+                    ))}
+                  </motion.ul>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {filtered.length > 0 ? (
@@ -190,7 +290,16 @@ export default function UpdatesView({
           <div className="glass-card-static inline-flex p-4 rounded-2xl mb-4">
             <Bell className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           </div>
-          <p>No updates match your search yet.</p>
+          <p className="mb-4">No updates match those filters.</p>
+          {(activeCategoryId || debouncedSearch) && (
+            <button
+              type="button"
+              onClick={() => setActiveCategoryId(null)}
+              className="btn-secondary"
+            >
+              Clear filter
+            </button>
+          )}
         </div>
       )}
     </div>

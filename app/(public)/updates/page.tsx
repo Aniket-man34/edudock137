@@ -22,19 +22,30 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function UpdatesPage() {
   const supabase = createServerClient();
 
-  const { data, count } = await supabase
-    .from("updates")
-    .select("id, title, slug, image_url, created_at, external_url, clicks", {
-      count: "exact",
-    })
-    .order("created_at", { ascending: false })
-    .range(0, 19);
+  const [{ data, count }, { data: categories }] = await Promise.all([
+    supabase
+      .from("updates")
+      .select("id, title, slug, image_url, created_at, external_url, clicks, category_id", {
+        count: "exact",
+      })
+      .order("created_at", { ascending: false })
+      .range(0, 19),
+    supabase
+      .from("categories")
+      .select("*")
+      .eq("entity_type", "update")
+      .order("name"),
+  ]);
 
   return (
     <>
       <JsonLd data={generateCollectionPageSchema(PAGE_SEO.updates)} />
       <Suspense fallback={<UpdatesListSkeleton />}>
-        <UpdatesView initialUpdates={data ?? []} totalCount={count ?? 0} />
+        <UpdatesView
+          initialUpdates={data ?? []}
+          totalCount={count ?? 0}
+          categories={categories ?? []}
+        />
       </Suspense>
     </>
   );

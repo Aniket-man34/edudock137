@@ -102,6 +102,10 @@ export default {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        "marquee-rtl": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -109,6 +113,7 @@ export default {
         "fade-up": "fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards",
         "glow-pulse": "glow-pulse 2.4s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
+        "marquee-rtl": "marquee-rtl 28s linear infinite",
       },
     },
   },

@@ -23,6 +23,8 @@ export default function SiteHeader() {
   const isActiveRoute = (path: string) =>
     pathname === path || (path !== "/" && pathname.startsWith(path));
 
+  const isHome = pathname === "/";
+
   return (
     <>
       {/* Desktop Navbar */}
@@ -38,41 +40,44 @@ export default function SiteHeader() {
           EduDock
         </Link>
 
-        <div className="flex-1 max-w-sm mx-auto">
-          <label htmlFor="site-search-desktop" className="sr-only">
-            Search EduDock
-          </label>
-          <div className="relative flex items-center w-full group">
-            <Search className="absolute left-3 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary pointer-events-none" />
-            <Input
-              id="site-search-desktop"
-              type="search"
-              placeholder="Search tools, PDFs, updates…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search EduDock"
-              className="w-full h-10 pl-9 pr-9 bg-muted/40 border-transparent text-sm rounded-xl focus:bg-card focus:border-primary/30 transition-all"
-            />
-            <div className="absolute right-2 flex items-center justify-center">
-              <AnimatePresence>
-                {searchQuery && (
-                  <motion.button
-                    type="button"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.15 }}
-                    onClick={() => setSearchQuery("")}
-                    className="flex items-center justify-center h-7 w-7 text-muted-foreground hover:text-foreground rounded-full hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label="Clear search"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </motion.button>
-                )}
-              </AnimatePresence>
+        {!isHome && (
+          <div className="flex-1 max-w-sm mx-auto">
+            <label htmlFor="site-search-desktop" className="sr-only">
+              Search EduDock
+            </label>
+            <div className="relative flex items-center w-full group">
+              <Search className="absolute left-3 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary pointer-events-none" />
+              <Input
+                id="site-search-desktop"
+                type="search"
+                placeholder="Search tools, PDFs, updates…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search EduDock"
+                className="w-full h-10 pl-9 pr-9 bg-muted/40 border-transparent text-sm rounded-xl focus:bg-card focus:border-primary/30 transition-all"
+              />
+              <div className="absolute right-2 flex items-center justify-center">
+                <AnimatePresence>
+                  {searchQuery && (
+                    <motion.button
+                      type="button"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.15 }}
+                      onClick={() => setSearchQuery("")}
+                      className="flex items-center justify-center h-7 w-7 text-muted-foreground hover:text-foreground rounded-full hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+        {isHome && <div className="flex-1" aria-hidden="true" />}
 
         <nav aria-label="Primary" className="flex items-center gap-0.5">
           {navItems.map((item) => {
@@ -117,41 +122,45 @@ export default function SiteHeader() {
         >
           EduDock
         </Link>
-        <div className="flex-1">
-          <label htmlFor="site-search-mobile" className="sr-only">
-            Search EduDock
-          </label>
-          <div className="relative flex items-center w-full">
-            <Search className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              id="site-search-mobile"
-              type="search"
-              placeholder="Search…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search EduDock"
-              className="w-full h-9 pl-8 pr-8 bg-muted/40 border-transparent text-xs rounded-lg focus:bg-card focus:border-primary/30 transition-all"
-            />
-            <div className="absolute right-1.5 flex items-center justify-center">
-              <AnimatePresence>
-                {searchQuery && (
-                  <motion.button
-                    type="button"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.15 }}
-                    onClick={() => setSearchQuery("")}
-                    className="flex items-center justify-center h-7 w-7 text-muted-foreground hover:text-foreground rounded-full hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label="Clear search"
-                  >
-                    <X className="h-3 w-3" />
-                  </motion.button>
-                )}
-              </AnimatePresence>
+        {!isHome ? (
+          <div className="flex-1">
+            <label htmlFor="site-search-mobile" className="sr-only">
+              Search EduDock
+            </label>
+            <div className="relative flex items-center w-full">
+              <Search className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                id="site-search-mobile"
+                type="search"
+                placeholder="Search…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search EduDock"
+                className="w-full h-9 pl-8 pr-8 bg-muted/40 border-transparent text-xs rounded-lg focus:bg-card focus:border-primary/30 transition-all"
+              />
+              <div className="absolute right-1.5 flex items-center justify-center">
+                <AnimatePresence>
+                  {searchQuery && (
+                    <motion.button
+                      type="button"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.15 }}
+                      onClick={() => setSearchQuery("")}
+                      className="flex items-center justify-center h-7 w-7 text-muted-foreground hover:text-foreground rounded-full hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-3 w-3" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex-1" aria-hidden="true" />
+        )}
         <ThemeToggle className="p-1.5" />
       </header>
 
