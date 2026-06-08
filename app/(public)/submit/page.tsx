@@ -4,6 +4,8 @@ import { buildPageMetadata } from "@/lib/seo";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import SuggestionForm from "@/components/SuggestionForm";
 
+export const runtime = "edge";
+
 export const metadata: Metadata = buildPageMetadata({ pageKey: "submit" });
 export const revalidate = 3600;
 
