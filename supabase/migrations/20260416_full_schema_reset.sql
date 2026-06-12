@@ -50,12 +50,20 @@ CREATE POLICY "Authenticated users can manage categories"
 CREATE TABLE public.tools (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-  name TEXT NOT NULL,
+  title TEXT NOT NULL,
   short_description TEXT,
-  long_description TEXT,
+  description TEXT,
   image_url TEXT,
-  website_url TEXT,
+  favicon_url TEXT,
+  image_type TEXT,
+  url TEXT NOT NULL,
   clicks INTEGER NOT NULL DEFAULT 0,
+  meta_title TEXT,
+  meta_description TEXT,
+  schema_markup JSONB,
+  slug TEXT,
+  author_name TEXT,
+  author_avatar TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
@@ -77,14 +85,19 @@ CREATE POLICY "Authenticated users can manage tools"
 CREATE TABLE public.pdfs (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-  name TEXT NOT NULL,
+  title TEXT NOT NULL,
   description TEXT,
   cover_image_url TEXT,
   drive_link TEXT NOT NULL,
+  file_url TEXT,
+  file_type TEXT,
   clicks INTEGER NOT NULL DEFAULT 0,
   slug TEXT,
   author_name TEXT,
-  author_avatar_url TEXT,
+  author_avatar TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  schema_markup JSONB,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
@@ -106,14 +119,17 @@ CREATE POLICY "Authenticated users can manage pdfs"
 CREATE TABLE public.updates (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-  headline TEXT NOT NULL,
+  title TEXT NOT NULL,
   content TEXT,
   image_url TEXT,
-  external_link TEXT,
+  external_url TEXT,
   clicks INTEGER NOT NULL DEFAULT 0,
   slug TEXT,
   author_name TEXT,
-  author_avatar_url TEXT,
+  author_avatar TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  schema_markup JSONB,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
@@ -228,13 +244,16 @@ CREATE INDEX idx_categories_name ON public.categories(name);
 -- Tools indexes
 CREATE INDEX idx_tools_category_id ON public.tools(category_id);
 CREATE INDEX idx_tools_clicks ON public.tools(clicks DESC);
-CREATE INDEX idx_tools_name ON public.tools(name);
+CREATE INDEX idx_tools_title ON public.tools(title);
+CREATE INDEX idx_tools_slug ON public.tools(slug);
+CREATE INDEX idx_tools_created_at ON public.tools(created_at DESC);
 
 -- PDFs indexes
 CREATE INDEX idx_pdfs_category_id ON public.pdfs(category_id);
 CREATE INDEX idx_pdfs_clicks ON public.pdfs(clicks DESC);
 CREATE INDEX idx_pdfs_slug ON public.pdfs(slug);
-CREATE INDEX idx_pdfs_name ON public.pdfs(name);
+CREATE INDEX idx_pdfs_title ON public.pdfs(title);
+CREATE INDEX idx_pdfs_created_at ON public.pdfs(created_at DESC);
 
 -- Updates indexes
 CREATE INDEX idx_updates_category_id ON public.updates(category_id);
