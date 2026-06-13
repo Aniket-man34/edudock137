@@ -25,9 +25,10 @@ export default async function UpdatesPage() {
   const [{ data, count }, { data: categories }] = await Promise.all([
     supabase
       .from("updates")
-      .select("id, title, slug, image_url, created_at, external_url, clicks, category_id", {
-        count: "exact",
-      })
+      .select(
+        "id, title, slug, image_url, created_at, external_url, clicks, category_id, content, meta_description",
+        { count: "exact" },
+      )
       .order("created_at", { ascending: false })
       .range(0, 19),
     supabase

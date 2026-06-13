@@ -87,6 +87,7 @@ export default async function HomePage() {
     supabase
       .from("categories")
       .select("id, name")
+      .eq("entity_type", "update")
       .order("name"),
   ]);
 

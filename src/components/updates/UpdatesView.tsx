@@ -28,6 +28,8 @@ interface UpdateRow {
   external_url?: string | null;
   clicks?: number | null;
   category_id?: string | null;
+  content?: string | null;
+  meta_description?: string | null;
 }
 
 interface UpdatesViewProps {
@@ -58,22 +60,54 @@ export default function UpdatesView({
   totalCount,
   categories,
 }: UpdatesViewProps) {
-  const { debouncedSearch } = useSiteSearch();
+  const {
+    debouncedSearch,
+    activeCategoryId: pinnedCategoryId,
+    activeCategoryName: pinnedCategoryName,
+    setActiveCategory,
+    clearActiveCategory,
+  } = useSiteSearch();
   const [updates, setUpdates] = useState<UpdateRow[]>(initialUpdates);
   const [page, setPage] = useState(1);
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(initialUpdates.length < totalCount);
   const [sort, setSort] = useState<SortKey>("newest");
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [localCategoryId, setLocalCategoryId] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
 
+  // Effective filter category — pinned by marquee click takes precedence,
+  // otherwise the local dropdown selection drives filtering.
+  const activeCategoryId = pinnedCategoryId ?? localCategoryId;
+  const activeCategoryName =
+    pinnedCategoryName ??
+    (localCategoryId
+      ? categories.find((c) => c.id === localCategoryId)?.name ?? null
+      : null);
+
   const filtered = useMemo(() => {
     const term = debouncedSearch.toLowerCase().trim();
+    const keyword = (activeCategoryName ?? "").toLowerCase().trim();
+
     const list = updates.filter((u) => {
-      const matchSearch = !term || u.title?.toLowerCase().includes(term);
-      const matchCategory =
-        !activeCategoryId || u.category_id === activeCategoryId;
+      // Search box: scan title, snippet, content body.
+      const haystack = [
+        u.title,
+        u.meta_description ?? "",
+        u.content ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      const matchSearch = !term || haystack.includes(term);
+
+      // Hybrid category match: direct id OR keyword fallback inside body text.
+      let matchCategory = true;
+      if (activeCategoryId) {
+        const idHit = u.category_id === activeCategoryId;
+        const keywordHit = keyword.length > 1 && haystack.includes(keyword);
+        matchCategory = idHit || keywordHit;
+      }
+
       return matchSearch && matchCategory;
     });
     const sorted = [...list];
@@ -86,7 +120,7 @@ export default function UpdatesView({
       );
     }
     return sorted;
-  }, [updates, debouncedSearch, sort, activeCategoryId]);
+  }, [updates, debouncedSearch, sort, activeCategoryId, activeCategoryName]);
 
   useEffect(() => {
     const target = observerTarget.current;
@@ -111,7 +145,7 @@ export default function UpdatesView({
     const { data, error } = await supabase
       .from("updates")
       .select(
-        "id, title, slug, image_url, created_at, external_url, clicks, category_id",
+        "id, title, slug, image_url, created_at, external_url, clicks, category_id, content, meta_description",
       )
       .order("created_at", { ascending: false })
       .range(from, to);
@@ -128,9 +162,19 @@ export default function UpdatesView({
     setIsFetching(false);
   }
 
-  const activeCategoryName = activeCategoryId
-    ? categories.find((c) => c.id === activeCategoryId)?.name
-    : null;
+  const activeCategoryLabel = activeCategoryName;
+
+  const selectCategory = (id: string | null) => {
+    if (id === null) {
+      clearActiveCategory();
+      setLocalCategoryId(null);
+    } else {
+      const name = categories.find((c) => c.id === id)?.name ?? null;
+      setActiveCategory(id, name);
+      setLocalCategoryId(id);
+    }
+    setIsFilterOpen(false);
+  };
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -147,7 +191,7 @@ export default function UpdatesView({
         {totalCount > 0 && (
           <p className="text-xs text-muted-foreground mt-2">
             Showing {filtered.length} of {totalCount}
-            {activeCategoryName ? ` · ${activeCategoryName}` : ""}
+            {activeCategoryLabel ? ` · ${activeCategoryLabel}` : ""}
           </p>
         )}
       </motion.div>
@@ -186,7 +230,7 @@ export default function UpdatesView({
               aria-haspopup="listbox"
             >
               <Filter className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              {activeCategoryName ?? "All Categories"}
+              {activeCategoryLabel ?? "All Categories"}
             </button>
 
             <AnimatePresence>
@@ -211,10 +255,7 @@ export default function UpdatesView({
                         type="button"
                         role="option"
                         aria-selected={activeCategoryId === null}
-                        onClick={() => {
-                          setActiveCategoryId(null);
-                          setIsFilterOpen(false);
-                        }}
+                        onClick={() => selectCategory(null)}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
                           activeCategoryId === null
                             ? "bg-primary/10 text-primary font-semibold"
@@ -230,10 +271,7 @@ export default function UpdatesView({
                           type="button"
                           role="option"
                           aria-selected={activeCategoryId === cat.id}
-                          onClick={() => {
-                            setActiveCategoryId(cat.id);
-                            setIsFilterOpen(false);
-                          }}
+                          onClick={() => selectCategory(cat.id)}
                           className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
                             activeCategoryId === cat.id
                               ? "bg-primary/10 text-primary font-semibold"
@@ -294,7 +332,7 @@ export default function UpdatesView({
           {(activeCategoryId || debouncedSearch) && (
             <button
               type="button"
-              onClick={() => setActiveCategoryId(null)}
+              onClick={() => selectCategory(null)}
               className="btn-secondary"
             >
               Clear filter

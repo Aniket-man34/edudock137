@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const runtime = "edge";
+export const dynamic = "force-dynamic";
+
+import { cache } from "react";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, Wrench, Calendar } from "lucide-react";
+import { ArrowLeft, ExternalLink, Wrench, Calendar, ShieldCheck } from "lucide-react";
 import { createServerClient } from "@/integrations/supabase/server";
 import {
   buildArticleMetadata,
@@ -17,8 +20,48 @@ import SocialShare from "@/components/updates/SocialShare";
 import ToolClickTracker from "@/components/tools/ToolClickTracker";
 import BookmarkButton from "@/components/BookmarkButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import EduDockFooterEcosystem from "@/components/EduDockFooterEcosystem";
 
-export const revalidate = 60;
+// Strip the size suffix (=s96-c, =w400-h400) Google adds to avatar URLs;
+// without this, hotlinking + referer mask sometimes returns a 1×1 placeholder.
+function normalizeAvatarUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    if (
+      u.hostname.endsWith("googleusercontent.com") ||
+      u.hostname.endsWith("ggpht.com")
+    ) {
+      // Drop the trailing "=…" parameters block that Google appends.
+      return raw.replace(/=[swh]\d+(-[a-z0-9-]+)?$/i, "=s256-c");
+    }
+    return raw;
+  } catch {
+    return raw;
+  }
+}
+
+const fetchRelatedTools = cache(async (toolId: string, categoryId: string | null) => {
+  const supabase = createServerClient();
+  const base = supabase
+    .from("tools")
+    .select("id, title, slug, image_url, favicon_url, short_description")
+    .neq("id", toolId)
+    .order("created_at", { ascending: false })
+    .limit(4);
+  const { data: scoped } = categoryId
+    ? await base.eq("category_id", categoryId)
+    : await base;
+  if ((scoped ?? []).length > 0) return scoped ?? [];
+  if (!categoryId) return [];
+  const { data: fallback } = await supabase
+    .from("tools")
+    .select("id, title, slug, image_url, favicon_url, short_description")
+    .neq("id", toolId)
+    .order("created_at", { ascending: false })
+    .limit(4);
+  return fallback ?? [];
+});
 
 export async function generateMetadata({
   params,
@@ -63,33 +106,7 @@ export default async function ToolDetailPage({
   const tool = await fetchTool(params.slug);
   if (!tool) notFound();
 
-  const supabase = createServerClient();
-  const relatedQuery = tool.category_id
-    ? supabase
-        .from("tools")
-        .select("id, title, slug, image_url, favicon_url, short_description")
-        .eq("category_id", tool.category_id)
-        .neq("id", tool.id)
-        .order("created_at", { ascending: false })
-        .limit(4)
-    : supabase
-        .from("tools")
-        .select("id, title, slug, image_url, favicon_url, short_description")
-        .neq("id", tool.id)
-        .order("created_at", { ascending: false })
-        .limit(4);
-
-  const { data: relatedRaw } = await relatedQuery;
-  let related = relatedRaw ?? [];
-  if (related.length === 0 && tool.category_id) {
-    const { data: fallback } = await supabase
-      .from("tools")
-      .select("id, title, slug, image_url, favicon_url, short_description")
-      .neq("id", tool.id)
-      .order("created_at", { ascending: false })
-      .limit(4);
-    related = fallback ?? [];
-  }
+  const related = await fetchRelatedTools(tool.id, tool.category_id ?? null);
 
   const formattedDate = tool.created_at
     ? new Date(tool.created_at).toLocaleDateString("en-US", {
@@ -100,6 +117,8 @@ export default async function ToolDetailPage({
     : "";
 
   const heroImage = tool.image_url || tool.favicon_url || null;
+  const authorAvatar = normalizeAvatarUrl(tool.author_avatar);
+  const shareUrl = `${SITE_URL}/tools/${tool.slug || tool.id}`;
 
   return (
     <>
@@ -166,28 +185,6 @@ export default async function ToolDetailPage({
               )}
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
-                {tool.author_name && (
-                  <div className="flex items-center gap-2">
-                    {tool.author_avatar ? (
-                      <img
-                        src={tool.author_avatar}
-                        alt={`${tool.author_name} avatar`}
-                        className="w-6 h-6 rounded-full ring-1 ring-border/40"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div
-                        className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary"
-                        aria-hidden="true"
-                      >
-                        {tool.author_name[0]}
-                      </div>
-                    )}
-                    <span className="text-foreground font-medium">
-                      {tool.author_name}
-                    </span>
-                  </div>
-                )}
                 {formattedDate && (
                   <div className="flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
@@ -222,6 +219,39 @@ export default async function ToolDetailPage({
           </div>
         </div>
 
+        {tool.author_name && (
+          <div className="glass-card-static p-5 md:p-6 rounded-2xl mb-8 flex items-center gap-4">
+            {authorAvatar ? (
+              <img
+                src={authorAvatar}
+                alt={`${tool.author_name} profile picture`}
+                referrerPolicy="no-referrer"
+                loading="lazy"
+                className="w-14 h-14 md:w-16 md:h-16 rounded-full ring-2 ring-primary/20 object-cover shrink-0"
+              />
+            ) : (
+              <div
+                className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/15 flex items-center justify-center text-lg font-bold text-primary ring-2 ring-primary/20 shrink-0"
+                aria-hidden="true"
+              >
+                {tool.author_name.trim().charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-0.5 inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-3 w-3" aria-hidden="true" />
+                Curated by
+              </p>
+              <p className="text-base md:text-lg font-bold text-foreground truncate">
+                {tool.author_name}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                EduDock editor
+              </p>
+            </div>
+          </div>
+        )}
+
         {tool.description && (
           <div className="glass-card-static p-6 md:p-8 rounded-2xl mb-10">
             <h2 className="text-xl font-bold mb-4 font-display">
@@ -234,10 +264,7 @@ export default async function ToolDetailPage({
         )}
 
         <div className="glass-card-static p-6 rounded-2xl mb-10">
-          <SocialShare
-            title={tool.title}
-            url={`${SITE_URL}/tools/${tool.slug || tool.id}`}
-          />
+          <SocialShare title={tool.title} url={shareUrl} />
         </div>
 
         {related.length > 0 && (
@@ -278,6 +305,8 @@ export default async function ToolDetailPage({
           </section>
         )}
       </article>
+
+      <EduDockFooterEcosystem />
     </>
   );
 }
