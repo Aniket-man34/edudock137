@@ -3,10 +3,13 @@ import { SearchProvider } from "@/components/layout/SearchProvider";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import AnalyticsTracker from "@/components/layout/AnalyticsTracker";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
 
 export default function PublicGroupLayout({ children }: { children: ReactNode }) {
   return (
     <SearchProvider>
+      <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>

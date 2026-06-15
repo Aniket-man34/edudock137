@@ -223,22 +223,40 @@ export function buildArticleMetadata(args: ArticleArgs): Metadata {
 }
 
 // ── SCHEMA GENERATORS (JSON-LD) ───────────────────────────────────
+export function generateOrganizationSchema(): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.svg`,
+    sameAs: [
+      `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE_NAME}`,
+    ],
+  };
+}
+
+export function generateWebSiteSchema(): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+// Organization + WebSite are emitted globally by the public layout, so the
+// home page only contributes the app-install SoftwareApplication record.
 export function generateHomeSchemas(): object[] {
   return [
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: SITE_NAME,
-      url: SITE_URL,
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: `${SITE_URL}/?q={search_term_string}`,
-        },
-        "query-input": "required name=search_term_string",
-      },
-    },
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
