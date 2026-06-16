@@ -66,6 +66,9 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "brand-1": "hsl(var(--brand-1))",
+        "brand-2": "hsl(var(--brand-2))",
+        "brand-3": "hsl(var(--brand-3))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -106,6 +109,22 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        "gradient-pan": {
+          "0%": { backgroundPosition: "0% 50%" },
+          "100%": { backgroundPosition: "200% 50%" },
+        },
+        "aurora-drift-1": {
+          "0%, 100%": { transform: "translate3d(0, 0, 0) scale(1)" },
+          "50%": { transform: "translate3d(6rem, 3rem, 0) scale(1.12)" },
+        },
+        "aurora-drift-2": {
+          "0%, 100%": { transform: "translate3d(0, 0, 0) scale(1.05)" },
+          "50%": { transform: "translate3d(-5rem, 2rem, 0) scale(0.92)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -114,6 +133,10 @@ export default {
         "glow-pulse": "glow-pulse 2.4s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
         "marquee-rtl": "marquee-rtl 28s linear infinite",
+        "gradient-pan": "gradient-pan 8s linear infinite",
+        "aurora-drift-1": "aurora-drift-1 22s ease-in-out infinite",
+        "aurora-drift-2": "aurora-drift-2 26s ease-in-out infinite",
+        float: "float 6s ease-in-out infinite",
       },
     },
   },

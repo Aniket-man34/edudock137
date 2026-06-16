@@ -124,6 +124,9 @@ export default function PdfsView({
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         className="mb-8"
       >
+        <span className="section-eyebrow mb-2">
+          <BookOpen className="h-3 w-3" aria-hidden="true" /> Free downloads
+        </span>
         <h1 className="page-header">PDF Library</h1>
         <p className="page-subtitle">
           Free study materials, books, and notes — download in one tap.
@@ -147,14 +150,22 @@ export default function PdfsView({
                 type="button"
                 aria-selected={isActive}
                 onClick={() => setSort(key)}
-                className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
+                className={`relative inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                {label}
+                {isActive && (
+                  <motion.span
+                    layoutId="pdfs-sort-pill"
+                    className="absolute inset-0 rounded-lg gradient-brand shadow-sm"
+                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                    aria-hidden="true"
+                  />
+                )}
+                <Icon className="relative z-10 h-3.5 w-3.5" aria-hidden="true" />
+                <span className="relative z-10">{label}</span>
               </button>
             );
           })}
@@ -249,7 +260,7 @@ export default function PdfsView({
                   duration: 0.32,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className="group glass-card-static rounded-2xl overflow-hidden hover:-translate-y-1 hover:border-primary/30 transition-[transform,box-shadow,border-color] duration-fast ease-out motion-reduce:hover:translate-y-0"
+                className="group glass-card-static gradient-border rounded-2xl overflow-hidden hover:-translate-y-1 hover:border-primary/30 transition-[transform,box-shadow,border-color] duration-fast ease-out motion-reduce:hover:translate-y-0"
               >
                 <Link
                   href={`/pdfs/${pdf.slug || pdf.id}`}

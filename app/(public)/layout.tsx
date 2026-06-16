@@ -19,7 +19,7 @@ export default function PublicGroupLayout({ children }: { children: ReactNode })
         <main
           id="main-content"
           tabIndex={-1}
-          className="pt-14 md:pt-[64px] pb-24 md:pb-0 focus:outline-none"
+          className="pt-14 md:pt-[68px] pb-24 md:pb-0 focus:outline-none"
         >
           {children}
         </main>

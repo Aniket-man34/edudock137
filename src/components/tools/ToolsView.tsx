@@ -118,6 +118,9 @@ export default function ToolsView({
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         className="mb-8"
       >
+        <span className="section-eyebrow mb-2">
+          <Wrench className="h-3 w-3" aria-hidden="true" /> Directory
+        </span>
         <h1 className="page-header">Study Tools</h1>
         <p className="page-subtitle">
           Hand-picked web tools that help you learn faster.
@@ -142,14 +145,22 @@ export default function ToolsView({
                 type="button"
                 aria-selected={isActive}
                 onClick={() => setSort(key)}
-                className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
+                className={`relative inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                {label}
+                {isActive && (
+                  <motion.span
+                    layoutId="tools-sort-pill"
+                    className="absolute inset-0 rounded-lg gradient-brand shadow-sm"
+                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                    aria-hidden="true"
+                  />
+                )}
+                <Icon className="relative z-10 h-3.5 w-3.5" aria-hidden="true" />
+                <span className="relative z-10">{label}</span>
               </button>
             );
           })}

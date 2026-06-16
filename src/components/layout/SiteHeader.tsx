@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Wrench, BookOpen, Bell, Search, X } from "lucide-react";
+import { Home, Wrench, BookOpen, Bell, Search, X, GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -15,6 +15,27 @@ const navItems = [
   { label: "PDFs", path: "/pdfs", icon: BookOpen },
   { label: "Updates", path: "/updates", icon: Bell },
 ];
+
+function BrandMark({ size = "md" }: { size?: "sm" | "md" }) {
+  const glyph = size === "sm" ? "h-7 w-7" : "h-8 w-8";
+  const text = size === "sm" ? "text-lg" : "text-xl";
+  const icon = size === "sm" ? "h-4 w-4" : "h-[18px] w-[18px]";
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span
+        className={`relative inline-flex items-center justify-center ${glyph} rounded-xl gradient-brand text-white shadow-[0_4px_14px_-3px_hsl(var(--brand-1)/0.6)] ring-1 ring-white/20`}
+        aria-hidden="true"
+      >
+        <GraduationCap className={icon} strokeWidth={2.4} />
+      </span>
+      <span
+        className={`font-display ${text} font-bold gradient-text-animated tracking-tight`}
+      >
+        EduDock
+      </span>
+    </span>
+  );
+}
 
 export default function SiteHeader() {
   const pathname = usePathname() || "/";
@@ -30,14 +51,14 @@ export default function SiteHeader() {
       {/* Desktop Navbar */}
       <header
         role="banner"
-        className="hidden md:flex fixed top-0 left-0 right-0 z-50 glass-navbar h-[64px] items-center px-8 gap-8"
+        className="hidden md:flex fixed top-0 left-0 right-0 z-50 glass-navbar h-[68px] items-center px-8 gap-8"
       >
         <Link
           href="/"
-          className="font-display text-xl font-bold gradient-text shrink-0 tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
+          className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
           aria-label="EduDock home"
         >
-          EduDock
+          <BrandMark />
         </Link>
 
         {!isHome && (
@@ -87,14 +108,14 @@ export default function SiteHeader() {
                 key={item.path}
                 href={item.path}
                 aria-current={isActive ? "page" : undefined}
-                className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                className={`relative px-4 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 bg-primary/10 rounded-xl"
+                    className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/15 to-secondary/10 ring-1 ring-primary/20"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -117,10 +138,10 @@ export default function SiteHeader() {
       >
         <Link
           href="/"
-          className="font-display text-lg font-bold gradient-text shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+          className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
           aria-label="EduDock home"
         >
-          EduDock
+          <BrandMark size="sm" />
         </Link>
         {!isHome ? (
           <div className="flex-1">
@@ -183,7 +204,7 @@ export default function SiteHeader() {
                 {isActive && (
                   <motion.div
                     layoutId="tab-bg"
-                    className="absolute inset-0 bg-primary/10 rounded-2xl"
+                    className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/10 ring-1 ring-primary/20"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}

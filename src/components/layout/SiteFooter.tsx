@@ -1,17 +1,29 @@
 import Link from "next/link";
-import { Mail, Github, Twitter } from "lucide-react";
+import { Mail, Github, Twitter, GraduationCap } from "lucide-react";
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 bg-background/80 backdrop-blur-sm pb-24 md:pb-0">
-      <div className="container mx-auto px-4 md:px-8 py-10">
+    <footer className="relative border-t border-border/60 bg-background/80 backdrop-blur-sm pb-24 md:pb-0 overflow-hidden">
+      <div
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+        aria-hidden="true"
+      />
+      <div className="container mx-auto px-4 md:px-8 py-12">
         <div className="grid gap-8 md:grid-cols-4">
           <div className="md:col-span-2 space-y-3">
             <Link
               href="/"
-              className="font-display text-xl font-bold gradient-text inline-block tracking-tight"
+              className="inline-flex items-center gap-2 group"
             >
-              EduDock
+              <span
+                className="relative inline-flex items-center justify-center h-8 w-8 rounded-xl gradient-brand text-white shadow-[0_4px_14px_-3px_hsl(var(--brand-1)/0.6)] ring-1 ring-white/20"
+                aria-hidden="true"
+              >
+                <GraduationCap className="h-[18px] w-[18px]" strokeWidth={2.4} />
+              </span>
+              <span className="font-display text-xl font-bold gradient-text tracking-tight">
+                EduDock
+              </span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
               Curated tools, free PDFs, and timely updates for students and

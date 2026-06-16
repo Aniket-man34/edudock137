@@ -49,11 +49,11 @@ function ToolCardComponent({
             ? `${tool.title}: ${tool.short_description}`
             : tool.title || "Open tool"
         }
-        className={`group relative flex h-full flex-col items-center justify-start gap-2 p-4 text-center glass-card-static rounded-2xl hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 active:scale-[0.98] transition-[transform,box-shadow,border-color] duration-fast ease-out motion-reduce:hover:translate-y-0 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+        className={`group relative flex h-full flex-col items-center justify-start gap-2 p-4 text-center glass-card-static gradient-border rounded-2xl hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 active:scale-[0.98] transition-[transform,box-shadow,border-color] duration-fast ease-out motion-reduce:hover:translate-y-0 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
           showDescription ? "aspect-auto" : "aspect-square"
         }`}
       >
-        <div className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 flex-none rounded-full bg-primary/10 text-primary mb-1">
+        <div className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 flex-none rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/10 ring-1 ring-primary/15 text-primary mb-1 transition-transform duration-base ease-out group-hover:scale-105">
           {tool.image_url ? (
             <img
               src={tool.image_url}
@@ -63,12 +63,12 @@ function ToolCardComponent({
               loading="lazy"
             />
           ) : (
-            <span className="font-bold text-lg" aria-hidden="true">
+            <span className="font-bold text-lg font-display" aria-hidden="true">
               {tool.title?.[0] || "?"}
             </span>
           )}
         </div>
-        <h3 className="text-sm sm:text-base font-semibold text-foreground line-clamp-2 leading-tight">
+        <h3 className="text-sm sm:text-base font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
           {tool.title}
         </h3>
         {showDescription && tool.short_description && (

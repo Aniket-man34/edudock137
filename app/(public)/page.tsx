@@ -123,28 +123,31 @@ export default async function HomePage() {
       <div className="relative">
         {/* ── HERO ───────────────────────────────────────────────── */}
         <section className="relative overflow-hidden">
+          <div className="aurora" aria-hidden="true" />
           <div
-            className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-transparent"
+            className="absolute inset-0 -z-10 grid-texture opacity-[0.6] [mask-image:radial-gradient(ellipse_at_top,#000_30%,transparent_75%)]"
             aria-hidden="true"
           />
-          <div className="container mx-auto px-4 pt-12 md:pt-20 pb-12 text-center max-w-3xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary mb-5">
+          <div className="container mx-auto px-4 pt-14 md:pt-24 pb-12 text-center max-w-3xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary mb-6 shadow-sm backdrop-blur-sm">
               <Sparkles className="h-3 w-3" aria-hidden="true" />
               Curated for students &amp; educators
             </span>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold font-display tracking-tight leading-[1.05] mb-5">
-              Your <span className="gradient-text">study shelf,</span> not a
-              tab graveyard.
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold font-display tracking-tight leading-[1.04] mb-5">
+              Your <span className="gradient-text-animated">study shelf,</span>{" "}
+              not a tab graveyard.
             </h1>
 
-            <p className="text-base md:text-lg text-foreground/80 max-w-2xl mx-auto mb-7 leading-relaxed">
+            <p className="text-base md:text-lg text-foreground/75 max-w-2xl mx-auto mb-8 leading-relaxed">
               {formatTotals(totals)} — hand-picked, free, and updated weekly.
             </p>
 
             <HomeSearch totals={totals} />
 
-            <CategoryMarquee categories={uniqueCategories} className="mt-6" />
+            <StatRow totals={totals} />
+
+            <CategoryMarquee categories={uniqueCategories} className="mt-7" />
           </div>
         </section>
 
@@ -172,21 +175,25 @@ export default async function HomePage() {
                   className="flex-none w-[40vw] md:w-[200px] snap-start group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
                 >
                   {p.cover_image_url ? (
-                    <div className="relative overflow-hidden rounded-xl shadow-md ring-1 ring-border/30 mb-2">
+                    <div className="relative overflow-hidden rounded-2xl shadow-md ring-1 ring-border/40 mb-2.5 transition-shadow group-hover:shadow-xl">
                       <img
                         src={p.cover_image_url}
                         alt=""
                         aria-hidden="true"
                         loading="lazy"
-                        className="w-full aspect-[2/3] object-cover transition-transform duration-base ease-out group-hover:scale-[1.04]"
+                        className="w-full aspect-[2/3] object-cover transition-transform duration-base ease-out group-hover:scale-[1.05]"
+                      />
+                      <div
+                        className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-base"
+                        aria-hidden="true"
                       />
                     </div>
                   ) : (
-                    <div className="w-full aspect-[2/3] flex items-center justify-center bg-muted rounded-xl shadow-md ring-1 ring-border/30 mb-2">
+                    <div className="w-full aspect-[2/3] flex items-center justify-center bg-gradient-to-br from-muted to-muted/50 rounded-2xl shadow-md ring-1 ring-border/40 mb-2.5">
                       <BookOpen className="h-8 w-8 text-primary/40" aria-hidden="true" />
                     </div>
                   )}
-                  <p className="text-xs font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                  <p className="text-xs font-semibold line-clamp-2 group-hover:text-primary transition-colors">
                     {p.title}
                   </p>
                 </Link>
@@ -216,26 +223,39 @@ export default async function HomePage() {
                   key={u.id}
                   href={`/updates/${u.slug || u.id}`}
                   aria-label={u.title ?? "Read update"}
-                  className="flex-none w-[88vw] md:w-[640px] snap-center rounded-2xl overflow-hidden glass-card-static group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="flex-none w-[88vw] md:w-[640px] snap-center rounded-2xl overflow-hidden glass-card-static gradient-border group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {u.image_url ? (
-                    <img
-                      src={u.image_url}
-                      alt=""
-                      aria-hidden="true"
-                      loading="lazy"
-                      className="w-full aspect-[1200/620] object-cover transition-transform duration-base ease-out group-hover:scale-[1.02]"
-                    />
-                  ) : (
-                    <div className="w-full aspect-[1200/620] flex items-center justify-center bg-muted">
-                      <Bell className="h-10 w-10 text-primary/40" aria-hidden="true" />
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={u.image_url}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        className="w-full aspect-[1200/620] object-cover transition-transform duration-base ease-out group-hover:scale-[1.03]"
+                      />
+                      <div
+                        className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/75 via-black/20 to-transparent"
+                        aria-hidden="true"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 p-5">
+                        <p className="text-base md:text-lg font-bold leading-snug line-clamp-2 text-white drop-shadow-sm">
+                          {u.title}
+                        </p>
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      <div className="w-full aspect-[1200/620] flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                        <Bell className="h-10 w-10 text-primary/40" aria-hidden="true" />
+                      </div>
+                      <div className="p-4">
+                        <p className="text-sm md:text-base font-bold leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                          {u.title}
+                        </p>
+                      </div>
+                    </>
                   )}
-                  <div className="p-4">
-                    <p className="text-sm md:text-base font-bold leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                      {u.title}
-                    </p>
-                  </div>
                 </Link>
               ))}
             </div>
@@ -289,10 +309,10 @@ export default async function HomePage() {
           />
           <div className="container mx-auto px-4 relative z-10">
             <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              <div className="glass-card-static p-8 rounded-3xl">
+              <div className="glass-card-static gradient-border p-8 rounded-3xl">
                 <div className="flex items-center gap-3 mb-5">
                   <div
-                    className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-400/20 to-sky-400/5 ring-1 ring-sky-400/20"
+                    className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-400/25 to-indigo-400/10 ring-1 ring-sky-400/25"
                     aria-hidden="true"
                   >
                     <Info className="h-5 w-5 text-sky-500" />
@@ -311,15 +331,15 @@ export default async function HomePage() {
                 </Link>
               </div>
 
-              <div className="glass-card-static p-8 rounded-3xl relative overflow-hidden">
+              <div className="glass-card-static gradient-border p-8 rounded-3xl relative overflow-hidden">
                 <div
-                  className="absolute -bottom-16 -right-16 w-48 h-48 bg-primary/[0.06] blur-3xl rounded-full pointer-events-none"
+                  className="absolute -bottom-16 -right-16 w-48 h-48 bg-primary/[0.08] blur-3xl rounded-full pointer-events-none"
                   aria-hidden="true"
                 />
                 <div className="relative">
                   <div className="flex items-center gap-3 mb-4">
                     <div
-                      className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20"
+                      className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/25 to-secondary/10 ring-1 ring-primary/25"
                       aria-hidden="true"
                     >
                       <Mail className="h-5 w-5 text-primary" />
@@ -360,6 +380,40 @@ function formatTotals(t: { tools: number; pdfs: number; updates: number }) {
   return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
 }
 
+function StatRow({
+  totals,
+}: {
+  totals: { tools: number; pdfs: number; updates: number };
+}) {
+  const stats = [
+    { label: "Tools", value: totals.tools, href: "/tools", icon: Wrench },
+    { label: "PDFs", value: totals.pdfs, href: "/pdfs", icon: BookOpen },
+    { label: "Updates", value: totals.updates, href: "/updates", icon: Bell },
+  ].filter((s) => s.value > 0);
+
+  if (stats.length === 0) return null;
+
+  return (
+    <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
+      {stats.map(({ label, value, href, icon: Icon }) => (
+        <Link
+          key={label}
+          href={href}
+          className="group inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-sm px-4 py-2 text-sm shadow-sm transition-[transform,border-color,box-shadow] duration-fast ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+          <span className="font-bold tabular-nums text-foreground">
+            {value.toLocaleString()}
+          </span>
+          <span className="text-muted-foreground group-hover:text-foreground transition-colors">
+            {label}
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 function SectionHeader({
   icon: Icon,
   accent,
@@ -374,30 +428,31 @@ function SectionHeader({
   viewAll: string;
 }) {
   const accentClass = {
-    emerald: "from-emerald-400/20 to-green-400/10 ring-emerald-400/25 text-emerald-500",
-    violet: "from-violet-400/20 to-purple-400/10 ring-violet-400/25 text-violet-500",
-    sky: "from-sky-400/20 to-blue-400/10 ring-sky-400/25 text-sky-500",
+    emerald: "from-emerald-400/25 to-teal-400/10 ring-emerald-400/30 text-emerald-500",
+    violet: "from-violet-400/25 to-fuchsia-400/10 ring-violet-400/30 text-violet-500",
+    sky: "from-sky-400/25 to-indigo-400/10 ring-sky-400/30 text-sky-500",
   }[accent];
 
   return (
-    <div className="flex items-center gap-3 mb-6">
+    <div className="flex items-end gap-3 mb-7">
       <div
-        className={`flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br ${accentClass} ring-1`}
+        className={`flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br ${accentClass} ring-1 shadow-sm shrink-0`}
         aria-hidden="true"
       >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-[22px] w-[22px]" />
       </div>
-      <div className="flex-1">
-        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight font-display">
+      <div className="flex-1 min-w-0">
+        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight font-display leading-tight">
           {title}
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
       </div>
       <Link
         href={viewAll}
-        className="text-sm font-semibold text-primary hover:text-primary/80 inline-flex items-center gap-1 link-underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="group/va shrink-0 text-sm font-semibold text-primary hover:text-primary inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3.5 py-1.5 transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
-        View all <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        <span className="hidden sm:inline">View all</span>
+        <ArrowRight className="h-4 w-4 transition-transform group-hover/va:translate-x-0.5" aria-hidden="true" />
       </Link>
     </div>
   );
