@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Wrench, BookOpen, Bell, Search, X, GraduationCap } from "lucide-react";
+import { Home, Wrench, BookOpen, Bell, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -19,15 +19,16 @@ const navItems = [
 function BrandMark({ size = "md" }: { size?: "sm" | "md" }) {
   const glyph = size === "sm" ? "h-7 w-7" : "h-8 w-8";
   const text = size === "sm" ? "text-lg" : "text-xl";
-  const icon = size === "sm" ? "h-4 w-4" : "h-[18px] w-[18px]";
   return (
     <span className="inline-flex items-center gap-2">
-      <span
-        className={`relative inline-flex items-center justify-center ${glyph} rounded-xl gradient-brand text-white shadow-[0_4px_14px_-3px_hsl(var(--brand-1)/0.6)] ring-1 ring-white/20`}
+      <img
+        src="/favicon.svg"
+        alt=""
         aria-hidden="true"
-      >
-        <GraduationCap className={icon} strokeWidth={2.4} />
-      </span>
+        width={size === "sm" ? 28 : 32}
+        height={size === "sm" ? 28 : 32}
+        className={`${glyph} rounded-xl shadow-[0_4px_14px_-3px_hsl(var(--brand-1)/0.6)] ring-1 ring-white/20`}
+      />
       <span
         className={`font-display ${text} font-bold gradient-text-animated tracking-tight`}
       >

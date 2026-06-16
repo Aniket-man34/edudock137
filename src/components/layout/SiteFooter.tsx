@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Github, Twitter, GraduationCap } from "lucide-react";
+import { Mail, Github, Twitter } from "lucide-react";
 
 export default function SiteFooter() {
   return (
@@ -15,12 +15,14 @@ export default function SiteFooter() {
               href="/"
               className="inline-flex items-center gap-2 group"
             >
-              <span
-                className="relative inline-flex items-center justify-center h-8 w-8 rounded-xl gradient-brand text-white shadow-[0_4px_14px_-3px_hsl(var(--brand-1)/0.6)] ring-1 ring-white/20"
+              <img
+                src="/favicon.svg"
+                alt=""
                 aria-hidden="true"
-              >
-                <GraduationCap className="h-[18px] w-[18px]" strokeWidth={2.4} />
-              </span>
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-xl shadow-[0_4px_14px_-3px_hsl(var(--brand-1)/0.6)] ring-1 ring-white/20"
+              />
               <span className="font-display text-xl font-bold gradient-text tracking-tight">
                 EduDock
               </span>
