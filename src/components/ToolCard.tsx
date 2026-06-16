@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, memo } from "react";
+import { memo } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Tool = Tables<"tools"> & { categories?: { name: string } | null };
@@ -16,17 +16,9 @@ function ToolCardComponent({
   index: number;
   showDescription?: boolean;
 }) {
-  const handleClick = useCallback(() => {
-    if (!tool?.id) return;
-    // Fire-and-forget; we do not await before navigation.
-    (supabase as any)
-      .rpc("increment_tool_clicks", { p_id: tool.id })
-      .then(({ error }: any) => {
-        if (error && process.env.NODE_ENV !== "production") {
-          console.error("Error incrementing tool clicks:", error);
-        }
-      });
-  }, [tool?.id]);
+  // Click tracking happens on the detail page (ToolClickTracker), so the
+  // card just navigates internally to /tools/[slug].
+  const href = `/tools/${tool.slug || tool.id}`;
 
   return (
     <motion.div
@@ -39,15 +31,12 @@ function ToolCardComponent({
       }}
       className="h-full"
     >
-      <a
-        href={tool.url || "#"}
-        target={tool.url ? "_blank" : undefined}
-        rel={tool.url ? "noopener noreferrer" : undefined}
-        onClick={handleClick}
+      <Link
+        href={href}
         aria-label={
           tool.short_description
             ? `${tool.title}: ${tool.short_description}`
-            : tool.title || "Open tool"
+            : tool.title || "View tool"
         }
         className={`group relative flex h-full flex-col items-center justify-start gap-2 p-4 text-center glass-card-static gradient-border rounded-2xl hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 active:scale-[0.98] transition-[transform,box-shadow,border-color] duration-fast ease-out motion-reduce:hover:translate-y-0 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
           showDescription ? "aspect-auto" : "aspect-square"
@@ -76,7 +65,7 @@ function ToolCardComponent({
             {tool.short_description}
           </p>
         )}
-      </a>
+      </Link>
     </motion.div>
   );
 }
@@ -88,9 +77,8 @@ const areEqual = (
   prev.tool.id === next.tool.id &&
   prev.tool.title === next.tool.title &&
   prev.tool.image_url === next.tool.image_url &&
-  prev.tool.url === next.tool.url &&
+  prev.tool.slug === next.tool.slug &&
   prev.tool.short_description === next.tool.short_description &&
-  prev.tool.clicks === next.tool.clicks &&
   prev.index === next.index &&
   prev.showDescription === next.showDescription;
 
