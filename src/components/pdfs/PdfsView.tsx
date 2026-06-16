@@ -40,7 +40,7 @@ export default function PdfsView({
   totalCount,
   categories,
 }: PdfsViewProps) {
-  const { debouncedSearch } = useSiteSearch();
+  const { debouncedSearch, setSearchQuery } = useSiteSearch();
   const [pdfs, setPdfs] = useState<Pdf[]>(initialPdfs);
   const [page, setPage] = useState(1);
   const [isFetching, setIsFetching] = useState(false);
@@ -346,7 +346,10 @@ export default function PdfsView({
           {(activeCategoryId || debouncedSearch) && (
             <button
               type="button"
-              onClick={() => setActiveCategoryId(null)}
+              onClick={() => {
+                setActiveCategoryId(null);
+                setSearchQuery("");
+              }}
               className="btn-secondary"
             >
               Clear filter

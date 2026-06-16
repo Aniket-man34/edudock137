@@ -47,6 +47,9 @@ export default function NewsletterForm({
     setState("success");
     setEmail("");
     toast.success("You're in. Watch for our next digest.");
+    // Re-enable the form after the confirmation so a different email
+    // can be subscribed without a full page reload.
+    setTimeout(() => setState("idle"), 4000);
   }
 
   const wrapper =

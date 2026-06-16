@@ -39,29 +39,34 @@ async function loadCorpus(): Promise<Corpus> {
   if (cachedCorpus) return cachedCorpus;
   if (inflight) return inflight;
   inflight = (async () => {
-    const [{ data: tools }, { data: pdfs }, { data: updates }] =
-      await Promise.all([
-        supabase
-          .from("tools")
-          .select("id, title, slug, short_description, image_url, url")
-          .order("title"),
-        supabase
-          .from("pdfs")
-          .select("id, title, slug, cover_image_url")
-          .order("title"),
-        supabase
-          .from("updates")
-          .select("id, title, slug, image_url")
-          .order("title"),
-      ]);
-    const corpus: Corpus = {
-      tools: (tools as ToolHit[]) ?? [],
-      pdfs: (pdfs as PdfHit[]) ?? [],
-      updates: (updates as UpdateHit[]) ?? [],
-    };
-    cachedCorpus = corpus;
-    inflight = null;
-    return corpus;
+    try {
+      const [{ data: tools }, { data: pdfs }, { data: updates }] =
+        await Promise.all([
+          supabase
+            .from("tools")
+            .select("id, title, slug, short_description, image_url, url")
+            .order("title"),
+          supabase
+            .from("pdfs")
+            .select("id, title, slug, cover_image_url")
+            .order("title"),
+          supabase
+            .from("updates")
+            .select("id, title, slug, image_url")
+            .order("title"),
+        ]);
+      const corpus: Corpus = {
+        tools: (tools as ToolHit[]) ?? [],
+        pdfs: (pdfs as PdfHit[]) ?? [],
+        updates: (updates as UpdateHit[]) ?? [],
+      };
+      cachedCorpus = corpus;
+      return corpus;
+    } finally {
+      // Always release the in-flight ref so a failed fetch can be
+      // retried instead of permanently returning a rejected promise.
+      inflight = null;
+    }
   })();
   return inflight;
 }
@@ -78,11 +83,16 @@ export default function HomeSearchResults({ query }: { query: string }) {
     }
     let cancelled = false;
     setLoading(true);
-    loadCorpus().then((c) => {
-      if (cancelled) return;
-      setCorpus(c);
-      setLoading(false);
-    });
+    loadCorpus()
+      .then((c) => {
+        if (cancelled) return;
+        setCorpus(c);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };

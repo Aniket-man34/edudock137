@@ -32,7 +32,7 @@ export default function ToolsView({
   totalCount,
   categories,
 }: ToolsViewProps) {
-  const { debouncedSearch } = useSiteSearch();
+  const { debouncedSearch, setSearchQuery } = useSiteSearch();
   const [tools, setTools] = useState<Tool[]>(initialTools);
   const [page, setPage] = useState(1);
   const [isFetching, setIsFetching] = useState(false);
@@ -284,7 +284,10 @@ export default function ToolsView({
           {(activeCategoryId || debouncedSearch) && (
             <button
               type="button"
-              onClick={() => setActiveCategoryId(null)}
+              onClick={() => {
+                setActiveCategoryId(null);
+                setSearchQuery("");
+              }}
               className="btn-secondary"
             >
               Clear filter
