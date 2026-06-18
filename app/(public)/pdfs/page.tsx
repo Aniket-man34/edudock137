@@ -11,7 +11,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import PdfsView from "@/components/pdfs/PdfsView";
 import PdfsListSkeleton from "@/components/pdfs/PdfsListSkeleton";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = createServerClient();

@@ -29,7 +29,7 @@ type Update = Tables<"updates">;
 type PdfCard = Pick<Pdf, "id" | "title" | "cover_image_url" | "clicks" | "slug">;
 type UpdateCard = Pick<Update, "id" | "title" | "image_url" | "slug" | "created_at">;
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = createServerClient();

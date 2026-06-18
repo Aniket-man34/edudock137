@@ -18,7 +18,7 @@ import PdfClickTracker from "@/components/pdfs/PdfClickTracker";
 import BookmarkButton from "@/components/BookmarkButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

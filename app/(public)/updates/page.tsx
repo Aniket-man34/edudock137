@@ -11,7 +11,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import UpdatesView from "@/components/updates/UpdatesView";
 import UpdatesListSkeleton from "@/components/updates/UpdatesListSkeleton";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = createServerClient();

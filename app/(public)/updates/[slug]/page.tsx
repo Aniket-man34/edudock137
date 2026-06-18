@@ -23,7 +23,7 @@ import BookmarkButton from "@/components/BookmarkButton";
 import NewsletterForm from "@/components/NewsletterForm";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 const getHighResAvatar = (url: string | null) => {
   if (!url) return null;
