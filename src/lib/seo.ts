@@ -356,7 +356,9 @@ export function generateCollectionPageSchema(page: {
   };
 }
 
-export function generateSoftwareApplicationSchema(tool: {
+// Tools render as WebApplication so Google can surface them as a web app in
+// rich results (the admin "WebApp" JSON-LD template matches this @type).
+export function generateWebApplicationSchema(tool: {
   title: string;
   short_description: string | null;
   description: string | null;
@@ -373,14 +375,15 @@ export function generateSoftwareApplicationSchema(tool: {
     "Explore this educational tool on EduDock.";
   return {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": "WebApplication",
     name: tool.title,
     description: desc,
     image: tool.image_url || DEFAULT_OG_IMAGE,
     applicationCategory: "EducationalApplication",
     operatingSystem: "Web",
+    browserRequirements: "Requires JavaScript",
     url: tool.url,
-    offers: { "@type": "Offer", price: "0" },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     author: {
       "@type": "Person",
       name: tool.author_name || "EduDock Official",
@@ -388,6 +391,47 @@ export function generateSoftwareApplicationSchema(tool: {
     publisher: { "@type": "Organization", name: SITE_NAME },
     mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
   };
+}
+
+// Back-compat alias: older imports referenced generateSoftwareApplicationSchema.
+export const generateSoftwareApplicationSchema = generateWebApplicationSchema;
+
+// Admin-authored JSON-LD (schema_markup jsonb) takes priority over the
+// generated fallback. We accept an object, a JSON string, or an array of
+// either, normalize to a non-empty plain object, and inject "@context" if the
+// admin omitted it. Anything malformed falls back to the generated schema.
+export function resolveSchemaMarkup(
+  raw: unknown,
+  fallback: object,
+): object | object[] {
+  let parsed: unknown = raw;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return fallback;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      return fallback;
+    }
+  }
+
+  const withContext = (obj: Record<string, unknown>) =>
+    obj["@context"] ? obj : { "@context": "https://schema.org", ...obj };
+
+  if (Array.isArray(parsed)) {
+    const items = parsed.filter(
+      (i): i is Record<string, unknown> =>
+        !!i && typeof i === "object" && Object.keys(i).length > 0,
+    );
+    return items.length ? items.map(withContext) : fallback;
+  }
+
+  if (parsed && typeof parsed === "object") {
+    const obj = parsed as Record<string, unknown>;
+    return Object.keys(obj).length ? withContext(obj) : fallback;
+  }
+
+  return fallback;
 }
 
 // ── DB FETCHER (server, request-deduplicated) ─────────────────────

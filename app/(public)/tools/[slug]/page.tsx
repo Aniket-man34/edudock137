@@ -11,7 +11,8 @@ import { createServerClient } from "@/integrations/supabase/server";
 import {
   buildArticleMetadata,
   fetchTool,
-  generateSoftwareApplicationSchema,
+  generateWebApplicationSchema,
+  resolveSchemaMarkup,
   SITE_URL,
   DEFAULT_OG_IMAGE,
 } from "@/lib/seo";
@@ -123,16 +124,19 @@ export default async function ToolDetailPage({
   return (
     <>
       <JsonLd
-        data={generateSoftwareApplicationSchema({
-          title: tool.title,
-          short_description: tool.short_description,
-          description: tool.description,
-          image_url: tool.image_url || tool.favicon_url,
-          url: tool.url,
-          slug: tool.slug,
-          id: tool.id,
-          author_name: tool.author_name,
-        })}
+        data={resolveSchemaMarkup(
+          tool.schema_markup,
+          generateWebApplicationSchema({
+            title: tool.title,
+            short_description: tool.short_description,
+            description: tool.description,
+            image_url: tool.image_url || tool.favicon_url,
+            url: tool.url,
+            slug: tool.slug,
+            id: tool.id,
+            author_name: tool.author_name,
+          }),
+        )}
       />
       <ToolClickTracker toolId={tool.id} />
 

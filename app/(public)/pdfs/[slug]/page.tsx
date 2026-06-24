@@ -9,6 +9,7 @@ import {
   buildArticleMetadata,
   fetchPdf,
   generateDigitalDocumentSchema,
+  resolveSchemaMarkup,
   SITE_URL,
   DEFAULT_OG_IMAGE,
 } from "@/lib/seo";
@@ -103,15 +104,18 @@ export default async function PdfDetailPage({
   return (
     <>
       <JsonLd
-        data={generateDigitalDocumentSchema({
-          title: pdf.title,
-          description: pdf.description,
-          cover_image_url: pdf.cover_image_url,
-          created_at: pdf.created_at,
-          slug: pdf.slug,
-          id: pdf.id,
-          author_name: pdf.author_name,
-        })}
+        data={resolveSchemaMarkup(
+          pdf.schema_markup,
+          generateDigitalDocumentSchema({
+            title: pdf.title,
+            description: pdf.description,
+            cover_image_url: pdf.cover_image_url,
+            created_at: pdf.created_at,
+            slug: pdf.slug,
+            id: pdf.id,
+            author_name: pdf.author_name,
+          }),
+        )}
       />
       <PdfClickTracker pdfId={pdf.id} />
 

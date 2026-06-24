@@ -9,6 +9,7 @@ import {
   buildArticleMetadata,
   fetchUpdate,
   generateArticleSchema,
+  resolveSchemaMarkup,
   SITE_URL,
   DEFAULT_OG_IMAGE,
 } from "@/lib/seo";
@@ -183,16 +184,19 @@ export default async function UpdateDetailPage({
     <>
       <ReadingProgress />
       <JsonLd
-        data={generateArticleSchema({
-          title: update.title,
-          description: update.content,
-          image_url: update.image_url,
-          created_at: update.created_at,
-          updated_at: update.updated_at,
-          slug: update.slug,
-          id: update.id,
-          author_name: update.author_name,
-        })}
+        data={resolveSchemaMarkup(
+          update.schema_markup,
+          generateArticleSchema({
+            title: update.title,
+            description: update.content,
+            image_url: update.image_url,
+            created_at: update.created_at,
+            updated_at: update.updated_at,
+            slug: update.slug,
+            id: update.id,
+            author_name: update.author_name,
+          }),
+        )}
       />
       <UpdateClickTracker updateId={update.id} />
 
