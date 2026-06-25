@@ -13,6 +13,10 @@ import {
   SITE_URL,
   DEFAULT_OG_IMAGE,
 } from "@/lib/seo";
+import {
+  extractHeadings,
+  normalizeArticleContent,
+} from "@/lib/headings";
 import { JsonLd } from "@/components/seo/JsonLd";
 import SocialShare from "@/components/updates/SocialShare";
 import AuthorShareRow from "@/components/updates/AuthorShareRow";
@@ -33,60 +37,6 @@ const getHighResAvatar = (url: string | null) => {
   }
   return url;
 };
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-function transformContent(raw: string | null): string {
-  if (!raw) return "";
-  return raw
-    .replace(/^<h2>(.*)<\/h2>$/gim, "## $1")
-    .replace(/^<h3>(.*)<\/h3>$/gim, "### $1");
-}
-
-function extractHeadings(markdown: string) {
-  const lines = markdown.split("\n");
-  const headings: Array<{
-    id: string;
-    text: string;
-    level: 2 | 3;
-    number: string;
-  }> = [];
-  let h2Count = 0;
-  let h3Count = 0;
-  for (const line of lines) {
-    const m2 = /^##\s+(.+?)\s*$/.exec(line);
-    const m3 = /^###\s+(.+?)\s*$/.exec(line);
-    if (m2) {
-      h2Count++;
-      h3Count = 0;
-      const text = m2[1].trim();
-      headings.push({
-        id: slugify(text),
-        text,
-        level: 2,
-        number: `${h2Count}`,
-      });
-    } else if (m3) {
-      h3Count++;
-      const text = m3[1].trim();
-      headings.push({
-        id: slugify(text),
-        text,
-        level: 3,
-        number: `${h2Count}.${h3Count}`,
-      });
-    }
-  }
-  return headings;
-}
 
 function readingMinutes(text: string | null): number {
   if (!text) return 1;
@@ -175,7 +125,7 @@ export default async function UpdateDetailPage({
       })
     : "";
 
-  const markdownContent = transformContent(update.content);
+  const markdownContent = normalizeArticleContent(update.content);
   const headings = extractHeadings(markdownContent);
   const minutes = readingMinutes(update.content);
   const avatarUrl = getHighResAvatar(update.author_avatar);
