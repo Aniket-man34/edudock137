@@ -1,13 +1,16 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { SearchProvider } from "@/components/layout/SearchProvider";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import AnalyticsTracker from "@/components/layout/AnalyticsTracker";
+import BackToTop from "@/components/BackToTop";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
 
 export default function PublicGroupLayout({ children }: { children: ReactNode }) {
   return (
+    <Suspense fallback={null}>
     <SearchProvider>
       <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       <a href="#main-content" className="skip-link">
@@ -23,8 +26,10 @@ export default function PublicGroupLayout({ children }: { children: ReactNode })
         >
           {children}
         </main>
+        <BackToTop />
         <SiteFooter />
       </div>
     </SearchProvider>
+    </Suspense>
   );
 }

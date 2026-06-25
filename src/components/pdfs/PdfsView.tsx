@@ -40,12 +40,17 @@ export default function PdfsView({
   totalCount,
   categories,
 }: PdfsViewProps) {
-  const { debouncedSearch, setSearchQuery } = useSiteSearch();
+  const {
+    debouncedSearch,
+    setSearchQuery,
+    activeCategoryId,
+    setActiveCategory,
+    clearAllFilters,
+  } = useSiteSearch();
   const [pdfs, setPdfs] = useState<Pdf[]>(initialPdfs);
   const [page, setPage] = useState(1);
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(initialPdfs.length < totalCount);
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sort, setSort] = useState<SortKey>("newest");
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -115,6 +120,13 @@ export default function PdfsView({
   const activeCategoryName = activeCategoryId
     ? categories.find((c) => c.id === activeCategoryId)?.name
     : null;
+
+  // Helper to select a category via the shared context (decoupled from search).
+  const selectCategory = (id: string | null) => {
+    const cat = id ? categories.find((c) => c.id === id) : null;
+    setActiveCategory(id, cat?.name ?? null);
+    setIsFilterOpen(false);
+  };
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -206,10 +218,7 @@ export default function PdfsView({
                         type="button"
                         role="option"
                         aria-selected={activeCategoryId === null}
-                        onClick={() => {
-                          setActiveCategoryId(null);
-                          setIsFilterOpen(false);
-                        }}
+                        onClick={() => selectCategory(null)}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
                           activeCategoryId === null
                             ? "bg-primary/10 text-primary font-semibold"
@@ -225,10 +234,7 @@ export default function PdfsView({
                           type="button"
                           role="option"
                           aria-selected={activeCategoryId === cat.id}
-                          onClick={() => {
-                            setActiveCategoryId(cat.id);
-                            setIsFilterOpen(false);
-                          }}
+                          onClick={() => selectCategory(cat.id)}
                           className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
                             activeCategoryId === cat.id
                               ? "bg-primary/10 text-primary font-semibold"
@@ -342,18 +348,48 @@ export default function PdfsView({
           <div className="glass-card-static inline-flex p-4 rounded-2xl mb-4">
             <BookOpen className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           </div>
-          <p className="mb-4">No PDFs match those filters.</p>
-          {(activeCategoryId || debouncedSearch) && (
-            <button
-              type="button"
-              onClick={() => {
-                setActiveCategoryId(null);
-                setSearchQuery("");
-              }}
-              className="btn-secondary"
-            >
-              Clear filter
-            </button>
+          <h2 className="text-lg font-semibold mb-1">No PDFs match those filters</h2>
+          <p className="mb-5 text-sm text-muted-foreground max-w-md">
+            {debouncedSearch
+              ? <>No results for <span className="font-medium text-foreground">&ldquo;{debouncedSearch}&rdquo;</span>{activeCategoryName ? <> in {activeCategoryName}</> : null}.</>
+              : <>Nothing in {activeCategoryName} yet.</>}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {(activeCategoryId || debouncedSearch) && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="btn-secondary"
+              >
+                Clear all filters
+              </button>
+            )}
+            {activeCategoryId && !debouncedSearch && (
+              <button
+                type="button"
+                onClick={() => selectCategory(null)}
+                className="btn-ghost"
+              >
+                View all categories
+              </button>
+            )}
+          </div>
+          {categories.length > 1 && !activeCategoryId && (
+            <div className="mt-6">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Browse categories</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {categories.slice(0, 6).map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => selectCategory(cat.id)}
+                    className="px-3 py-1.5 text-xs rounded-full glass-card-static hover:shadow-md transition-all"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}

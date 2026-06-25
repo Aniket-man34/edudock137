@@ -62,28 +62,19 @@ export default function UpdatesView({
 }: UpdatesViewProps) {
   const {
     debouncedSearch,
-    activeCategoryId: pinnedCategoryId,
-    activeCategoryName: pinnedCategoryName,
+    activeCategoryId,
+    activeCategoryName,
     setActiveCategory,
     clearActiveCategory,
+    clearAllFilters,
   } = useSiteSearch();
   const [updates, setUpdates] = useState<UpdateRow[]>(initialUpdates);
   const [page, setPage] = useState(1);
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(initialUpdates.length < totalCount);
   const [sort, setSort] = useState<SortKey>("newest");
-  const [localCategoryId, setLocalCategoryId] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
-
-  // Effective filter category — pinned by marquee click takes precedence,
-  // otherwise the local dropdown selection drives filtering.
-  const activeCategoryId = pinnedCategoryId ?? localCategoryId;
-  const activeCategoryName =
-    pinnedCategoryName ??
-    (localCategoryId
-      ? categories.find((c) => c.id === localCategoryId)?.name ?? null
-      : null);
 
   const filtered = useMemo(() => {
     const term = debouncedSearch.toLowerCase().trim();
@@ -167,11 +158,9 @@ export default function UpdatesView({
   const selectCategory = (id: string | null) => {
     if (id === null) {
       clearActiveCategory();
-      setLocalCategoryId(null);
     } else {
       const name = categories.find((c) => c.id === id)?.name ?? null;
       setActiveCategory(id, name);
-      setLocalCategoryId(id);
     }
     setIsFilterOpen(false);
   };
@@ -339,15 +328,48 @@ export default function UpdatesView({
           <div className="glass-card-static inline-flex p-4 rounded-2xl mb-4">
             <Bell className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           </div>
-          <p className="mb-4">No updates match those filters.</p>
-          {(activeCategoryId || debouncedSearch) && (
-            <button
-              type="button"
-              onClick={() => selectCategory(null)}
-              className="btn-secondary"
-            >
-              Clear filter
-            </button>
+          <h2 className="text-lg font-semibold mb-1">No updates match those filters</h2>
+          <p className="mb-5 text-sm text-muted-foreground max-w-md">
+            {debouncedSearch
+              ? <>No results for <span className="font-medium text-foreground">&ldquo;{debouncedSearch}&rdquo;</span>{activeCategoryName ? <> in {activeCategoryName}</> : null}.</>
+              : <>Nothing in {activeCategoryName} yet.</>}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {(activeCategoryId || debouncedSearch) && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="btn-secondary"
+              >
+                Clear all filters
+              </button>
+            )}
+            {activeCategoryId && !debouncedSearch && (
+              <button
+                type="button"
+                onClick={() => selectCategory(null)}
+                className="btn-ghost"
+              >
+                View all categories
+              </button>
+            )}
+          </div>
+          {categories.length > 1 && !activeCategoryId && (
+            <div className="mt-6">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Browse categories</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {categories.slice(0, 6).map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => selectCategory(cat.id)}
+                    className="px-3 py-1.5 text-xs rounded-full glass-card-static hover:shadow-md transition-all"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}
