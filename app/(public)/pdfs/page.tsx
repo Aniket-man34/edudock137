@@ -11,6 +11,11 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import PdfsView from "@/components/pdfs/PdfsView";
 import PdfsListSkeleton from "@/components/pdfs/PdfsListSkeleton";
 
+// Cloudflare (next-on-pages) requires the Edge runtime for any non-static
+// (dynamic/SSR) route. Without it the dynamic listing cannot be emitted as an
+// edge function and falls back to a build-time static snapshot, so newly
+// published PDFs never appear. Must stay paired with `force-dynamic`.
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {

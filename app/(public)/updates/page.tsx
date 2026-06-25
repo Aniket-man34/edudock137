@@ -11,6 +11,11 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import UpdatesView from "@/components/updates/UpdatesView";
 import UpdatesListSkeleton from "@/components/updates/UpdatesListSkeleton";
 
+// Cloudflare (next-on-pages) requires the Edge runtime for any non-static
+// (dynamic/SSR) route. Without it the dynamic listing cannot be emitted as an
+// edge function and falls back to a build-time static snapshot, so newly
+// published updates never appear. Must stay paired with `force-dynamic`.
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {

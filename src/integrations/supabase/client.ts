@@ -2,28 +2,12 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "./types";
-
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY;
-
-const PLACEHOLDER_URL = "https://placeholder.supabase.co";
-const PLACEHOLDER_KEY = "placeholder";
-
-const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config";
 
 export function createClient() {
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    if (isBuild) {
-      return createBrowserClient<Database>(PLACEHOLDER_URL, PLACEHOLDER_KEY);
-    }
-    console.error("CRITICAL: Supabase keys are missing at RUNTIME environment.");
-    return createBrowserClient<Database>(PLACEHOLDER_URL, PLACEHOLDER_KEY);
-  }
+  // SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY always resolve to a real value
+  // (env first, then the public project default), so the browser client never
+  // degrades to a placeholder that 404s every query.
   return createBrowserClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 }
 

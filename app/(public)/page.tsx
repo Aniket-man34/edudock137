@@ -29,6 +29,11 @@ type Update = Tables<"updates">;
 type PdfCard = Pick<Pdf, "id" | "title" | "cover_image_url" | "clicks" | "slug">;
 type UpdateCard = Pick<Update, "id" | "title" | "image_url" | "slug" | "created_at">;
 
+// Cloudflare (next-on-pages) requires the Edge runtime for any non-static
+// (dynamic/SSR) route. Without it the dynamic home page cannot be emitted as an
+// edge function and falls back to a build-time static snapshot, so newly
+// published content never appears. Must stay paired with `force-dynamic`.
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {

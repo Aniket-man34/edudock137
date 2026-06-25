@@ -1,31 +1,18 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
-
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY;
-
-const PLACEHOLDER_URL = "https://placeholder.supabase.co";
-const PLACEHOLDER_KEY = "placeholder";
-
-const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config";
 
 export function createServerClient() {
   const authOpts = {
     auth: { persistSession: false, autoRefreshToken: false },
   };
 
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    if (isBuild) {
-      return createSupabaseClient<Database>(PLACEHOLDER_URL, PLACEHOLDER_KEY, authOpts);
-    }
-    console.error("CRITICAL: Supabase keys are missing at RUNTIME environment.");
-    return createSupabaseClient<Database>(PLACEHOLDER_URL, PLACEHOLDER_KEY, authOpts);
-  }
-
-  return createSupabaseClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, authOpts);
+  // SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY always resolve to a real value
+  // (env first, then the public project default) so the server client can never
+  // silently degrade to a placeholder and render an empty site in production.
+  return createSupabaseClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    authOpts,
+  );
 }
