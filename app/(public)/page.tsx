@@ -32,7 +32,7 @@ type UpdateCard = Pick<Update, "id" | "title" | "image_url" | "slug" | "created_
 // Cloudflare (next-on-pages) requires the Edge runtime for any non-static
 // (dynamic/SSR) route. Without it the dynamic home page cannot be emitted as an
 // edge function and falls back to a build-time static snapshot, so newly
-// published content never appears. Must stay paired with `force-dynamic`.
+// published content never appears.  stay paired with `force-dynamic`.
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
